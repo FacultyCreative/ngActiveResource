@@ -1,0 +1,22 @@
+{
+  "name": "ActiveResource",
+  "version": "0.0.0",
+  "authors": [
+    "Brett Shollenberger <brett.shollenberger@gmail.com>"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "active-support": "~0.0.4",
+    "angular": "latest",
+    "angular-mocks": "latest",
+    "lodash": "latest",
+    "meld": "~1.3.0"
+  }
+}
