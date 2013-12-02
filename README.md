@@ -1,1 +1,1 @@
-# ActiveResource for Angularjs
+# ActiveResource for Angular.js
