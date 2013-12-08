@@ -22,7 +22,7 @@ module.exports = function(config) {
       'bower_components/active-support/active-support.js',
       'bower_components/lodash/dist/lodash.js',
       'lib/angular-resource/**/*.js',
-      'spec/angular-resource/*.js'
+      'spec/angular-resource/**/*.js'
     ],
     // list of files / patterns to exclude
     exclude: [],
