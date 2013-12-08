@@ -8,7 +8,6 @@ pattern persistence methods.
 
 Create an Angular factory or provider that relies on ActiveResource:
 
-```
   angular.module('app', ['ActiveResource')
     .factory('User', ['ActiveResource', function(ActiveResource) {
 
@@ -22,7 +21,7 @@ Create an Angular factory or provider that relies on ActiveResource:
 
       return User;
     });
-```
+
 ## Establish Associations:
 
 A has many association can be setup by naming the field, and passing in the name
@@ -33,22 +32,19 @@ model:
 
 Now you have access to comment methods via post:
 
-```
     var post    = new Post();
     var comment = post.comments.new({text: 'Great post!'});
     comment.$save();
     
     expect(comment.post).toEqual(post);
     expect(post.comments).toContain(comment);
-```
+
 ## Write Validations:
 
 Models can describe validations required before data will be persisted
 successfully:
 
-```
     User.validates({name: 'presence', email: {format: 'email'} });
-```
 
 Validations also work with Wrangler's form helper to perform easy form styling.
 For instance, a field with `ng-model` set to `user.email` will set the class
