@@ -8,19 +8,19 @@ pattern persistence methods.
 
 Create an Angular factory or provider that relies on ActiveResource:
 
-  angular.module('app', ['ActiveResource')
-    .factory('User', ['ActiveResource', function(ActiveResource) {
+    angular.module('app', ['ActiveResource')
+      .factory('User', ['ActiveResource', function(ActiveResource) {
 
-      function User(data) {
-        this.id = data.id;
-      };
+        function User(data) {
+          this.id = data.id;
+        };
 
-      User = ActiveResource.Base.apply(User);
-      User.hasMany('posts', ['app', 'Post']);
-      User.api.set('http://api.faculty.com');
+        User = ActiveResource.Base.apply(User);
+        User.hasMany('posts', ['app', 'Post']);
+        User.api.set('http://api.faculty.com');
 
-      return User;
-    });
+        return User;
+      });
 
 ## Establish Associations:
 
