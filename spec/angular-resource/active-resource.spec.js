@@ -16,7 +16,9 @@ describe('ActiveResource', function() {
     $timeout       = _$timeout_;
     $http          = _$http_;
 
-    backend.whenGET('http://api.faculty.com/system/4.json').respond({id: 4});
+    backend.whenGET('http://api.faculty.com/system/?id=5&placement=door').respond([{id: 5, placement: 'door'}]);
+    backend.whenGET('http://api.faculty.com/system/?id=4').respond({id: 4});
+    backend.whenGET('http://api.faculty.com/system/?placement=window').respond([{id: 5, placement: 'window'}, {id: 6, placement: 'window'}]);
 
     spyOn($http, 'get').andCallThrough();
     system = System.new({id: 1});
@@ -24,7 +26,7 @@ describe('ActiveResource', function() {
 
   describe('Caching', function() {
     it('adds a cache to the model', function() {
-      expect(System.cached).toEqual({});
+      expect(System.cached).toBeDefined();
     });
   });
 
@@ -165,18 +167,31 @@ describe('ActiveResource', function() {
       });
 
       it('finds by id', function() {
-        var foundSystems = System.where({id: 1});
+        var foundSystems;
+        System.where({id: 1}).then(function(response) { foundSystems = response; });
+        $timeout.flush();
         expect(foundSystems).toEqual([system]);
       });
 
       it('finds by any attr', function() {
-        var foundSystems = System.where({placement: 'door'});
+        var foundSystems;
+        System.where({placement: 'door'}).then(function(response) { foundSystems = response; });
+        $timeout.flush();
         expect(foundSystems).toEqual([system2, system3])
       });
 
-      it('returns empty array if nothing is found', function() {
-        var foundSystems = System.where({id: 1, placement: 'door'});
-        expect(foundSystems).toEqual([]);
+      it('queries the backend if nothing is found in the cache', function() {
+        var foundSystems;
+        System.where({id: 5, placement: 'door'}).then(function(response) { foundSystems = response; });
+        backend.flush();
+        expect(foundSystems[0].constructor.name).toBe('System');
+      });
+
+      it('creates a new instance in the cache', function() {
+        var foundSystems;
+        System.where({id: 5, placement: 'door'}).then(function(response) { foundSystems = response; });
+        backend.flush();
+        expect(System.cached[5]).toBe(foundSystems[0]);
       });
     });
 
@@ -192,23 +207,44 @@ describe('ActiveResource', function() {
 
       it('returns the first instance found', function() {
         var foundSystem;
-        System.find({id: 1}).then(function(response) { foundSystem = response.data; });
+        System.find({id: 1}).then(function(response) { foundSystem = response; });
         $timeout.flush();
         expect(foundSystem).toEqual(system);
       });
 
       it('accepts any attributes', function() {
         var foundSystem;
-        System.find({placement: 'door'}).then(function(response) { foundSystem = response.data; });
+        System.find({placement: 'door'}).then(function(response) { foundSystem = response; });
         $timeout.flush();
         expect(foundSystem).toEqual(system2);
       });
 
       it('queries the backend if the instance is not found in the cache', function() {
         var foundSystem;
-        System.find({id: 4}).then(function(response) { foundSystem = response.data; });
+        System.find({id: 4}).then(function(response) { foundSystem = response; });
         backend.flush();
-        expect(foundSystem).toEqual({id: 4});
+        expect(foundSystem.id).toEqual(4);
+      });
+
+      it('queries the backend using multiple parameters', function() {
+        var foundSystem;
+        System.find({placement: 'window'}).then(function(response) { foundSystem = response; });
+        backend.flush();
+        expect(foundSystem.id).toEqual(5);
+      });
+
+      it('returns the instantiated model instead of the plain data', function() {
+        var foundSystem;
+        System.find({placement: 'window'}).then(function(response) { foundSystem = response; });
+        backend.flush();
+        expect(foundSystem.constructor.name).toBe('System');
+      });
+
+      it('returns the first object only', function() {
+        var foundSystem;
+        System.find({placement: 'window'}).then(function(response) { foundSystem = response; });
+        backend.flush();
+        expect(foundSystem.id).toBe(5);
       });
     });
   });
@@ -216,7 +252,7 @@ describe('ActiveResource', function() {
   describe('Base#api', function() {
     describe('Base.api#set', function() {
       it('creates a find url', function() {
-        expect(System.api.findURL).toEqual('http://api.faculty.com/system/[:id].json');
+        expect(System.api.findURL).toEqual('http://api.faculty.com/system/[:attrs]');
       });
 
       it('creates a create url', function() {
@@ -224,7 +260,7 @@ describe('ActiveResource', function() {
       });
 
       it('creates a delete url', function() {
-        expect(System.api.deleteURL).toEqual('http://api.faculty.com/system/[:id].json');
+        expect(System.api.deleteURL).toEqual('http://api.faculty.com/system/[:attrs]');
       });
 
       it('creates an index url', function() {
@@ -232,7 +268,7 @@ describe('ActiveResource', function() {
       });
 
       it('creates an update url', function() {
-        expect(System.api.updateURL).toEqual('http://api.faculty.com/system/[:id].json');
+        expect(System.api.updateURL).toEqual('http://api.faculty.com/system/[:attrs]');
       });
     });
 
@@ -270,7 +306,12 @@ describe('ActiveResource', function() {
       describe('Model#find', function() {
         it('calls GET to the specified API, filling in the correct ID', function() {
           System.find(4);
-          expect($http.get).toHaveBeenCalledWith('http://api.faculty.com/system/4.json');
+          expect($http.get).toHaveBeenCalledWith('http://api.faculty.com/system/?id=4');
+        });
+
+        it('calls GET with the specified attributes attached to the querystring', function() {
+          System.find({placement: 'window'});
+          expect($http.get).toHaveBeenCalledWith('http://api.faculty.com/system/?placement=window');
         });
       });
     });
