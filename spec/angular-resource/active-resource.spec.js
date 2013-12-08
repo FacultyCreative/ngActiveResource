@@ -2,16 +2,23 @@
 
 describe('ActiveResource', function() {
 
-  var ActiveResource, Mocks, Sensor, System, system;
+  var ActiveResource, Mocks, Sensor, System, system, backend, $timeout, $http;
   beforeEach(module('ActiveResource'));
   beforeEach(module('ActiveResource.Mocks'));
 
-  beforeEach(inject(['ActiveResource', 'ActiveResource.Mocks', function(_ActiveResource_, _ARMocks_) {
+  beforeEach(inject(['ActiveResource', 'ActiveResource.Mocks', '$httpBackend', '$timeout', '$http',
+    function(_ActiveResource_, _ARMocks_, _$httpBackend_, _$timeout_, _$http_) {
     ActiveResource = _ActiveResource_;
     Mocks          = _ARMocks_;
     System         = Mocks.System;
     Sensor         = Mocks.Sensor;
+    backend        = _$httpBackend_;
+    $timeout       = _$timeout_;
+    $http          = _$http_;
 
+    backend.whenGET('http://api.faculty.com/system/4.json').respond({id: 4});
+
+    spyOn($http, 'get').andCallThrough();
     system = System.new({id: 1});
   }]));
 
@@ -124,7 +131,8 @@ describe('ActiveResource', function() {
 
       it('updates the instance', function() {
         system.update({placement: 'window'});
-        expect(System.find(1).placement).toEqual('window');
+        System.find(1).then(function(results) { system = results; });
+        expect(system.placement).toEqual('window');
       });
 
       it('updates associated relations if described', function() {
@@ -183,18 +191,24 @@ describe('ActiveResource', function() {
       });
 
       it('returns the first instance found', function() {
-        var foundSystem = System.find({id: 1});
+        var foundSystem;
+        System.find({id: 1}).then(function(response) { foundSystem = response.data; });
+        $timeout.flush();
         expect(foundSystem).toEqual(system);
       });
 
       it('accepts any attributes', function() {
-        var foundSystem = System.find({placement: 'door'});
+        var foundSystem;
+        System.find({placement: 'door'}).then(function(response) { foundSystem = response.data; });
+        $timeout.flush();
         expect(foundSystem).toEqual(system2);
       });
 
-      it('returns undefined if nothing is found', function() {
-        var foundSystem = System.find({id: 1, placement: 'door'});
-        expect(foundSystem).toEqual(undefined);
+      it('queries the backend if the instance is not found in the cache', function() {
+        var foundSystem;
+        System.find({id: 4}).then(function(response) { foundSystem = response.data; });
+        backend.flush();
+        expect(foundSystem).toEqual({id: 4});
       });
     });
   });
@@ -253,8 +267,11 @@ describe('ActiveResource', function() {
     });
 
     describe('API Methods', function() {
-      it('adds a find method', function() {
-        //expect(System.api.find(1)).toEqual
+      describe('Model#find', function() {
+        it('calls GET to the specified API, filling in the correct ID', function() {
+          System.find(4);
+          expect($http.get).toHaveBeenCalledWith('http://api.faculty.com/system/4.json');
+        });
       });
     });
   });
