@@ -13,10 +13,10 @@ Create an Angular factory or provider that relies on ActiveResource:
 
         function User(data) {
           this.id = data.id;
+          this.hasMany('posts', ['app', 'Post']);
         };
 
         User = ActiveResource.Base.apply(User);
-        User.hasMany('posts', ['app', 'Post']);
         User.api.set('http://api.faculty.com');
 
         return User;
@@ -28,7 +28,7 @@ A has many association can be setup by naming the field, and passing in the name
 of the module the associated model is located in, and the name of the associated
 model:
 
-    Post.hasMany('comments', ['app', 'Comment']);
+    this.hasMany('comments', ['app', 'Comment']);
 
 Now you have access to comment methods via post:
 
