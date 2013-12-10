@@ -7,10 +7,11 @@ angular
           if (!data) data = {};
           this.id        = data.id        || undefined;
           this.placement = data.placement || undefined;
+          this.hasMany('sensors',
+            ['ActiveResource.Mocks', 'ARMockSensor']);
         };
 
         System = ActiveResource.Base.apply(System);
-        System.hasMany('sensors', ['ActiveResource.Mocks', 'ARMockSensor']);
         System.api.set('http://api.faculty.com/');
 
         return System;
