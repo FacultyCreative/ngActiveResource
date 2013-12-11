@@ -90,6 +90,18 @@ describe('ActiveResource', function() {
       it('adds an empty collection', function() {
         expect(system.sensors.length).toEqual(0);
       });
+
+      it('adds new associated instances', function() {
+        var sensor;
+        system.sensors.new().$save().then(function(response) { sensor = response; });
+        backend.flush();
+        expect(system.sensors).toContain(sensor);
+      });
+
+      it('does not add new associated instances until they are saved', function() {
+        var sensor = system.sensors.new();
+        expect(system.sensors).not.toContain(sensor);
+      });
     });
 
     describe('base#belongsTo', function() {
@@ -102,6 +114,15 @@ describe('ActiveResource', function() {
   });
 
   describe('Associated Collections', function() {
+
+    describe('Constructors', function() {
+      it('the same constructor is used for chained associations', function() {
+        var sensor1 = Sensor.new();
+        var sensor2 = system.sensors.new(); 
+        expect(sensor1.constructor == sensor2.constructor).toBe(true);
+      });
+    });
+
     describe('collection#new', function() {
       it('establishes the belongs-to relationship', function() {
         var sensor = system.sensors.new()
@@ -177,7 +198,7 @@ describe('ActiveResource', function() {
       var sensor;
       beforeEach(function() {
         sensor = system.sensors.new();
-        sensor.$save().then(function(response) { sensor = response; Sensor = sensor.constructor;  });
+        sensor.$save().then(function(response) { sensor = response; });
         backend.flush();
       });
 
