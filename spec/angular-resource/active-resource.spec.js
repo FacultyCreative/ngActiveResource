@@ -2,12 +2,12 @@
 
 describe('ActiveResource', function() {
 
-  var ActiveResource, Mocks, Sensor, System, system, backend, $timeout, $http;
+  var ActiveResource, Mocks, Sensor, System, system, backend, $timeout, $http, $rootScope;
   beforeEach(module('ActiveResource'));
   beforeEach(module('ActiveResource.Mocks'));
 
-  beforeEach(inject(['ActiveResource', 'ActiveResource.Mocks', '$httpBackend', '$timeout', '$http',
-    function(_ActiveResource_, _ARMocks_, _$httpBackend_, _$timeout_, _$http_) {
+  beforeEach(inject(['ActiveResource', 'ActiveResource.Mocks', '$httpBackend', '$timeout', '$http', '$rootScope',
+    function(_ActiveResource_, _ARMocks_, _$httpBackend_, _$timeout_, _$http_, _$rootScope_) {
     ActiveResource = _ActiveResource_;
     Mocks          = _ARMocks_;
     System         = Mocks.System;
@@ -15,10 +15,35 @@ describe('ActiveResource', function() {
     backend        = _$httpBackend_;
     $timeout       = _$timeout_;
     $http          = _$http_;
+    $rootScope     = _$rootScope_;
 
-    backend.whenGET('http://api.faculty.com/system/?id=5&placement=door').respond([{id: 5, placement: 'door'}]);
-    backend.whenGET('http://api.faculty.com/system/?id=4').respond({id: 4});
-    backend.whenGET('http://api.faculty.com/system/?placement=window').respond([{id: 5, placement: 'window'}, {id: 6, placement: 'window'}]);
+    backend.whenGET('http://api.faculty.com/system/?id=5&placement=door')
+      .respond([{id: 5, placement: 'door'}]);
+
+    backend.whenGET('http://api.faculty.com/system/?id=4')
+      .respond({id: 4});
+
+    backend.whenGET('http://api.faculty.com/system/?placement=window')
+      .respond([{id: 5, placement: 'window'}, {id: 6, placement: 'window'}]);
+
+    backend.whenPOST('http://api.faculty.com/system.json', {sensors: []})
+      .respond({id: 4});
+
+    backend.whenPOST('http://api.faculty.com/sensor.json',
+      {system: {id: 1, sensors: []}})
+      .respond({id: 1});
+
+    backend.whenPOST('http://api.faculty.com/system.json',
+        {id: 1, sensors: []})
+        .respond({id: 1});
+
+    backend.whenPOST('http://api.faculty.com/system.json',
+        {id: 2, placement: 'door', sensors: []})
+        .respond({id: 2, placement: 'door'});
+
+    backend.whenPOST('http://api.faculty.com/system.json',
+        {id: 3, placement: 'door', sensors: []})
+        .respond({id: 3, placement: 'door'});
 
     spyOn($http, 'get').andCallThrough();
     spyOn($http, 'post').andCallThrough();
@@ -28,6 +53,35 @@ describe('ActiveResource', function() {
   describe('Caching', function() {
     it('adds a cache to the model', function() {
       expect(System.cached).toBeDefined();
+    });
+
+    it('adds new instances to the cache', function() {
+      expect(System.cached[1]).toBe(system);
+    });
+
+    it('cannot add new instances to the cache if they use the `new Constructor()` syntax', function() {
+      var system2 = new System({id: 2});
+      expect(System.cached[2]).toBe(undefined);
+    });
+
+    it('does not add instances to the cache if they do not have primary keys', function() {
+      var system3   = new System();
+      var assertion = _.include(System.cached, system3); 
+      expect(assertion).toBe(false);
+    });
+
+    it('expects the backend to add primary keys on $save, and then adds it to the cache', function() {
+      var system4 = new System();
+      system4.$save().then(function(response) { system4 = response; });
+      backend.flush();
+      expect(System.cached[4]).toEqual(system4);
+    });
+
+    it('updates the cache for nested relationships on save', function() {
+      var sensor = system.sensors.new();
+      sensor.$save().then(function(response) { sensor = response; });
+      backend.flush();
+      expect(Sensor.cached[1]).toEqual(sensor);
     });
   });
 
@@ -123,8 +177,7 @@ describe('ActiveResource', function() {
       var sensor;
       beforeEach(function() {
         sensor = system.sensors.new();
-        backend.expectPOST('http://faculty.api.com/sensor.json').respond({id: 1});
-        sensor.$save().then(function(response) { sensor = response; });
+        sensor.$save().then(function(response) { sensor = response; Sensor = sensor.constructor;  });
         backend.flush();
       });
 
@@ -136,14 +189,15 @@ describe('ActiveResource', function() {
         expect(Sensor.cached[1]).toEqual(sensor);
       });
 
-      it('adds an id if none is defined', function() {
+      it('adds the id that it received from the backend', function() {
         expect(system.sensors[0].id).toEqual(1);
       });
     });
 
     describe('base#$create', function() {
       it('adds to the cache', function() {
-        system = System.$create({id: 1});
+        System.$create({id: 1}).then(function(response) { system = response; });
+        backend.flush();
         expect(System.cached[1]).toEqual(system);
       });
     });
@@ -151,7 +205,8 @@ describe('ActiveResource', function() {
     describe('base#update', function() {
 
       beforeEach(function() {
-        system = System.$create({id: 1});
+        System.$create({id: 1}).then(function(response) { system = response; });
+        backend.flush();
       });
 
       it('updates the instance', function() {
@@ -185,10 +240,9 @@ describe('ActiveResource', function() {
 
       beforeEach(function() {
         system.$save().then(function(response) { system = response; });
-        backend.expectPOST('http://api.faculty.com/system.json', {id: 1}).respond({id: 1, placement: undefined});
+        System.$create({id: 2, placement: 'door'}).then(function(response) { system2 = response; });
+        System.$create({id: 3, placement: 'door'}).then(function(response) { system3 = response; });
         backend.flush();
-        system2 = System.$create({id: 2, placement: 'door'});
-        system3 = System.$create({id: 3, placement: 'door'});
       });
 
       it('finds by id', function() {
@@ -226,10 +280,12 @@ describe('ActiveResource', function() {
 
       beforeEach(function() {
         system.$save().then(function(response) { system = response });
-        backend.expectPOST('http://api.faculty.com/system.json', {id: 1}).respond({id: 1});
+        backend.expectPOST('http://api.faculty.com/system.json', {id: 1, sensors: []}).respond({id: 1});
+        backend.expectPOST('http://api.faculty.com/system.json', {placement: 'door', sensors: []}).respond({id: 2, placement: 'door'});
+        backend.expectPOST('http://api.faculty.com/system.json', {placement: 'door', sensors: []}).respond({id: 3, placement: 'door'});
+        System.$create({placement: 'door'}).then(function(response) { system2 = response; });
+        System.$create({placement: 'door'}).then(function(response) { system3 = response; });
         backend.flush();
-        system2 = System.$create({id: 2, placement: 'door'});
-        system3 = System.$create({id: 3, placement: 'door'});
       });
 
       it('returns the first instance found', function() {
@@ -260,14 +316,14 @@ describe('ActiveResource', function() {
         expect(foundSystem.id).toEqual(5);
       });
 
-      xit('returns the instantiated model instead of the plain data', function() {
+      it('returns the instantiated model instead of the plain data', function() {
         var foundSystem;
         System.find({placement: 'window'}).then(function(response) { foundSystem = response; });
         backend.flush();
         expect(foundSystem.constructor.name).toBe('System');
       });
 
-      xit('returns the first object only', function() {
+      it('returns the first object only', function() {
         var foundSystem;
         System.find({placement: 'window'}).then(function(response) { foundSystem = response; });
         backend.flush();
