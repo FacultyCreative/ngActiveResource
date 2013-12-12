@@ -15,8 +15,10 @@
   "dependencies": {
     "active-support": "0.0.5",
     "angular": "latest",
-    "angular-mocks": "latest",
-    "lodash": "latest",
-    "meld": "~1.3.0"
+    "lodash": "latest"
+  },
+  "devDependencies": {
+    "angular-route": "latest",
+    "angular-mocks": "latest"
   }
 }

@@ -5,20 +5,18 @@
   <title>AngularJS test</title>
 
   <script src="http://code.angularjs.org/1.2.4/angular.js"></script>
+  <script src="../angular-route/angular-route.js"></script>
 
-  <script src="../bower_components/lodash/dist/lodash.js"></script>
-  <script src="../lib/json/json.js"></script>
-  <script src="../bower_components/active-support/active-support.js"></script>
-  <script src="../lib/angular-resource/active-resource.js"></script>
-  <script src="../lib/angular-resource/api/api.js"></script>
-  <script src="../lib/angular-resource/collection/collection.js"></script>
-  <script src="../lib/angular-resource/base/base.js"></script>
+  <script src="../lodash/dist/lodash.js"></script>
+  <script src="../json/json.js"></script>
+  <script src="../active-support/active-support.js"></script>
+  <script src="../angular-resource/active-resource.js"></script>
+  <script src="../angular-resource/api/api.js"></script>
+  <script src="../angular-resource/collection/collection.js"></script>
+  <script src="../angular-resource/base/base.js"></script>
   <script src="scripts/app.js"></script>
 </head>
 <body>
-  <div ng-controller="MainCtrl">
-    {{json.toJson(system)}}
-    <h1>Somethign new!</h1>
-  </div>
-</body>
+  <div ng-view></div>
+  </body>
 </html>
