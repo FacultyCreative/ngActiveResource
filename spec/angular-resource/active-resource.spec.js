@@ -106,8 +106,12 @@ describe('ActiveResource', function() {
 
     describe('base#belongsTo', function() {
       it('establishes the belongsTo relationship', function() {
-        system.sensors.$create({});
-        var sensor = system.sensors[0];
+        var sensor;
+        system.sensors.$create().then(function(response) {
+          sensor = response;
+        });
+        backend.expectPOST('http://api.faculty.com/sensor.json', {"system":{"id":1,"sensors":[{"$ref":"#"}]}}).respond({id: 3, system: 1});
+        backend.flush();
         expect(sensor.system).toEqual(system);
       });
     });
@@ -116,7 +120,7 @@ describe('ActiveResource', function() {
   describe('Associated Collections', function() {
 
     describe('Constructors', function() {
-      it('the same constructor is used for chained associations', function() {
+      it('uses the same constructor chained associations', function() {
         var sensor1 = Sensor.new();
         var sensor2 = system.sensors.new(); 
         expect(sensor1.constructor == sensor2.constructor).toBe(true);
@@ -129,39 +133,63 @@ describe('ActiveResource', function() {
         expect(sensor.system).toEqual(system);
       });
 
-      it('does not push the sensor into the has-many relationship until save, or an id is on the sensor', function() {
+      it('does not push the belongsTo instance into the has-many relationship until save, or an id is on the belongsTo instance', function() {
         var sensor = system.sensors.new();
         expect(system.sensors[0]).toEqual(undefined);
       });
 
       it('accepts data to instantiate with', function() {
-        var sensor = system.sensors.new({id: 1});
-        expect(sensor.id).toEqual(1);
+        var sensor = system.sensors.new({state: 'alarmed'});
+        expect(sensor.state).toEqual('alarmed');
       });
     });
 
     describe('collection#$create', function() {
+
+      var sensor;
+
+      beforeEach(function() {
+        system.sensors.$create({state: 'alarmed'}).then(function(response) {
+          sensor = response;
+        });
+        backend.expectPOST('http://api.faculty.com/sensor.json').respond({id: 1, system: 1});
+        backend.flush();
+      });
+
       it('establishes the belongs-to relationship', function() {
-        var sensor = system.sensors.$create();
         expect(sensor.system).toEqual(system);
       });
 
       it('establishes the has-many relationship', function() {
-        var sensor = system.sensors.$create();
         expect(system.sensors[0]).toEqual(sensor);
       })
 
       it('accepts data to instantiate with', function() {
-        var sensor = system.sensors.$create({id: 1});
+        expect(sensor.state).toEqual('alarmed');
+      });
+
+      it('expects to receive an id from the database', function() {
         expect(sensor.id).toEqual(1);
+      });
+
+      it('is added to the cache', function() {
+        expect(Sensor.cached[1]).toBe(sensor);
       });
     });
 
     describe('collection#delete', function() {
 
+      var sensor1, sensor2;
       beforeEach(function() {
-        system.sensors.$create({id: 1});
-        system.sensors.$create({id: 2});
+        system.sensors.$create().then(function(response) {
+          sensor1 = response;
+        });
+        system.sensors.$create().then(function(response) {
+          sensor2 = response;
+        });
+        backend.expectPOST('http://api.faculty.com/sensor.json').respond({id: 1, system: 1});
+        backend.expectPOST('http://api.faculty.com/sensor.json').respond({id: 2, system: 1});
+        backend.flush();
         system.sensors.$delete(1);
       });
 
