@@ -190,7 +190,9 @@ describe('ActiveResource', function() {
         backend.expectPOST('http://api.faculty.com/sensor.json').respond({id: 1, system: 1});
         backend.expectPOST('http://api.faculty.com/sensor.json').respond({id: 2, system: 1});
         backend.flush();
-        system.sensors.$delete(1);
+        sensor1.$delete();
+        backend.expectDELETE('http://api.faculty.com/sensor/?id=1').respond({data: 'success'});
+        backend.flush();
       });
 
       it('deletes the instance from the collection', function() {
