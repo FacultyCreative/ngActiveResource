@@ -297,7 +297,7 @@ describe('ActiveResource', function() {
 
     describe('base#find', function() {
 
-      var system2, system3;
+      var system2, system3, sensor2;
 
       beforeEach(function() {
         system.$save().then(function(response) { system = response });
@@ -349,6 +349,15 @@ describe('ActiveResource', function() {
         System.find({placement: 'window'}).then(function(response) { foundSystem = response; });
         backend.flush();
         expect(foundSystem.id).toBe(5);
+      });
+
+      it('also queries for associated models that need to be filled', function() {
+        var sensor2;
+        backend.expectGET('http://api.faculty.com/sensor/?id=2').respond({id: '2', system: '9'});
+        backend.expectGET('http://api.faculty.com/system/?id=9').respond({id: '9'});
+        Sensor.find({id: 2}).then(function(response) { sensor2 = response; });
+        backend.flush();
+        expect(sensor2.system.id).toEqual('9');
       });
     });
   });
