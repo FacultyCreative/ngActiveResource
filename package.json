@@ -6,12 +6,15 @@
   "author": "Brett Shollenberger <brett@facultycreative.com>",
   "license": "MIT",
   "dependencies": {
+    "lodash": "latest"
+  },
+  "devDependencies": {
     "faculty-api": "~0.1.0",
+    "bcryptjs": "latest",
     "load-grunt-tasks": "~0.2.0",
     "express": "~3.4.6",
     "mongoose": "~3.8.1",
     "grunt": "~0.4.2",
-    "lodash": "latest",
     "grunt-contrib-watch": "~0.5.3",
     "grunt-shell": "latest",
     "jasmine-node": "latest",
