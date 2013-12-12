@@ -1,29 +1,41 @@
 angular
-  .module('app', ['ActiveResource'])
+  .module('app', ['ng', 'ngRoute', 'ActiveResource'])
+  .config(['$routeProvider', function(Router) {
+    Router
+      .when('/', {
+        controller: 'MainCtrl',
+        templateUrl: 'templates/home.html'
+      });
+  }])
   .controller('MainCtrl', ['$scope', 'ARSystem', 'ARSensor', 'json', 
       function($scope, System, Sensor, json) {
-    $scope.system = System.new({id: 1});
-    $scope.sensor = $scope.system.sensors.new({id: 1});
-    $scope.json   = json;
-
-    $scope.sensor.$save().then(function(response) {
-      $scope.sensor.update({id: 1, placement: '0'});
-    });
+        $scope.system = System.new({id: 1});
     
-  }])
+        Sensor.find({"_id": "52a8b80d251c5395b485cfe6"}).then(function(response) {
+          $scope.sensor = response;
+        });
+      }
+  ])
   .provider('ARSensor', function() {
     this.$get = ['ActiveResource',
       function(ActiveResource) {
       function Sensor(data) {
+        console.log(data);
         if (!data) data = {};
-        this.id     = data.id     || undefined;
+        if (data[0]) data = data[0];
+        this.id     = data.id     || data['_id'] || undefined;
+        this.name   = data.name   || undefined;
         this.system = data.system || undefined;
         this.belongsTo('system',
           ['app', 'ARSystem']);
       };
 
       Sensor = ActiveResource.Base.apply(Sensor);
-      Sensor.api.set('http://api.faculty.com/');
+      Sensor.api.set('0.0.0:3000/api');
+      Sensor.api.findURL   = 'http://0.0.0:3000/api/sensors/[:attrs]';
+      Sensor.api.createURL = '0.0.0:3000/api/sensors';
+
+      console.log(Sensor.api);
       return Sensor;
     }];
   })
