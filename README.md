@@ -74,6 +74,8 @@ are deleted, use `dependentDestroy`:
 
     Post.dependentDestroy('comments');
 
+Now when you destroy a post, any associated comments will also be destroyed.
+
 ## Write Validations:
 
 Models can describe validations required before data will be persisted
