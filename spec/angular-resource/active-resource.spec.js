@@ -72,6 +72,12 @@ describe('ActiveResource', function() {
       {system: {id: 1, sensors: []}})
       .respond({id: 3});
 
+
+    // POST POST
+    // Reponses for POST requests to create new 'posts'
+    backend.whenPOST('http://api.faculty.com/post.json')
+      .respond({"_id":1});
+
     spyOn($http, 'get').andCallThrough();
     spyOn($http, 'post').andCallThrough();
     spyOn($http, 'delete').andCallThrough();
@@ -118,7 +124,7 @@ describe('ActiveResource', function() {
     // definition using the `primaryKey` method:
     //
     //    function Post(data) {
-    //      this.primaryKey('_id');
+    //      this.primaryKey('_hasManyid');
     //    }
     //
     // In the example above, the primary key for the model is assumed to be `_id`, as
@@ -490,8 +496,10 @@ describe('ActiveResource', function() {
 
     describe('base#update', function() {
 
+      var post;
       beforeEach(function() {
         System.$create({id: 1}).then(function(response) { system = response; });
+        Post.$create().then(function(response) { post = response; });
         backend.flush();
       });
 
@@ -515,6 +523,32 @@ describe('ActiveResource', function() {
         for (var i = 0; i<3; i++) { system.sensors.$create(); }
         system.update({sensors: [{id: 1}]});
         expect(system.sensors.length).toBe(1);
+      });
+
+      it('will not set "unsettable" properties', function() {
+        post.update({tags: "awesome!"});
+        expect(post.tags).not.toBeDefined();
+      });
+
+      it('considers "id" unsettable if overridden by primaryKey method', function() {
+        post.update({id: 25});
+        expect(post.id).not.toBeDefined();
+        expect(post._id).toBe(1);
+      });
+
+      it('considers properties defined in the body of the constructor to be "settable"', function() {
+        post.update({title: "Very Great Post!"});
+        expect(post.title).toBe("Very Great Post!");
+      });
+
+      it('considers properties defined via Object.defineProperty to be "settable"', function() {
+        post.update({content: "Here's the post!"});
+        expect(post.content).toBe("Here's the post!");
+      });
+      
+      it('considers properties defined in the prototype chain to be "settable"', function () {
+        post.update({date: 'February 24, 2013'});
+        expect(post.date).toBe('February 24, 2013');
       });
     });
   });
