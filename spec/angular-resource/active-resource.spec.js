@@ -17,33 +17,56 @@ describe('ActiveResource', function() {
     $http          = _$http_;
     $rootScope     = _$rootScope_;
 
+    // MOCK API RESPONSES
+    // 
+    // GET SYSTEM
+    // Requests for mock "persisted" systems that will be returned from the mock API
+    backend.whenGET('http://api.faculty.com/system/?id=1')
+      .respond([{id: 1}]);
+
+    backend.whenGET('http://api.faculty.com/system/?id=2')
+      .respond([{id: 2}]);
+  
+    backend.whenGET('http://api.faculty.com/system/?id=3')
+      .respond([{id: 3}]);
+
+    backend.whenGET('http://api.faculty.com/system/?id=4')
+      .respond([{id: 4}]);
+
     backend.whenGET('http://api.faculty.com/system/?id=5&placement=door')
       .respond([{id: 5, placement: 'door'}]);
 
-    backend.whenGET('http://api.faculty.com/system/?id=4')
-      .respond({id: 4});
-
     backend.whenGET('http://api.faculty.com/system/?placement=window')
-      .respond([{id: 5, placement: 'window'}, {id: 6, placement: 'window'}]);
+      .respond([{id: 6, placement: 'window'}, {id: 7, placement: 'window'}]);
 
-    backend.whenPOST('http://api.faculty.com/system.json', {sensors: []})
-      .respond({id: 4});
+    // POST SYSTEM
+    // Responses for POST requests to create new systems
+    backend.whenPOST('http://api.faculty.com/system.json', {placement: 'window', name: 'Bretts System', sensors: []})
+      .respond({id: 8, placement: 'window', name: 'Bretts System'});
+    
+    backend.whenPOST('http://api.faculty.com/system.json', {placement: 'window', name: 'Matts System', sensors: []})
+        .respond({id: 9, placement: 'window', name: 'Matts System'});
 
-    backend.whenPOST('http://api.faculty.com/sensor.json',
-      {system: {id: 1, sensors: []}})
+    backend.whenPOST('http://api.faculty.com/system.json',
+        {id: 10, placement: 'door', sensors: []})
+        .respond({id: 10, placement: 'door'});
+
+    backend.whenPOST('http://api.faculty.com/system.json')
       .respond({id: 1});
 
-    backend.whenPOST('http://api.faculty.com/system.json',
-        {id: 1, sensors: []})
-        .respond({id: 1});
+    // GET SENSOR
+    // Requests for mock "persisted" sensors
+    backend.whenGET('http://api.faculty.com/sensor/?id=1')
+      .respond({id: 1, system: 1});
 
-    backend.whenPOST('http://api.faculty.com/system.json',
-        {id: 2, placement: 'door', sensors: []})
-        .respond({id: 2, placement: 'door'});
+    backend.whenGET('http://api.faculty.com/sensor/?id=2')
+      .respond({id: 2, system: 2});
 
-    backend.whenPOST('http://api.faculty.com/system.json',
-        {id: 3, placement: 'door', sensors: []})
-        .respond({id: 3, placement: 'door'});
+    // POST SENSOR
+    // Responses for POST requests to create new sensors
+    backend.whenPOST('http://api.faculty.com/sensor.json',
+      {system: {id: 1, sensors: []}})
+      .respond({id: 3});
 
     spyOn($http, 'get').andCallThrough();
     spyOn($http, 'post').andCallThrough();
@@ -65,23 +88,23 @@ describe('ActiveResource', function() {
     });
 
     it('does not add instances to the cache if they do not have primary keys', function() {
-      var system3   = new System();
+      var system3   = System.new();
       var assertion = _.include(System.cached, system3); 
       expect(assertion).toBe(false);
     });
 
     it('expects the backend to add primary keys on $save, and then adds it to the cache', function() {
-      var system4 = new System();
-      system4.$save().then(function(response) { system4 = response; });
+      var system1 = System.new();
+      system1.$save().then(function(response) { system1 = response; });
       backend.flush();
-      expect(System.cached[4]).toEqual(system4);
+      expect(System.cached[1]).toEqual(system1);
     });
 
     it('updates the cache for nested relationships on save', function() {
       var sensor = system.sensors.new();
       sensor.$save().then(function(response) { sensor = response; });
       backend.flush();
-      expect(Sensor.cached[1]).toEqual(sensor);
+      expect(Sensor.cached[3]).toEqual(sensor);
     });
   });
 
@@ -175,6 +198,10 @@ describe('ActiveResource', function() {
       it('is added to the cache', function() {
         expect(Sensor.cached[1]).toBe(sensor);
       });
+
+      it('is added to the hasMany-belongsTo collection', function() {
+        expect(system.sensors).toContain(sensor);
+      });
     });
 
     describe('collection#delete', function() {
@@ -237,11 +264,11 @@ describe('ActiveResource', function() {
       });
 
       it('adds the new model to the cache', function() {
-        expect(Sensor.cached[1]).toEqual(sensor);
+        expect(Sensor.cached[3]).toEqual(sensor);
       });
 
       it('adds the id that it received from the backend', function() {
-        expect(system.sensors[0].id).toEqual(1);
+        expect(system.sensors[0].id).toEqual(3);
       });
     });
 
@@ -287,12 +314,17 @@ describe('ActiveResource', function() {
   describe('Querying', function() {
     describe('base#where', function() {
 
-      var system2, system3;
+      var system8, system9;
 
       beforeEach(function() {
+        // Backend will respond with {id: 1}
         system.$save().then(function(response) { system = response; });
-        System.$create({id: 2, placement: 'door'}).then(function(response) { system2 = response; });
-        System.$create({id: 3, placement: 'door'}).then(function(response) { system3 = response; });
+        
+        // Backend will respond with {id: 8, placement: 'window'}
+        System.$create({placement: 'window', name: 'Bretts System'}).then(function(response) { system8 = response; });
+        
+        // Backend will respond with {id: 9, placement: 'door'}
+        System.$create({placement: 'window', name: 'Matts System'}).then(function(response)   { system9 = response; });
         backend.flush();
       });
 
@@ -305,9 +337,9 @@ describe('ActiveResource', function() {
 
       it('finds by any attr', function() {
         var foundSystems;
-        System.where({placement: 'door'}).then(function(response) { foundSystems = response; });
+        System.where({placement: 'window'}).then(function(response) { foundSystems = response; });
         $timeout.flush();
-        expect(foundSystems).toEqual([system2, system3])
+        expect(foundSystems).toEqual([system8, system9])
       });
 
       it('queries the backend if nothing is found in the cache', function() {
@@ -317,11 +349,11 @@ describe('ActiveResource', function() {
         expect(foundSystems[0].constructor.name).toBe('System');
       });
 
-      it('creates a new instance in the cache', function() {
+      it('adds the instance to the cache', function() {
         var foundSystems;
-        System.where({id: 5, placement: 'door'}).then(function(response) { foundSystems = response; });
+        System.where({id: 4}).then(function(response) { foundSystems = response; });
         backend.flush();
-        expect(System.cached[5]).toBe(foundSystems[0]);
+        expect(System.cached[4]).toBe(foundSystems[0]);
       });
     });
 
@@ -364,7 +396,7 @@ describe('ActiveResource', function() {
         var foundSystem;
         System.find({placement: 'window'}).then(function(response) { foundSystem = response; });
         backend.flush();
-        expect(foundSystem.id).toEqual(5);
+        expect(foundSystem.id).toEqual(6);
       });
 
       it('returns the instantiated model instead of the plain data', function() {
@@ -375,19 +407,20 @@ describe('ActiveResource', function() {
       });
 
       it('returns the first object only', function() {
+        // No cached system will be found, triggering a $http.get('http://api.faculty.com/system/?placement=window');
+        //
+        // The mock API is setup to respond with sensors 6 & 7. Find will only respond with the first instance (6).
         var foundSystem;
         System.find({placement: 'window'}).then(function(response) { foundSystem = response; });
         backend.flush();
-        expect(foundSystem.id).toBe(5);
+        expect(foundSystem.id).toBe(6);
       });
 
       it('also queries for associated models that need to be filled', function() {
         var sensor2;
-        backend.expectGET('http://api.faculty.com/sensor/?id=2').respond({id: '2', system: '9'});
-        backend.expectGET('http://api.faculty.com/system/?id=9').respond({id: '9'});
         Sensor.find({id: 2}).then(function(response) { sensor2 = response; });
         backend.flush();
-        expect(sensor2.system.id).toEqual('9');
+        expect(sensor2.system.id).toEqual(2);
       });
     });
   });
