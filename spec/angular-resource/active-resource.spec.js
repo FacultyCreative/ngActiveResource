@@ -2,22 +2,24 @@
 
 describe('ActiveResource', function() {
 
-  var ActiveResource, Mocks, Sensor, System, Post, Comment, system, backend, $timeout, $http, $rootScope;
+  var ActiveResource, Mocks, Sensor, System, Post, Comment, Author, 
+    system, backend, $timeout, $http;
+
   beforeEach(module('ActiveResource'));
   beforeEach(module('ActiveResource.Mocks'));
 
-  beforeEach(inject(['ActiveResource', 'ActiveResource.Mocks', '$httpBackend', '$timeout', '$http', '$rootScope',
-    function(_ActiveResource_, _ARMocks_, _$httpBackend_, _$timeout_, _$http_, _$rootScope_) {
+  beforeEach(inject(['ActiveResource', 'ActiveResource.Mocks', '$httpBackend', '$timeout', '$http',
+    function(_ActiveResource_, _ARMocks_, _$httpBackend_, _$timeout_, _$http_) {
     ActiveResource = _ActiveResource_;
     Mocks          = _ARMocks_;
     System         = Mocks.System;
     Sensor         = Mocks.Sensor;
     Post           = Mocks.Post;
     Comment        = Mocks.Comment;
+    Author         = Mocks.Author;
     backend        = _$httpBackend_;
     $timeout       = _$timeout_;
     $http          = _$http_;
-    $rootScope     = _$rootScope_;
 
     // MOCK API RESPONSES
     // 
@@ -112,6 +114,17 @@ describe('ActiveResource', function() {
   });
 
   describe('Primary Keys', function() {
+    // Each model's primary key defaults to "id," but can be overridden in the model
+    // definition using the `primaryKey` method:
+    //
+    //    function Post(data) {
+    //      this.primaryKey('_id');
+    //    }
+    //
+    // In the example above, the primary key for the model is assumed to be `_id`, as
+    // in a MongoDB database. 
+    //
+    // The primary key is used primarily for mapping API requests properly.
     var post, comment;
     beforeEach(function() {
       Post.$create({title: "My Great Post"}).then(function(response) { post = response; });
@@ -122,6 +135,35 @@ describe('ActiveResource', function() {
 
     it('sets the defined primary key', function() {
       expect(post['_id']).toBe("52a8b80d251c5395b485cfe6");
+    });
+    
+    it('does not set the default "id" field', function() {
+      expect(post.id).not.toBeDefined();
+    });
+
+    it('saves using the primary key', function() {
+      post.$save().then(function(response) { post = response; });
+      backend.expectPOST('http://api.faculty.com/post.json', {"_id": "52a8b80d251c5395b485cfe6", "title": "My Great Post", comments: []})
+        .respond({"_id": "52a8b80d251c5395b485cfe6", "title": "My Great Post"});
+      backend.flush(); 
+      expect($http.post).toHaveBeenCalledWith('http://api.faculty.com/post.json',
+       '{"title":"My Great Post","comments":[],"_id":"52a8b80d251c5395b485cfe6"}');
+    });
+
+    it('deletes using the primary key', function() {
+      post.$delete();
+      backend.expectDELETE('http://api.faculty.com/post/?_id=52a8b80d251c5395b485cfe6')
+        .respond({data: 'Success'});
+      backend.flush();
+      expect($http.delete).toHaveBeenCalledWith('http://api.faculty.com/post/?_id=52a8b80d251c5395b485cfe6');
+    });
+
+    it('finds using the primary key if no arguments are passed to find', function() {
+      Post.find('52a8b80d251c5395b485cfe7').then(function(response) { post = response; });
+      backend.expectGET('http://api.faculty.com/post/?_id=52a8b80d251c5395b485cfe7')
+        .respond({"_id": "52a8b80d251c5395b485cfe7", "title": "An Incredible Post"});
+      backend.flush();
+      expect($http.get).toHaveBeenCalledWith('http://api.faculty.com/post/?_id=52a8b80d251c5395b485cfe7');
     });
 
   });
@@ -154,6 +196,100 @@ describe('ActiveResource', function() {
         backend.expectPOST('http://api.faculty.com/sensor.json', {"system":{"id":1,"sensors":[{"$ref":"#"}]}}).respond({id: 3, system: 1});
         backend.flush();
         expect(sensor.system).toEqual(system);
+      });
+
+      describe('Belongs To Multiple Models', function() {
+        var post, author, commentAuthor, comment;
+        beforeEach(function() {
+
+          Author.$create({name: 'Master Yoda'})
+            .then(function(response) {
+              author = response; 
+            });
+
+          Author.$create({name: 'Luke Skywalker'})
+            .then(function(response) {
+              commentAuthor = response;
+            });
+
+          backend.expectPOST('http://api.faculty.com/author.json',
+            {name: 'Master Yoda', comments: [], posts: []})
+            .respond({'_id': 1, name: 'Master Yoda'});
+
+          backend.expectPOST('http://api.faculty.com/author.json',
+            {name: 'Luke Skywalker', comments: [], posts: []})
+            .respond({'_id': 2, name: 'Luke Skywalker'});
+
+          backend.flush();
+
+          author.posts.$create({title: 'Do Or Do Not, There Is No Try'})
+            .then(function(response) { 
+              post   = response; 
+            });
+
+          backend.expectPOST('http://api.faculty.com/post.json',
+            {title: 'Do Or Do Not, There Is No Try', comments: []})
+            .respond({'_id': 1, title: 'Do Or Do Not, There Is No Try', 
+              author: 1});
+
+          backend.flush();
+
+          post.comments.$create({text: 'Great post, Yoda!', 
+            author: commentAuthor})
+            .then(function(response) {
+              comment = response;
+            });
+
+          backend.expectPOST('http://api.faculty.com/comment.json',
+              {text: "Great post, Yoda!"})
+              .respond({'id': 1, 'text': 'Great post, Yoda!',
+                author: 2, post: 1});
+
+          backend.flush();
+        });
+
+        it('establishes the first belongs to relationship', function() {
+          expect(comment.post.title).toBe('Do Or Do Not, There Is No Try');
+        });
+
+        it('establishes the second belongs to relationship', function() {
+          expect(comment.author.name).toBe('Luke Skywalker');
+        });
+
+        it('establishes the complete relationship chain', function() {
+          expect(post.comments.first.post.author
+            .posts.first.comments.last.author.name).toBe('Luke Skywalker');
+        });
+      });
+    });
+  });
+
+  describe('Syntax Options', function() {
+    describe('Assocations', function() {
+      describe('Name-Module-Provider Syntax', function() {
+        // When writing your models, this looks like:
+        //
+        //    function System(data) {
+        //        this.hasMany('sensors',
+        //          ['ActiveResource.Mocks', 'ARMockSensor']);
+        //
+        it('allows you to name an attribute, and to specify a module and class to find the constructor for it',
+          function() {
+            expect(system.sensors.new().constructor.name).toBe('Sensor');
+        });
+      });
+
+      describe('Name Lookup Syntax', function() {
+        // When writing your models, this looks like:
+        //
+        //    function Post(data) {
+        //      this.hasMany('comments');
+        //      this.belongsTo('author');
+        //
+        it('will find the right provider if it has the same name as the expected attribute', function() {
+          var post = Post.new();
+          expect(post.comments.new().constructor.name).toBe('Comment');
+        });
       });
     });
   });
