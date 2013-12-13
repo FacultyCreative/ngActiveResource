@@ -1,14 +1,15 @@
 angular
   .module('ActiveResource.Mocks')
-  .provider('ARMockComment', function() {
+  .provider('Comment', function() {
     this.$get = ['ActiveResource',
       function(ActiveResource) {
       function Comment(data) {
         if (!data) data = {};
         this.id     = data.id   || undefined;
         this.text   = data.text || undefined;
-        this.belongsTo('post',
-          ['ActiveRecord.Mocks', 'ARMockPost']);
+
+        this.belongsTo('post');
+        this.belongsTo('author');
       };
 
       Comment = ActiveResource.Base.apply(Comment);

@@ -1,6 +1,6 @@
 angular
   .module('ActiveResource.Mocks')
-  .provider('ARMockPost', function() {
+  .provider('Post', function() {
     this.$get = ['ActiveResource',
       function(ActiveResource) {
       function Post(data) {
@@ -8,8 +8,9 @@ angular
 
         if (!data) data = {};
         this.title  = data.title  || undefined;
-        this.hasMany('comments',
-          ['ActiveRecord.Mocks', 'ARMockComment']);
+        
+        this.belongsTo('author');
+        this.hasMany('comments');
       };
 
       Post = ActiveResource.Base.apply(Post);

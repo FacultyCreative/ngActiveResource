@@ -9,7 +9,7 @@ angular
         this.state  = data.state  || undefined;
         this.system = data.system || undefined;
         this.belongsTo('system',
-          ['ActiveRecord.Mocks', 'ARMockSystem']);
+          ['ActiveResource.Mocks', 'ARMockSystem']);
       };
 
       Sensor = ActiveResource.Base.apply(Sensor);
