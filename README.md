@@ -39,6 +39,25 @@ Now you have access to comment methods via post:
     expect(comment.post).toEqual(post);
     expect(post.comments).toContain(comment);
 
+### Methods:
+
+ActiveResource adds two types of methods to your models and instances:
+
+1) API-updating methods. These are prefaced with `$`, such as `$create`,
+`$save`, `$update`, and `$delete`, and are the 'unsafe' methods in a RESTful API 
+(POST, PUT, and DELETE). These methods will call the API using the URLs you've
+set as ModelName.api.createURL, ModelName.api.updateURL, and ModelName.api.deleteURL.
+The api.set method sets default API URLs for you, but you can override these defaults by setting
+them explicitly.
+
+2) Local-instance creating and finding methods. These include `new`, `find`,
+`where`, and `update`. `new` creates a new instance of a model on the client,
+and `update` updates that instance without issuing a PUT request. `find` will
+attempt to find local instances in the model's client-side cache before issuing
+a GET request, and `where` will always issue a GET request to ensure it has all
+instances of a model that match given terms. These are the 'safe' methods in a
+RESTful API (GET).
+
 ## Write Validations:
 
 Models can describe validations required before data will be persisted
