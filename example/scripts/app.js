@@ -19,15 +19,14 @@ angular
   .provider('ARSensor', function() {
     this.$get = ['ActiveResource',
       function(ActiveResource) {
+
       function Sensor(data) {
-        console.log(data);
         if (!data) data = {};
         if (data[0]) data = data[0];
         this.id     = data.id     || data['_id'] || undefined;
         this.name   = data.name   || undefined;
         this.system = data.system || undefined;
-        this.belongsTo('system',
-          ['app', 'ARSystem']);
+        this.belongsTo('system', ['app', 'ARSystem']);
       };
 
       Sensor = ActiveResource.Base.apply(Sensor);
@@ -35,13 +34,13 @@ angular
       Sensor.api.findURL   = 'http://0.0.0:3000/api/sensors/[:attrs]';
       Sensor.api.createURL = '0.0.0:3000/api/sensors';
 
-      console.log(Sensor.api);
       return Sensor;
     }];
   })
   .provider('ARSystem', function() {
     this.$get = ['ActiveResource',
       function(ActiveResource) {
+
         function System(data) {
           if (!data) data = {};
           this.id        = data.id        || undefined;
