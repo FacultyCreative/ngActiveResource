@@ -67,6 +67,13 @@ a custom one like so:
       primaryKey('_id');
     }
 
+## Destroy Dependent Associations
+
+If you want a model to delete certain associated resources when they themselves
+are deleted, use `dependentDestroy`:
+
+    Post.dependentDestroy('comments');
+
 ## Write Validations:
 
 Models can describe validations required before data will be persisted
