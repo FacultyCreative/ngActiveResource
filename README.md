@@ -39,7 +39,7 @@ Now you have access to comment methods via post:
     expect(comment.post).toEqual(post);
     expect(post.comments).toContain(comment);
 
-### Methods:
+## Methods:
 
 ActiveResource adds two types of methods to your models and instances:
 
@@ -57,6 +57,15 @@ attempt to find local instances in the model's client-side cache before issuing
 a GET request, and `where` will always issue a GET request to ensure it has all
 instances of a model that match given terms. These are the 'safe' methods in a
 RESTful API (GET).
+
+## Custom Primary Keys
+
+By default, models will assume a primary key field labeled `id`, but you can set
+a custom one like so:
+
+    function Post(data) {
+      primaryKey('_id');
+    }
 
 ## Write Validations:
 
