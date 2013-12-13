@@ -2,7 +2,7 @@
 
 describe('ActiveResource', function() {
 
-  var ActiveResource, Mocks, Sensor, System, system, backend, $timeout, $http, $rootScope;
+  var ActiveResource, Mocks, Sensor, System, Post, Comment, system, backend, $timeout, $http, $rootScope;
   beforeEach(module('ActiveResource'));
   beforeEach(module('ActiveResource.Mocks'));
 
@@ -12,6 +12,8 @@ describe('ActiveResource', function() {
     Mocks          = _ARMocks_;
     System         = Mocks.System;
     Sensor         = Mocks.Sensor;
+    Post           = Mocks.Post;
+    Comment        = Mocks.Comment;
     backend        = _$httpBackend_;
     $timeout       = _$timeout_;
     $http          = _$http_;
@@ -70,6 +72,7 @@ describe('ActiveResource', function() {
 
     spyOn($http, 'get').andCallThrough();
     spyOn($http, 'post').andCallThrough();
+    spyOn($http, 'delete').andCallThrough();
     system = System.new({id: 1});
   }]));
 
@@ -206,33 +209,87 @@ describe('ActiveResource', function() {
 
     describe('collection#delete', function() {
 
-      var sensor1, sensor2;
-      beforeEach(function() {
-        system.sensors.$create().then(function(response) {
-          sensor1 = response;
+      describe('Destruction of dependents', function() {
+        var sensor1, sensor2;
+        beforeEach(function() {
+          system.sensors.$create().then(function(response) {
+            sensor1 = response;
+          });
+          system.sensors.$create().then(function(response) {
+            sensor2 = response;
+          });
+          backend.expectPOST('http://api.faculty.com/sensor.json').respond({id: 1, system: 1});
+          backend.expectPOST('http://api.faculty.com/sensor.json').respond({id: 2, system: 1});
+          backend.flush();
+          sensor1.$delete();
+          backend.expectDELETE('http://api.faculty.com/sensor/?id=1').respond({data: 'success'});
+          backend.flush();
         });
-        system.sensors.$create().then(function(response) {
-          sensor2 = response;
+
+        it('deletes the instance from the collection', function() {
+          expect(system.sensors[1]).not.toBeDefined();
         });
-        backend.expectPOST('http://api.faculty.com/sensor.json').respond({id: 1, system: 1});
-        backend.expectPOST('http://api.faculty.com/sensor.json').respond({id: 2, system: 1});
-        backend.flush();
-        sensor1.$delete();
-        backend.expectDELETE('http://api.faculty.com/sensor/?id=1').respond({data: 'success'});
-        backend.flush();
+
+        it('updates its length', function() {
+          expect(system.sensors.length).toBe(1);
+        });
+
+        it('still contains all other members', function() {
+          expect(system.sensors[0].id).toEqual(2);
+        });
       });
 
-      it('deletes the instance from the collection', function() {
-        expect(system.sensors[1]).not.toBeDefined();
+      describe('Destruction of parent', function() {
+        describe('Dependent => destroy == false', function() {
+          var sensor1;
+          beforeEach(function() {
+            system.sensors.$create().then(function(response) {
+              sensor1 = response;
+            });
+            backend.expectPOST('http://api.faculty.com/sensor.json').respond({id: 1, system: 1});
+            backend.flush();
+            system.$delete();
+            backend.expectDELETE('http://api.faculty.com/system/?id=1').respond({data: 'success'});
+            backend.flush();
+          });
+
+          it('sets the belongs to relationship to undefined', function() {
+            expect(sensor1.system).toEqual(undefined);
+          });
+        });
+
+        describe('Dependent => destroy', function() {
+          var post, comment;
+          beforeEach(function() {
+            Post.$create({title: 'My Great Post'}).then(function(response) { post = response; });
+            backend.expectPOST('http://api.faculty.com/post.json')
+              .respond({id: 1, title: 'My Great Post'});
+            backend.flush();
+            post.comments.$create().then(function(response) { comment = response; });
+            backend.expectPOST('http://api.faculty.com/comment.json')
+              .respond({id: 1, post: 1});
+            backend.flush();
+            post.$delete().then(function(response) { post = comment = response; });
+            backend.expectDELETE('http://api.faculty.com/post/?id=1').respond({data: 'success'});
+            backend.expectDELETE('http://api.faculty.com/comment/?id=1').respond({data: 'success'});
+            backend.flush();
+            $timeout.flush();
+          });
+
+          it('deletes the primary resource', function() {
+            expect(post).not.toBeDefined();
+          });
+
+          it('deletes dependents when the primary resource is destroyed', function() {
+            expect(comment).not.toBeDefined();
+          });
+
+          it('calls the backend to delete the dependents', function() {
+            expect($http.delete).toHaveBeenCalledWith('http://api.faculty.com/comment/?id=1');
+          });
+        });
       });
 
-      it('updates its length', function() {
-        expect(system.sensors.length).toBe(1);
-      });
-
-      it('still contains all other members', function() {
-        expect(system.sensors[0].id).toEqual(2);
-      });
     });
 
     it('updates the relationships when set via setters IFF there is an id on the belongsTo relationship', function() {
