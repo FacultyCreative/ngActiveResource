@@ -21,9 +21,11 @@ angular
       function(ActiveResource) {
 
       function Sensor(data) {
+        this.primaryKey('_id');
+
         if (!data) data = {};
         if (data[0]) data = data[0];
-        this.id     = data.id     || data['_id'] || undefined;
+
         this.name   = data.name   || undefined;
         this.system = data.system || undefined;
         this.belongsTo('system', ['app', 'ARSystem']);
@@ -42,6 +44,8 @@ angular
       function(ActiveResource) {
 
         function System(data) {
+          this.primaryKey('_id');
+
           if (!data) data = {};
           this.id        = data.id        || undefined;
           this.placement = data.placement || undefined;
