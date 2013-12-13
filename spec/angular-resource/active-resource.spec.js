@@ -371,7 +371,7 @@ describe('ActiveResource', function() {
   describe('Querying', function() {
     describe('base#where', function() {
 
-      var system8, system9;
+      var system8, system9, system10;
 
       beforeEach(function() {
         // Backend will respond with {id: 1}
@@ -381,29 +381,39 @@ describe('ActiveResource', function() {
         System.$create({placement: 'window', name: 'Bretts System'}).then(function(response) { system8 = response; });
         
         // Backend will respond with {id: 9, placement: 'door'}
-        System.$create({placement: 'window', name: 'Matts System'}).then(function(response)   { system9 = response; });
+        System.$create({placement: 'window', name: 'Matts System'}).then(function(response)  { system9 = response; });
         backend.flush();
       });
 
       it('finds by id', function() {
         var foundSystems;
         System.where({id: 1}).then(function(response) { foundSystems = response; });
-        $timeout.flush();
+        backend.flush();
         expect(foundSystems).toEqual([system]);
       });
 
       it('finds by any attr', function() {
         var foundSystems;
         System.where({placement: 'window'}).then(function(response) { foundSystems = response; });
+        backend.expectGET('http://api.faculty.com/system/?placement=window')
+          .respond([{id: 8, placement: 'window', name: 'Bretts System'},
+                    {id: 9, placement: 'window', name: 'Matts System'},
+                    {id: 10, placement: 'window', name: 'Pickles System'}]);
+        backend.flush();
+        System.find(10).then(function(response) { system10 = response; });
         $timeout.flush();
-        expect(foundSystems).toEqual([system8, system9])
+        expect(foundSystems).toEqual([system8, system9, system10]);
       });
 
-      it('queries the backend if nothing is found in the cache', function() {
-        var foundSystems;
-        System.where({id: 5, placement: 'door'}).then(function(response) { foundSystems = response; });
+      it('always queries the backend to get all instances, even if some are found in the cache', function() {
+        var foundSystems; 
+        System.where({placement: 'window'}).then(function(response) { foundSystems = response; });
+        backend.expectGET('http://api.faculty.com/system/?placement=window')
+          .respond([{id: 8, placement: 'window', name: 'Bretts System'},
+                    {id: 9, placement: 'window', name: 'Matts System'},
+                    {id: 10, placement: 'window', name: 'Pickles System'}]);
         backend.flush();
-        expect(foundSystems[0].constructor.name).toBe('System');
+        expect($http.get).toHaveBeenCalledWith('http://api.faculty.com/system/?placement=window');
       });
 
       it('adds the instance to the cache', function() {
