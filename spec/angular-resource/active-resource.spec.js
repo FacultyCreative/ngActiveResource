@@ -111,6 +111,21 @@ describe('ActiveResource', function() {
     });
   });
 
+  describe('Primary Keys', function() {
+    var post, comment;
+    beforeEach(function() {
+      Post.$create({title: "My Great Post"}).then(function(response) { post = response; });
+      backend.expectPOST('http://api.faculty.com/post.json')
+        .respond({"_id": "52a8b80d251c5395b485cfe6", "title": "My Great Post"});
+      backend.flush();
+    });
+
+    it('sets the defined primary key', function() {
+      expect(post['_id']).toBe("52a8b80d251c5395b485cfe6");
+    });
+
+  });
+
   describe('Associations', function() {
     describe('base#hasMany', function() {
       it('adds an empty collection', function() {
@@ -263,14 +278,14 @@ describe('ActiveResource', function() {
           beforeEach(function() {
             Post.$create({title: 'My Great Post'}).then(function(response) { post = response; });
             backend.expectPOST('http://api.faculty.com/post.json')
-              .respond({id: 1, title: 'My Great Post'});
+              .respond({"_id": 1, "title": 'My Great Post'});
             backend.flush();
             post.comments.$create().then(function(response) { comment = response; });
             backend.expectPOST('http://api.faculty.com/comment.json')
               .respond({id: 1, post: 1});
             backend.flush();
             post.$delete().then(function(response) { post = comment = response; });
-            backend.expectDELETE('http://api.faculty.com/post/?id=1').respond({data: 'success'});
+            backend.expectDELETE('http://api.faculty.com/post/?_id=1').respond({data: 'success'});
             backend.expectDELETE('http://api.faculty.com/comment/?id=1').respond({data: 'success'});
             backend.flush();
             $timeout.flush();

@@ -4,8 +4,9 @@ angular
     this.$get = ['ActiveResource',
       function(ActiveResource) {
       function Post(data) {
+        this.primaryKey('_id');
+
         if (!data) data = {};
-        this.id     = data.id     || undefined;
         this.title  = data.title  || undefined;
         this.hasMany('comments',
           ['ActiveRecord.Mocks', 'ARMockComment']);
