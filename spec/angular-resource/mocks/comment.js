@@ -9,7 +9,7 @@ angular
         this.text   = data.text || undefined;
 
         this.belongsTo('post');
-        this.belongsTo('author');
+        this.belongsTo('author', {foreignKey: 'author_id'});
       };
 
       Comment = ActiveResource.Base.apply(Comment);

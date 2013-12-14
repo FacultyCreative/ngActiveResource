@@ -11,7 +11,7 @@ angular
           this.placement = data.placement || undefined;
           this.name      = data.name      || undefined;
           this.hasMany('sensors',
-            ['ActiveResource.Mocks', 'ARMockSensor']);
+            {provider: 'ARMockSensor'});
         };
 
         System = ActiveResource.Base.apply(System);

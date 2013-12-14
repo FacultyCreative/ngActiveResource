@@ -9,7 +9,7 @@ angular
         if (!data) data = {};
         this.title  = data.title  || undefined;
         
-        this.belongsTo('author');
+        this.belongsTo('author', {foreignKey: 'author_id'});
         this.hasMany('comments');
 
         var content;
