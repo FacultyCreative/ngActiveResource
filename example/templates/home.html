@@ -1,16 +1,17 @@
+<h1>Sensors</h1>
 <div ng-controller="MainCtrl">
-    <table>
-      <thead>
-        <th>ID</th>
-        <th>Name</th>
-      </thead>
-      <tbody>
-      {{sensor | json}}
-        <tr ng-repeat="sensor in system.sensors">
-          <td>{{sensor.id}}</td>
-          <td>{{sensor.name}}</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+  <table>
+    <thead>
+      <th>ID</th>
+      <th>Name</th>
+    </thead>
+    <tbody>
+    {{sensor | json}}
+      <tr ng-repeat="sensor in system.sensors">
+        <td>{{sensor.id}}</td>
+        <td>{{sensor.name}}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
 

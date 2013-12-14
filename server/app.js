@@ -4,9 +4,18 @@ var db         = require('./lib/mongooseModels');
 var facultyAPI = require('faculty-api');
 var path       = require('path');
 
+var allowCrossDomain = function(req, res, next) {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
+    res.header('Access-Control-Allow-Headers', 'Content-Type');
+
+    next();
+}
+
 app.configure(function() {
   app.use(express.methodOverride());
   app.use(express.bodyParser());
+  app.use(allowCrossDomain);
   app.use(express.static(path.join(__dirname, '../bower_components/')));
   app.use(express.static(path.join(__dirname, '../lib/')));
   app.use(express.static(path.join(__dirname, '../example')));

@@ -30,6 +30,10 @@ schema.system = new mongoose.Schema({
 schema.sensor = new mongoose.Schema({
   name: {
     type: String
+  },
+  system_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true
   }
 });
 

@@ -1,22 +1,29 @@
 angular
   .module('app', ['ng', 'ngRoute', 'ActiveResource'])
-  .config(['$routeProvider', function(Router) {
+  .config(['$routeProvider', '$httpProvider', function(Router, $http) {
     Router
       .when('/', {
-        controller: 'MainCtrl',
-        templateUrl: 'templates/home.html'
+        controller: 'MainCtrl'
       });
+      $http.defaults.useXDomain = true;
+      delete $http.defaults.headers.common['X-Requested-With'];
   }])
-  .controller('MainCtrl', ['$scope', 'ARSystem', 'ARSensor', 'json', 
+  .controller('MainCtrl', ['$scope', 'System', 'Sensor', 'json', 
       function($scope, System, Sensor, json) {
-        $scope.system = System.new({id: 1});
-    
-        Sensor.find({"_id": "52a8b80d251c5395b485cfe6"}).then(function(response) {
-          $scope.sensor = response;
+        $scope.system = System.new();
+        System.find('52abf5cdb7c9be185a000002').then(function(response) {
+          $scope.system = response;
+          $scope.sensor = $scope.system.sensors.new();
+          $scope.saveSensor = function() {
+            $scope.sensor.$save().then(function(response) {
+              $scope.sensor = $scope.system.sensors.new();
+            });
+          };
         });
+
       }
   ])
-  .provider('ARSensor', function() {
+  .provider('Sensor', function() {
     this.$get = ['ActiveResource',
       function(ActiveResource) {
 
@@ -28,18 +35,19 @@ angular
 
         this.name   = data.name   || undefined;
         this.system = data.system || undefined;
-        this.belongsTo('system', ['app', 'ARSystem']);
+        this.belongsTo('system', {foreignKey: 'system_id'});
       };
 
       Sensor = ActiveResource.Base.apply(Sensor);
       Sensor.api.set('0.0.0:3000/api');
       Sensor.api.findURL   = 'http://0.0.0:3000/api/sensors/[:attrs]';
-      Sensor.api.createURL = '0.0.0:3000/api/sensors';
+      Sensor.api.createURL = 'http://0.0.0:3000/api/sensors';
+      Sensor.api.deleteURL = 'http://0.0.0:3000/api/sensors/[:attrs]';
 
       return Sensor;
     }];
   })
-  .provider('ARSystem', function() {
+  .provider('System', function() {
     this.$get = ['ActiveResource',
       function(ActiveResource) {
 
@@ -47,14 +55,13 @@ angular
           this.primaryKey('_id');
 
           if (!data) data = {};
-          this.id        = data.id        || undefined;
           this.placement = data.placement || undefined;
-          this.hasMany('sensors',
-            ['app', 'ARSensor']);
+          this.hasMany('sensors');
         };
 
         System = ActiveResource.Base.apply(System);
-        System.api.set('http://api.faculty.com/');
+        System.api.set('http://0.0.0:3000/api/systems');
+        System.api.createURL = 'http://0.0.0:3000/api/systems';
 
         return System;
     }];

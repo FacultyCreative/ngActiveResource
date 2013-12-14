@@ -9,6 +9,7 @@
 
   <script src="../lodash/dist/lodash.js"></script>
   <script src="../json/json.js"></script>
+  <script src="../async/lib/async.js"></script>
   <script src="../active-support/active-support.js"></script>
   <script src="../angular-resource/active-resource.js"></script>
   <script src="../angular-resource/api/api.js"></script>
@@ -17,6 +18,25 @@
   <script src="scripts/app.js"></script>
 </head>
 <body>
-  <div ng-view></div>
+  <h1>Sensors</h1>
+
+  <div ng-controller="MainCtrl">
+    <table>
+      <thead>
+        <th>ID</th>
+        <th>Name</th>
+      </thead>
+      <tbody>
+        <tr ng-repeat="sensor in system.sensors">
+          <td>{{sensor._id}}</td>
+          <td>{{sensor.name}}</td>
+          <td><button class="btn btn-primary" ng-click="sensor.$delete()">Delete</button></td>
+        </tr>
+      </tbody>
+    </table>
+    <form ng-submit="saveSensor()">
+      <input ng-model="sensor.name">
+      <input type="submit" id="submit" value="Submit" />
+    </form>
   </body>
 </html>
