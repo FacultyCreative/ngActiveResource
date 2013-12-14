@@ -9,35 +9,77 @@ pattern persistence methods.
 Create an Angular factory or provider that relies on ActiveResource:
 
     angular.module('app', ['ActiveResource')
-      .factory('User', ['ActiveResource', function(ActiveResource) {
+      .factory('Post', ['ActiveResource', function(ActiveResource) {
 
-        function User(data) {
+        function Post(data) {
           this.id = data.id;
-          this.hasMany('posts', ['app', 'Post']);
+          this.hasMany('comments');
+          this.belongsTo('author);
         };
 
-        User = ActiveResource.Base.apply(User);
-        User.api.set('http://api.faculty.com');
+        Post = ActiveResource.Base.apply(Post);
+        Post.api.set('http://api.faculty.com');
+        Post.dependentDestroy('comments');
 
         return User;
       });
 
+The model is terse, but gains a lot of functionality from ActiveResource.Base.
+
+It declares a has-many relationship on Comment, allowing it to say things like:
+
+    var post    = Post.new({title: "My First Post"});
+    var comment = post.comments.new({text: "Great post!"});
+
+The new comment will be an instance of the class Comment, which will be defined
+in its own model.
+
+It also declares a belongs-to relationship on Author. This allows it to say
+things like:
+
+    var author     = Author.new();
+    comment.author = author;
+    comment.$save().then(function(response) { comment = response; });
+
+This will also cause author.comments to include this instance of Comment.
+
+Post also declares a dependent-destroy relationship on comments, meaning:
+
+    post.$delete().then(function(response) { post = comment = response; });
+    expect(post).not.toBeDefined();
+    expect(comment).not.toBeDefined();
+    expect(Post.find({title: "My First Post"}).not.toBeDefined();
+    expect(Comment.find({text: "Great post!"}).not.toBeDefined();
+
+This means the post and its comments have been deleted both locally and from the
+database.
+
+The astute reader will notice methods prefaced with `$` are interacting with an
+API. The API calls are established in the model definition under
+`Post.api.set()`.
+
 ## Establish Associations:
 
-A has many association can be setup by naming the field, and passing in the name
-of the module the associated model is located in, and the name of the associated
-model:
+A has many association can be setup by naming the field. If the field name is
+also the name of the provider that contains the foreign model, this is all you
+have to say. If the name of the provider is different, you can set it explicitly
+via the `provider` option: 
 
-    this.hasMany('comments', ['app', 'Comment']);
+    this.hasMany('comments', {provider: 'CommentModel'});
 
-Now you have access to comment methods via post:
+Foreign keys will also be intuited. For instance:
 
-    var post    = new Post();
-    var comment = post.comments.new({text: 'Great post!'});
-    comment.$save();
-    
-    expect(comment.post).toEqual(post);
-    expect(post.comments).toContain(comment);
+    this.belongsTo('post');
+
+Expect the model to define a `post_id` attribute mapping to the primary key of
+the post to which it belongs. If the foreign key is different, you can set it
+explicitly: 
+
+    this.belongsTo('post', {foreign_key: 'my_post_id'});
+
+Any number of options can be set on the association:
+
+    this.belongsTo('post', {provider: 'PostModel', foreign_key: 'my_post_id'});
 
 ## Methods:
 
