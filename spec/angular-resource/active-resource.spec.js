@@ -176,6 +176,40 @@ describe('ActiveResource', function() {
 
   });
 
+  describe('Foreign Keys', function() {
+    var post, comment, author;
+    beforeEach(function() {
+      Post.$create({title: 'Cool Post'}).then(function(response) { 
+        post = response; 
+        Author.$create({name: 'Bertrand Russel'}).then(function(response) { 
+          author = response; 
+          post.comments.$create({text: 'Excellente!', author: author})
+           .then(function(response) { comment = response; });
+        });
+      });
+
+      backend.expectPOST('http://api.faculty.com/post.json')
+        .respond({_id: 1, title: 'Cool Post'});
+
+      backend.expectPOST('http://api.faculty.com/author.json')
+        .respond({_id: 1, name: 'Bertrand Russel'})
+
+      backend.expectPOST('http://api.faculty.com/comment.json')
+        .respond({id: 1, post_id: 1, author_id: 1});
+
+      backend.flush();
+    });
+
+    it('parses associations to foreign keys when saving', function() {
+      expect($http.post).toHaveBeenCalledWith('http://api.faculty.com/comment.json',
+        '{"text":"Excellente!","post_id":1,"author_id":1}');
+    });
+
+    it('parses foreign key responses into model objects', function() {
+      expect(comment.author).toBe(author);
+    });
+  });
+
   describe('Associations', function() {
     describe('base#hasMany', function() {
       it('adds an empty collection', function() {
