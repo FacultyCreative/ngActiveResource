@@ -15,7 +15,8 @@
   "dependencies": {
     "active-support": "0.0.5",
     "angular": "latest",
-    "lodash": "latest"
+    "lodash": "latest",
+    "async": "~0.2.5"
   },
   "devDependencies": {
     "angular-route": "latest",
