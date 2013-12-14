@@ -72,6 +72,8 @@ describe('ActiveResource', function() {
       {system: {id: 1, sensors: []}})
       .respond({id: 3});
 
+    backend.whenPOST('http://api.faculty.com/sensor.json')
+      .respond({id: 3, system: 1});
 
     // POST POST
     // Reponses for POST requests to create new 'posts'
@@ -205,7 +207,7 @@ describe('ActiveResource', function() {
       });
 
       describe('Belongs To Multiple Models', function() {
-        var post, author, commentAuthor, comment;
+        var post, author, commentAuthor, comment, comment2;
         beforeEach(function() {
 
           Author.$create({name: 'Master Yoda'})
@@ -234,7 +236,7 @@ describe('ActiveResource', function() {
             });
 
           backend.expectPOST('http://api.faculty.com/post.json',
-            {title: 'Do Or Do Not, There Is No Try', comments: []})
+            {"title":"Do Or Do Not, There Is No Try","author":{"name":"Master Yoda","comments":[],"posts":[{"$ref":"#"}],"_id":1},"comments":[]})
             .respond({'_id': 1, title: 'Do Or Do Not, There Is No Try', 
               author: 1});
 
@@ -246,10 +248,19 @@ describe('ActiveResource', function() {
               comment = response;
             });
 
+          Comment.$create({text: 'Thanks, bro', author: author._id,
+            post: post._id})
+            .then(function(response) {
+              comment2 = response;
+            });
+
           backend.expectPOST('http://api.faculty.com/comment.json',
-              {text: "Great post, Yoda!"})
+              {"text":"Great post, Yoda!","post":{"title":"Do Or Do Not, There Is No Try","author":{"name":"Master Yoda","comments":[],"posts":[{"$ref":"#post"}],"_id":1},"comments":[{"$ref":"#"}],"_id":1},"author":{"name":"Luke Skywalker","comments":[{"$ref":"#"}],"posts":[],"_id":2}})
               .respond({'id': 1, 'text': 'Great post, Yoda!',
                 author: 2, post: 1});
+
+          backend.expectPOST('http://api.faculty.com/comment.json')
+            .respond({id: 2, text: 'Thanks, bro', author: 1, post: 1});
 
           backend.flush();
         });
@@ -264,9 +275,18 @@ describe('ActiveResource', function() {
 
         it('establishes the complete relationship chain', function() {
           expect(post.comments.first.post.author
-            .posts.first.comments.last.author.name).toBe('Luke Skywalker');
+            .posts.first.comments.last.text).toBe('Thanks, bro');
+        });
+
+        it('establishes the relationships when not set via model chaining', function() {
+          expect(comment2.author.name).toBe('Master Yoda');
+          expect(comment2.post.title).toBe('Do Or Do Not, There Is No Try');
         });
       });
+    });
+
+    describe('Foreign keys', function() {
+      
     });
   });
 
