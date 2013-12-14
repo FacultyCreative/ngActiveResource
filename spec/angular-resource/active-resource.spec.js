@@ -61,19 +61,19 @@ describe('ActiveResource', function() {
     // GET SENSOR
     // Requests for mock "persisted" sensors
     backend.whenGET('http://api.faculty.com/sensor/?id=1')
-      .respond({id: 1, system: 1});
+      .respond({id: 1, system_id: 1});
 
     backend.whenGET('http://api.faculty.com/sensor/?id=2')
-      .respond({id: 2, system: 2});
+      .respond({id: 2, system_id: 2});
 
     // POST SENSOR
     // Responses for POST requests to create new sensors
     backend.whenPOST('http://api.faculty.com/sensor.json',
-      {system: {id: 1, sensors: []}})
+      {system_id: 1})
       .respond({id: 3});
 
     backend.whenPOST('http://api.faculty.com/sensor.json')
-      .respond({id: 3, system: 1});
+      .respond({id: 3, system_id: 1});
 
     // POST POST
     // Reponses for POST requests to create new 'posts'
@@ -166,7 +166,7 @@ describe('ActiveResource', function() {
       expect($http.delete).toHaveBeenCalledWith('http://api.faculty.com/post/?_id=52a8b80d251c5395b485cfe6');
     });
 
-    it('finds using the primary key if no arguments are passed to find', function() {
+    it('finds using the primary key if no object is passed to find', function() {
       Post.find('52a8b80d251c5395b485cfe7').then(function(response) { post = response; });
       backend.expectGET('http://api.faculty.com/post/?_id=52a8b80d251c5395b485cfe7')
         .respond({"_id": "52a8b80d251c5395b485cfe7", "title": "An Incredible Post"});
@@ -201,7 +201,7 @@ describe('ActiveResource', function() {
         system.sensors.$create().then(function(response) {
           sensor = response;
         });
-        backend.expectPOST('http://api.faculty.com/sensor.json', {"system":{"id":1,"sensors":[{"$ref":"#"}]}}).respond({id: 3, system: 1});
+        backend.expectPOST('http://api.faculty.com/sensor.json', {"system_id": 1}).respond({id: 3, system_id: 1});
         backend.flush();
         expect(sensor.system).toEqual(system);
       });
@@ -236,9 +236,9 @@ describe('ActiveResource', function() {
             });
 
           backend.expectPOST('http://api.faculty.com/post.json',
-            {"title":"Do Or Do Not, There Is No Try","author":{"name":"Master Yoda","comments":[],"posts":[{"$ref":"#"}],"_id":1},"comments":[]})
+            {"title":"Do Or Do Not, There Is No Try","author_id": 1,"comments":[]})
             .respond({'_id': 1, title: 'Do Or Do Not, There Is No Try', 
-              author: 1});
+              author_id: 1});
 
           backend.flush();
 
@@ -255,12 +255,12 @@ describe('ActiveResource', function() {
             });
 
           backend.expectPOST('http://api.faculty.com/comment.json',
-              {"text":"Great post, Yoda!","post":{"title":"Do Or Do Not, There Is No Try","author":{"name":"Master Yoda","comments":[],"posts":[{"$ref":"#post"}],"_id":1},"comments":[{"$ref":"#"}],"_id":1},"author":{"name":"Luke Skywalker","comments":[{"$ref":"#"}],"posts":[],"_id":2}})
+              {"text":"Great post, Yoda!","post_id":1,"author_id":2})
               .respond({'id': 1, 'text': 'Great post, Yoda!',
-                author: 2, post: 1});
+                author_id: 2, post_id: 1});
 
           backend.expectPOST('http://api.faculty.com/comment.json')
-            .respond({id: 2, text: 'Thanks, bro', author: 1, post: 1});
+            .respond({id: 2, text: 'Thanks, bro', author_id: 1, post_id: 1});
 
           backend.flush();
         });
@@ -355,7 +355,7 @@ describe('ActiveResource', function() {
         system.sensors.$create({state: 'alarmed'}).then(function(response) {
           sensor = response;
         });
-        backend.expectPOST('http://api.faculty.com/sensor.json').respond({id: 1, system: 1});
+        backend.expectPOST('http://api.faculty.com/sensor.json').respond({id: 1, system_id: 1});
         backend.flush();
       });
 
@@ -395,8 +395,8 @@ describe('ActiveResource', function() {
           system.sensors.$create().then(function(response) {
             sensor2 = response;
           });
-          backend.expectPOST('http://api.faculty.com/sensor.json').respond({id: 1, system: 1});
-          backend.expectPOST('http://api.faculty.com/sensor.json').respond({id: 2, system: 1});
+          backend.expectPOST('http://api.faculty.com/sensor.json').respond({id: 1, system_id: 1});
+          backend.expectPOST('http://api.faculty.com/sensor.json').respond({id: 2, system_id: 1});
           backend.flush();
           sensor1.$delete();
           backend.expectDELETE('http://api.faculty.com/sensor/?id=1').respond({data: 'success'});
@@ -423,7 +423,7 @@ describe('ActiveResource', function() {
             system.sensors.$create().then(function(response) {
               sensor1 = response;
             });
-            backend.expectPOST('http://api.faculty.com/sensor.json').respond({id: 1, system: 1});
+            backend.expectPOST('http://api.faculty.com/sensor.json').respond({id: 1, system_id: 1});
             backend.flush();
             system.$delete();
             backend.expectDELETE('http://api.faculty.com/system/?id=1').respond({data: 'success'});
@@ -444,7 +444,7 @@ describe('ActiveResource', function() {
             backend.flush();
             post.comments.$create().then(function(response) { comment = response; });
             backend.expectPOST('http://api.faculty.com/comment.json')
-              .respond({id: 1, post: 1});
+              .respond({id: 1, post_id: 1});
             backend.flush();
             post.$delete().then(function(response) { post = comment = response; });
             backend.expectDELETE('http://api.faculty.com/post/?_id=1').respond({data: 'success'});
