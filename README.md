@@ -4,6 +4,35 @@ ActiveResource provides a Base class to make modelling with Angular easier. It
 provides associations, caching, API integration, validations, and Active Record
 pattern persistence methods.
 
+## Simple:
+
+Say you want a form to add comments to a post:
+
+    <form ng-submit="comment.$save">
+      <input ng-model="comment.text">
+      <input type="submit">
+    </form>
+
+    <div ng-repeat="comment in post.comments">
+      {{comment.text}}
+    </div>
+
+In your controller, all you have to setup is something like this:
+
+    Post.find(postId).then(function(response) {
+      $scope.post      = response;
+      $scope.comment   = $scope.post.comments.new();
+
+      Comment.after('$save', function() {
+        $scope.comment = $scope.post.comments.new();
+      });
+    };
+
+You don't even have to tell `ng-repeat` to load in the new comment. The new
+comment will already be added to the post by association. Simply tell the
+`comment` object on the scope to clear, so that the user can enter another
+comment.
+
 ## Writing a Model:
 
 Create an Angular factory or provider that relies on ActiveResource:

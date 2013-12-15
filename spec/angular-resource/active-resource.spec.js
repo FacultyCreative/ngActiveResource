@@ -849,6 +849,36 @@ describe('ActiveResource', function() {
   });
 
   describe('Evented Modeling', function() {
+    var post, comment, author;
+    beforeEach(function() {
+      Post.find(1).then(function(response) { post = response; });
+      backend.expectGET('http://api.faculty.com/post/?_id=1')
+        .respond({_id: 1, title: 'Great post!', author_id: 1});
+
+      backend.expectGET('http://api.faculty.com/author/?_id=1')
+        .respond({_id: 1, name: 'Yorn Lomborg'});
+
+      backend.expectGET('http://api.faculty.com/comment/?post_id=1')
+        .respond({});
+
+      backend.flush();
+    });
+
+    it('performs events on $save', function() {
+      var data = {answer: 0};
+      Post.after('$save', changeData);
+      function changeData(e) { data.answer = e; };
+      post.$save();
+      backend.flush();
+      expect(data.answer).toEqual(post);
+    });
+
+    it('performs events before $save', function() {
+      Post.before('$save', function(instance) { instance.title = 'Whoa!'; });
+      post.$save().then(function(response) { post = response; });
+      backend.flush();
+      expect(post.title).toBe('Whoa!');
+    });
   });
 });
 
