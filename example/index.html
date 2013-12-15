@@ -14,6 +14,7 @@
   <script src="../angular-resource/active-resource.js"></script>
   <script src="../angular-resource/api/api.js"></script>
   <script src="../angular-resource/collection/collection.js"></script>
+  <script src="../angular-resource/association/association.js"></script>
   <script src="../angular-resource/base/base.js"></script>
   <script src="scripts/app.js"></script>
 </head>
@@ -34,7 +35,7 @@
         </tr>
       </tbody>
     </table>
-    <form ng-submit="saveSensor()">
+    <form ng-submit="sensor.$save()">
       <input ng-model="sensor.name">
       <input type="submit" id="submit" value="Submit" />
     </form>

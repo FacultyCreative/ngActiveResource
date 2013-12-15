@@ -14,11 +14,10 @@ angular
         System.find('52abf5cdb7c9be185a000002').then(function(response) {
           $scope.system = response;
           $scope.sensor = $scope.system.sensors.new();
-          $scope.saveSensor = function() {
-            $scope.sensor.$save().then(function(response) {
-              $scope.sensor = $scope.system.sensors.new();
-            });
-          };
+          Sensor.after('$save', function(e) {
+            $scope.sensor = $scope.system.sensors.new();
+          });
+
         });
 
       }
@@ -28,7 +27,6 @@ angular
       function(ActiveResource) {
 
       function Sensor(data) {
-        this.primaryKey('_id');
 
         if (!data) data = {};
         if (data[0]) data = data[0];
@@ -40,6 +38,7 @@ angular
 
       Sensor = ActiveResource.Base.apply(Sensor);
       Sensor.api.set('0.0.0:3000/api');
+      Sensor.primaryKey = "_id";
       Sensor.api.findURL   = 'http://0.0.0:3000/api/sensors/[:attrs]';
       Sensor.api.createURL = 'http://0.0.0:3000/api/sensors';
       Sensor.api.deleteURL = 'http://0.0.0:3000/api/sensors/[:attrs]';
@@ -52,7 +51,6 @@ angular
       function(ActiveResource) {
 
         function System(data) {
-          this.primaryKey('_id');
 
           if (!data) data = {};
           this.placement = data.placement || undefined;
@@ -60,6 +58,7 @@ angular
         };
 
         System = ActiveResource.Base.apply(System);
+        System.primaryKey = "_id";
         System.api.set('http://0.0.0:3000/api/systems');
         System.api.createURL = 'http://0.0.0:3000/api/systems';
 
