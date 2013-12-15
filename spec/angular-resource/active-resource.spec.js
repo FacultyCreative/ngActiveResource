@@ -336,7 +336,7 @@ describe('ActiveResource', function() {
       backend.flush();
     });
 
-    iit('Eagerly Loads Associations By Default', function() {
+    it('Eagerly Loads Associations By Default', function() {
       expect(post.comments.first.id).toBe(1);
     });
   });
