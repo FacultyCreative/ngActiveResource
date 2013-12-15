@@ -339,6 +339,10 @@ describe('ActiveResource', function() {
     it('Eagerly Loads Associations By Default', function() {
       expect(post.comments.first.id).toBe(1);
     });
+
+    it('Uses foreign keys set to query for associations', function() {
+      expect($http.get).toHaveBeenCalledWith('http://api.faculty.com/comment/?post_id=1');
+    });
   });
 
   describe('Syntax Options', function() {
@@ -814,6 +818,37 @@ describe('ActiveResource', function() {
         });
       });
     });
+  });
+
+  describe('Over-Eager Loading', function() {
+    var post, comment, author;
+    beforeEach(function() {
+      Post.find(1, {overEager: true}).then(function(response) { post = response; });
+
+      backend.expectGET('http://api.faculty.com/post/?_id=1')
+        .respond({_id: 1, title: 'Great post!', author_id: 1});
+
+      backend.expectGET('http://api.faculty.com/author/?_id=1')
+        .respond({_id: 1, name: 'Yorn Lomborg'});
+
+      backend.expectGET('http://api.faculty.com/comment/?author_id=1')
+        .respond({_id: 1, text: 'Great!', author_id: 1, post_id: 1});
+
+      backend.expectGET('http://api.faculty.com/comment/?post_id=1')
+        .respond({_id: 1, text: 'Great!', author_id: 1, post_id: 1});
+
+      backend.expectGET('http://api.faculty.com/post/?author_id=1')
+        .respond({_id: 1, title: 'Great post!', author_id: 1});
+
+      backend.flush();
+    });
+
+    it('Loads assocations, and then all associations of associations, etc., recursively', function() {
+      expect($http.get).toHaveBeenCalledWith('http://api.faculty.com/post/?author_id=1');
+    });
+  });
+
+  describe('Evented Modeling', function() {
   });
 });
 
