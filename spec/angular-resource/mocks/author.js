@@ -4,8 +4,6 @@ angular
     this.$get = ['ActiveResource',
       function(ActiveResource) {
       function Author(data) {
-        this.primaryKey('_id');
-
         if (!data) data = {};
 
         this.name  = data.name  || undefined;
@@ -15,6 +13,7 @@ angular
       };
 
       Author = ActiveResource.Base.apply(Author);
+      Author.primaryKey = '_id';
       Author.dependentDestroy('comments');
       Author.api.set('http://api.faculty.com/');
       return Author;

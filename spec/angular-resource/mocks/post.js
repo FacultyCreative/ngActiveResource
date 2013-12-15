@@ -4,8 +4,6 @@ angular
     this.$get = ['ActiveResource',
       function(ActiveResource) {
       function Post(data) {
-        this.primaryKey('_id');
-
         if (!data) data = {};
         this.title  = data.title  || undefined;
         
@@ -29,6 +27,7 @@ angular
       });
 
       Post = ActiveResource.Base.apply(Post);
+      Post.primaryKey = '_id';
       Post.dependentDestroy('comments');
       Post.api.set('http://api.faculty.com/');
       return Post;

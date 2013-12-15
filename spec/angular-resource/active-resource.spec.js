@@ -167,7 +167,7 @@ describe('ActiveResource', function() {
     });
 
     it('finds using the primary key if no object is passed to find', function() {
-      Post.find('52a8b80d251c5395b485cfe7').then(function(response) { post = response; });
+      Post.find('52a8b80d251c5395b485cfe7', {lazy: true}).then(function(response) { post = response; });
       backend.expectGET('http://api.faculty.com/post/?_id=52a8b80d251c5395b485cfe7')
         .respond({"_id": "52a8b80d251c5395b485cfe7", "title": "An Incredible Post"});
       backend.flush();
@@ -319,8 +319,25 @@ describe('ActiveResource', function() {
       });
     });
 
-    describe('Foreign keys', function() {
-      
+  });
+
+  describe('Eager Loading', function() {
+    var post, comment, author;
+    beforeEach(function() {
+      Post.find(1).then(function(response) {
+        post = response;
+      });
+      backend.expectGET('http://api.faculty.com/post/?_id=1')
+        .respond({_id: 1, title: "Great Post"});
+
+      backend.expectGET('http://api.faculty.com/comment/?post_id=1')
+        .respond([{id: 1, text: "Great one!", post_id: 1}]);
+
+      backend.flush();
+    });
+
+    iit('Eagerly Loads Associations By Default', function() {
+      expect(post.comments.first.id).toBe(1);
     });
   });
 
@@ -626,14 +643,14 @@ describe('ActiveResource', function() {
 
       it('finds by id', function() {
         var foundSystems;
-        System.where({id: 1}).then(function(response) { foundSystems = response; });
+        System.where({id: 1}, {lazy: true}).then(function(response) { foundSystems = response; });
         backend.flush();
         expect(foundSystems).toEqual([system]);
       });
 
       it('finds by any attr', function() {
         var foundSystems;
-        System.where({placement: 'window'}).then(function(response) { foundSystems = response; });
+        System.where({placement: 'window'}, {lazy: true}).then(function(response) { foundSystems = response; });
         backend.expectGET('http://api.faculty.com/system/?placement=window')
           .respond([{id: 8, placement: 'window', name: 'Bretts System'},
                     {id: 9, placement: 'window', name: 'Matts System'},
@@ -646,7 +663,7 @@ describe('ActiveResource', function() {
 
       it('always queries the backend to get all instances, even if some are found in the cache', function() {
         var foundSystems; 
-        System.where({placement: 'window'}).then(function(response) { foundSystems = response; });
+        System.where({placement: 'window'}, {lazy: true}).then(function(response) { foundSystems = response; });
         backend.expectGET('http://api.faculty.com/system/?placement=window')
           .respond([{id: 8, placement: 'window', name: 'Bretts System'},
                     {id: 9, placement: 'window', name: 'Matts System'},
@@ -657,7 +674,7 @@ describe('ActiveResource', function() {
 
       it('adds the instance to the cache', function() {
         var foundSystems;
-        System.where({id: 4}).then(function(response) { foundSystems = response; });
+        System.where({id: 4}, {lazy: true}).then(function(response) { foundSystems = response; });
         backend.flush();
         expect(System.cached[4]).toBe(foundSystems[0]);
       });
@@ -679,7 +696,7 @@ describe('ActiveResource', function() {
 
       it('returns the first instance found', function() {
         var foundSystem;
-        System.find({id: 1}).then(function(response) { foundSystem = response; });
+        System.find({id: 1}, {lazy: true}).then(function(response) { foundSystem = response; });
         $timeout.flush();
         expect(foundSystem).toEqual(system);
       });
@@ -693,21 +710,21 @@ describe('ActiveResource', function() {
 
       it('queries the backend if the instance is not found in the cache', function() {
         var foundSystem;
-        System.find({id: 4}).then(function(response) { foundSystem = response; });
+        System.find({id: 4}, {lazy: true}).then(function(response) { foundSystem = response; });
         backend.flush();
         expect(foundSystem.id).toEqual(4);
       });
 
       it('queries the backend using multiple parameters', function() {
         var foundSystem;
-        System.find({placement: 'window'}).then(function(response) { foundSystem = response; });
+        System.find({placement: 'window'}, {lazy: true}).then(function(response) { foundSystem = response; });
         backend.flush();
         expect(foundSystem.id).toEqual(6);
       });
 
       it('returns the instantiated model instead of the plain data', function() {
         var foundSystem;
-        System.find({placement: 'window'}).then(function(response) { foundSystem = response; });
+        System.find({placement: 'window'}, {lazy: true}).then(function(response) { foundSystem = response; });
         backend.flush();
         expect(foundSystem.constructor.name).toBe('System');
       });
@@ -717,7 +734,7 @@ describe('ActiveResource', function() {
         //
         // The mock API is setup to respond with sensors 6 & 7. Find will only respond with the first instance (6).
         var foundSystem;
-        System.find({placement: 'window'}).then(function(response) { foundSystem = response; });
+        System.find({placement: 'window'}, {lazy: true}).then(function(response) { foundSystem = response; });
         backend.flush();
         expect(foundSystem.id).toBe(6);
       });
