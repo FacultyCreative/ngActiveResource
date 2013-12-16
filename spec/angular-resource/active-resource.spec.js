@@ -963,5 +963,22 @@ describe('ActiveResource', function() {
       post.update({_id: 2});
       expect(window.alert).toHaveBeenCalledWith('Great post! updated!');
     });
+
+    it('performs events before new', function() {
+      Post.before('new', function(data) {
+        data.title = 'This is what I always call my posts';
+      });
+      var post2 = Post.new();
+      expect(post2.title).toBe('This is what I always call my posts');
+    });
+
+    it('performs events after new', function() {
+      Post.after('new', function(instance) {
+        alert(instance.title + ' created!');
+      });
+      
+      var post2 = Post.new({title: 'My great post'});
+      expect(window.alert).toHaveBeenCalledWith('My great post created!');
+    });
   });
 });
