@@ -864,7 +864,7 @@ describe('ActiveResource', function() {
       backend.flush();
     });
 
-    it('performs events on $save', function() {
+    it('performs events after $save', function() {
       var data = {answer: 0};
       Post.after('$save', changeData);
       function changeData(e) { data.answer = e; };
@@ -878,6 +878,25 @@ describe('ActiveResource', function() {
       post.$save().then(function(response) { post = response; });
       backend.flush();
       expect(post.title).toBe('Whoa!');
+    });
+
+    it('performs events after $delete', function() {
+      spyOn(window, 'alert');
+      Post.after('$delete', function(instance) { 
+        window.alert(instance.title + ' deleted successfully!')});
+      post.$delete();
+      backend.expectDELETE('http://api.faculty.com/post/?_id=1').respond({
+        status: 200});
+      backend.flush();
+      expect(window.alert).toHaveBeenCalledWith('Great post! deleted successfully!');
+    });
+
+    it('performs events before $delete', function() {
+      spyOn(window, 'alert');
+      Post.before('$delete', function(instance) {
+        alert('Are you sure you want to delete ' + instance.title + '?')});
+      post.$delete();
+      expect(window.alert).toHaveBeenCalledWith('Are you sure you want to delete Great post!?');
     });
   });
 });
