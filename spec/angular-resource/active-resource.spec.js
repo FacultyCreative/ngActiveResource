@@ -918,12 +918,34 @@ describe('ActiveResource', function() {
     });
 
     it('performs events before find', function() {
-      Post.before('find', function(instance) {
-        alert('Finding instance ' + instance);
+      Post.before('find', function(terms) {
+        alert('Finding instance ' + terms);
       });
       Post.find(1);
       $timeout.flush();
       expect(window.alert).toHaveBeenCalledWith('Finding instance 1');
+    });
+
+    it('performs events before where', function() {
+      Post.before('where', function(terms) {
+        alert('Finding instances that match ' + terms.title);
+      });
+      Post.where({title: 'Great post!'}, {lazy: true});
+      backend.expectGET('http://api.faculty.com/post/?title=Great post!')
+        .respond({title: 'Great post!', _id: 1});
+      backend.flush();
+      expect(window.alert).toHaveBeenCalledWith('Finding instances that match Great post!');
+    });
+
+    it('performs events after where', function() {
+      Post.after('where', function(results) {
+        alert('Found em!');
+      });
+      Post.where({title: 'Great post!'}, {lazy: true});
+      backend.expectGET('http://api.faculty.com/post/?title=Great post!')
+        .respond({title: 'Great post!', _id: 1});
+      backend.flush();
+      expect(window.alert).toHaveBeenCalledWith('Found em!');
     });
   });
 });
