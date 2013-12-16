@@ -851,6 +851,7 @@ describe('ActiveResource', function() {
   describe('Evented Modeling', function() {
     var post, comment, author;
     beforeEach(function() {
+      spyOn(window, 'alert');
       Post.find(1).then(function(response) { post = response; });
       backend.expectGET('http://api.faculty.com/post/?_id=1')
         .respond({_id: 1, title: 'Great post!', author_id: 1});
@@ -881,7 +882,6 @@ describe('ActiveResource', function() {
     });
 
     it('performs events after $delete', function() {
-      spyOn(window, 'alert');
       Post.after('$delete', function(instance) { 
         window.alert(instance.title + ' deleted successfully!')});
       post.$delete();
@@ -892,12 +892,38 @@ describe('ActiveResource', function() {
     });
 
     it('performs events before $delete', function() {
-      spyOn(window, 'alert');
       Post.before('$delete', function(instance) {
         alert('Are you sure you want to delete ' + instance.title + '?')});
       post.$delete();
       expect(window.alert).toHaveBeenCalledWith('Are you sure you want to delete Great post!?');
     });
+
+    it('performs events before find', function() {
+      Post.before('find', function(instance) {
+        instance._id = 1;
+      });
+      Post.find({_id: 2}).then(function(response) { post = response; });
+      $timeout.flush();
+      expect(post._id).toEqual(1);
+    });
+
+    it('performs events after find', function() {
+      Post.after('find', function(instance) {
+        alert('Found ' + instance.title);
+      });
+
+      Post.find(1);
+      $timeout.flush();
+      expect(window.alert).toHaveBeenCalledWith('Found Great post!');
+    });
+
+    it('performs events before find', function() {
+      Post.before('find', function(instance) {
+        alert('Finding instance ' + instance);
+      });
+      Post.find(1);
+      $timeout.flush();
+      expect(window.alert).toHaveBeenCalledWith('Finding instance 1');
+    });
   });
 });
-
