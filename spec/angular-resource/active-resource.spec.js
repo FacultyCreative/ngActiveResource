@@ -980,5 +980,26 @@ describe('ActiveResource', function() {
       var post2 = Post.new({title: 'My great post'});
       expect(window.alert).toHaveBeenCalledWith('My great post created!');
     });
+
+    it('performs events before $create', function() {
+      var post2;
+      Post.before('$create', function(data) {
+        data.title = 'This is what I always call my posts';
+      });
+
+      Post.$create().then(function(response) { post2 = response; });
+      backend.flush();
+      expect(post2.title).toEqual('This is what I always call my posts');
+    });
+
+    it('performs events after $create', function() {
+      var post2;
+      Post.after('$create', function(instance) {
+        alert(instance.title + ' created!');
+      });
+      Post.$create({title: 'Gr8 p0$t'}).then(function(response) { post2 = response; });
+      backend.flush();
+      expect(window.alert).toHaveBeenCalledWith('Gr8 p0$t created!');
+    });
   });
 });
