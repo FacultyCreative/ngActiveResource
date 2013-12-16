@@ -851,6 +851,7 @@ describe('ActiveResource', function() {
   describe('Evented Modeling', function() {
     var post, comment, author;
     beforeEach(function() {
+      spyOn(window, 'alert');
       Post.find(1).then(function(response) { post = response; });
       backend.expectGET('http://api.faculty.com/post/?_id=1')
         .respond({_id: 1, title: 'Great post!', author_id: 1});
@@ -864,7 +865,7 @@ describe('ActiveResource', function() {
       backend.flush();
     });
 
-    it('performs events on $save', function() {
+    it('performs events after $save', function() {
       var data = {answer: 0};
       Post.after('$save', changeData);
       function changeData(e) { data.answer = e; };
@@ -879,6 +880,126 @@ describe('ActiveResource', function() {
       backend.flush();
       expect(post.title).toBe('Whoa!');
     });
+
+    it('performs events after $delete', function() {
+      Post.after('$delete', function(instance) { 
+        window.alert(instance.title + ' deleted successfully!')});
+      post.$delete();
+      backend.expectDELETE('http://api.faculty.com/post/?_id=1').respond({
+        status: 200});
+      backend.flush();
+      expect(window.alert).toHaveBeenCalledWith('Great post! deleted successfully!');
+    });
+
+    it('performs events before $delete', function() {
+      Post.before('$delete', function(instance) {
+        alert('Are you sure you want to delete ' + instance.title + '?')});
+      post.$delete();
+      expect(window.alert).toHaveBeenCalledWith('Are you sure you want to delete Great post!?');
+    });
+
+    it('performs events before find', function() {
+      Post.before('find', function(instance) {
+        instance._id = 1;
+      });
+      Post.find({_id: 2}).then(function(response) { post = response; });
+      $timeout.flush();
+      expect(post._id).toEqual(1);
+    });
+
+    it('performs events after find', function() {
+      Post.after('find', function(instance) {
+        alert('Found ' + instance.title);
+      });
+
+      Post.find(1);
+      $timeout.flush();
+      expect(window.alert).toHaveBeenCalledWith('Found Great post!');
+    });
+
+    it('performs events before find', function() {
+      Post.before('find', function(terms) {
+        alert('Finding instance ' + terms);
+      });
+      Post.find(1);
+      $timeout.flush();
+      expect(window.alert).toHaveBeenCalledWith('Finding instance 1');
+    });
+
+    it('performs events before where', function() {
+      Post.before('where', function(terms) {
+        alert('Finding instances that match ' + terms.title);
+      });
+      Post.where({title: 'Great post!'}, {lazy: true});
+      backend.expectGET('http://api.faculty.com/post/?title=Great post!')
+        .respond({title: 'Great post!', _id: 1});
+      backend.flush();
+      expect(window.alert).toHaveBeenCalledWith('Finding instances that match Great post!');
+    });
+
+    it('performs events after where', function() {
+      Post.after('where', function(results) {
+        alert('Found em!');
+      });
+      Post.where({title: 'Great post!'}, {lazy: true});
+      backend.expectGET('http://api.faculty.com/post/?title=Great post!')
+        .respond({title: 'Great post!', _id: 1});
+      backend.flush();
+      expect(window.alert).toHaveBeenCalledWith('Found em!');
+    });
+
+    it('performs events before update', function() {
+      Post.before('update', function(instance) {
+        instance.title = 'My new title';
+      });
+      post.update({_id: 2});
+      expect(post.title).toBe('My new title');
+    });
+
+    it('performs events after update', function() {
+      Post.after('update', function(instance) {
+        alert(instance.title + ' updated!');
+      });
+      post.update({_id: 2});
+      expect(window.alert).toHaveBeenCalledWith('Great post! updated!');
+    });
+
+    it('performs events before new', function() {
+      Post.before('new', function(data) {
+        data.title = 'This is what I always call my posts';
+      });
+      var post2 = Post.new();
+      expect(post2.title).toBe('This is what I always call my posts');
+    });
+
+    it('performs events after new', function() {
+      Post.after('new', function(instance) {
+        alert(instance.title + ' created!');
+      });
+      
+      var post2 = Post.new({title: 'My great post'});
+      expect(window.alert).toHaveBeenCalledWith('My great post created!');
+    });
+
+    it('performs events before $create', function() {
+      var post2;
+      Post.before('$create', function(data) {
+        data.title = 'This is what I always call my posts';
+      });
+
+      Post.$create().then(function(response) { post2 = response; });
+      backend.flush();
+      expect(post2.title).toEqual('This is what I always call my posts');
+    });
+
+    it('performs events after $create', function() {
+      var post2;
+      Post.after('$create', function(instance) {
+        alert(instance.title + ' created!');
+      });
+      Post.$create({title: 'Gr8 p0$t'}).then(function(response) { post2 = response; });
+      backend.flush();
+      expect(window.alert).toHaveBeenCalledWith('Gr8 p0$t created!');
+    });
   });
 });
-
