@@ -1,6 +1,6 @@
 {
   "name": "ActiveResource",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "RESTful resource modeling",
   "main": "index.js",
   "author": "Brett Shollenberger <brett@facultycreative.com>",
