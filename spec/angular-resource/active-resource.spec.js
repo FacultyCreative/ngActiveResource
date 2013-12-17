@@ -386,6 +386,19 @@ describe('ActiveResource', function() {
     });
 
     describe('collection#new', function() {
+
+      it('establishes the has-many relationship when passed in as data', function() {
+        var system2Data = {sensors: [{id: 1}]};
+        var system2     = System.new(system2Data);
+        expect(system2.sensors.first.id).toBe(1);
+      });
+
+      it('establishes the has-many relationship when the data is passed as an object', function() {
+        var system2Data = {sensors: {1: {id: 1}}};
+        var system2     = System.new(system2Data);
+        expect(system2.sensors.first.id).toBe(1);
+      });
+
       it('establishes the belongs-to relationship', function() {
         var sensor = system.sensors.new()
         expect(sensor.system).toEqual(system);
