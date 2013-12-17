@@ -962,16 +962,16 @@ describe('ActiveResource', function() {
     });
 
     it('performs events before update', function() {
-      Post.before('update', function(instance) {
-        instance.title = 'My new title';
+      Post.before('update', function(options) {
+        options.instance.title = 'My new title';
       });
       post.update({_id: 2});
       expect(post.title).toBe('My new title');
     });
 
     it('performs events after update', function() {
-      Post.after('update', function(instance) {
-        alert(instance.title + ' updated!');
+      Post.after('update', function(options) {
+        alert(options.instance.title + ' updated!');
       });
       post.update({_id: 2});
       expect(window.alert).toHaveBeenCalledWith('Great post! updated!');
