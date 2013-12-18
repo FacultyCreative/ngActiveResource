@@ -12,7 +12,7 @@ angular
 
         var content;
         Object.defineProperty(this, 'content', {
-          enumerable: true,
+          enumerable: false,
           get: function()    { return content; },
           set: function(val) { content = val;  }
         });

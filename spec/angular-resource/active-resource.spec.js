@@ -775,6 +775,11 @@ describe('ActiveResource', function() {
         post.update({content: "Here's the post!"});
         expect(post.content).toBe("Here's the post!");
       });
+
+      it('considers non-enumerable properties to be "settable"', function() {
+        post.update({content: "Here's the post!"});
+        expect(post.content).toBe("Here's the post!");
+      });
       
       it('considers properties defined in the prototype chain to be "settable"', function () {
         post.update({date: 'February 24, 2013'});
