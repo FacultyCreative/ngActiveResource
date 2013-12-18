@@ -236,6 +236,29 @@ describe('ActiveResource', function() {
         expect(system2.gridController.id).toEqual(1);
       });
 
+      it('instantiates with an existing instance', function() {
+        var gc = GridController.new({id: 1});
+        var system2 = System.new({gridController: gc});
+        expect(system2.gridController).toBe(gc);
+        expect(system2.gridController.system).toBe(system2);
+      });
+
+      it('instantiates with an existing instance in the other direction', function() {
+        var gc = GridController.new({id: 1, system: system});
+        expect(gc.system).toBe(system);
+      });
+
+      it('does not add the foreign association unless the instance has a foreign key',
+        function() {
+          var gc = GridController.new({system: system});
+          expect(system.gridController).not.toBe(gc);
+      });
+
+      it('adds the foreign association if the instance has a foreign key', function() {
+        var gc = GridController.new({id: 1, system: system});
+        expect(system.gridController.system.gridController).toBe(gc);
+      });
+
       it('sets up the inverse association', function() {
         expect(system.gridController.system).toEqual(system);
       });
