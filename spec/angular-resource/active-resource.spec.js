@@ -236,6 +236,10 @@ describe('ActiveResource', function() {
         expect(system2.gridController.id).toEqual(1);
       });
 
+      it('sets up the inverse association', function() {
+        expect(system.gridController.system).toEqual(system);
+      });
+
       it('does not require new to be called', function() {
         expect(function() { system.gridController.new() }).toThrow();
       });
