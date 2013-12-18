@@ -13,7 +13,7 @@
     "tests"
   ],
   "dependencies": {
-    "active-support": "0.0.5",
+    "active-support": "0.0.6",
     "angular": "latest",
     "lodash": "latest",
     "async": "~0.2.5",

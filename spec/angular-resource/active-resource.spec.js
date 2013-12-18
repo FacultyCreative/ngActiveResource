@@ -2,7 +2,7 @@
 
 describe('ActiveResource', function() {
 
-  var ActiveResource, Mocks, Sensor, System, Post, Comment, Author, 
+  var ActiveResource, Mocks, Sensor, System, GridController, Post, Comment, Author, 
     system, backend, $timeout, $http;
 
   beforeEach(module('ActiveResource'));
@@ -14,6 +14,7 @@ describe('ActiveResource', function() {
     Mocks          = _ARMocks_;
     System         = Mocks.System;
     Sensor         = Mocks.Sensor;
+    GridController = Mocks.GridController;
     Post           = Mocks.Post;
     Comment        = Mocks.Comment;
     Author         = Mocks.Author;
@@ -229,6 +230,148 @@ describe('ActiveResource', function() {
       });
     });
 
+    describe('base#hasOne', function() {
+      it('instantiates with new data', function() {
+        var system2 = System.new({gridController: {id: 1}});
+        expect(system2.gridController.id).toEqual(1);
+      });
+
+      it('has the nested association', function() {
+        var gc = system.gridController.new();
+        expect(gc.system).toBe(system);
+      });
+
+      it('grabs the association on find', function() {
+        System.find(100).then(function(response) {
+          system = response;
+        });
+
+        backend.expectGET('http://api.faculty.com/system/?id=100')
+          .respond({id: 100});
+
+        backend.expectGET('http://api.faculty.com/sensor/?system_id=100')
+          .respond([{id: 25, system_id: 100}]);
+
+        backend.expectGET('http://api.faculty.com/grid-controller/?system_id=100')
+          .respond({id: 25, system_id: 100});
+
+        backend.flush();
+
+        expect($http.get).toHaveBeenCalledWith('http://api.faculty.com/grid-controller/?system_id=100');
+      });
+
+      it('grabs the association when the dependent calls find', function() {
+        var gc;
+        GridController.find(100).then(function(response) {
+          gc = response;
+        });
+
+        backend.expectGET('http://api.faculty.com/grid-controller/?id=100')
+          .respond({id: 100, system_id: 100});
+
+        backend.expectGET('http://api.faculty.com/system/?id=100')
+          .respond({id: 100});
+
+        backend.flush();
+        expect(gc.system.id).toEqual(100);
+      });
+
+      it('does not grab the association when the dependent does not return a foreign key', function() {
+        var gc;
+        GridController.find(100).then(function(response) {
+          gc = response;
+        });
+
+        backend.expectGET('http://api.faculty.com/grid-controller/?id=100')
+          .respond({id: 100});
+
+        backend.flush();
+        expect($http.get).not.toHaveBeenCalledWith('http://api.faculty.com/system/?id=100');
+      });
+
+      it('sets associations for all hasOnes found through #where', function() {
+        var gcList;
+        GridController.where({status: 'ready'}).then(function(response) {
+          gcList = response;
+        });
+
+        backend.expectGET('http://api.faculty.com/grid-controller/?status=ready')
+          .respond([
+            {id: 100, status: 'ready', system_id: 100},
+            {id: 25,  status: 'ready', system_id: 25}]);
+        backend.expectGET('http://api.faculty.com/system/?id=100')
+          .respond({id: 100});
+
+        backend.expectGET('http://api.faculty.com/system/?id=25')
+          .respond({id: 25});
+
+        backend.flush();
+
+        expect(gcList[0].id).toEqual(100);
+        expect(gcList[1].id).toEqual(25);
+      });
+
+      it('updates the hasOne if data is passed to its owner during update', function() {
+            system.update({gridController: {id: 1}});
+            expect(system.gridController.id).toBe(1);
+            expect(system.gridController.system).toEqual(system);
+      });
+
+      it('updates itself', function() {
+        var gc = GridController.new();
+        gc.update({system: system});
+        expect(gc.system).toEqual(system);
+      });
+
+      it('updates itself using JSON strings', function() {
+        var gc = GridController.new();
+        gc.update({status: 'cool', system_id: 1}).then(function(response) {
+          gc = response;
+        });
+        $timeout.flush();
+        expect(gc.system).toEqual(system);
+      });
+
+      it('$creates', function() {
+        var gc;
+        system.gridController.$create().then(function(response) {
+          gc = response;
+        });
+
+        backend.expectPOST('http://api.faculty.com/grid-controller.json', {system_id: 1})
+          .respond({id: 1, system_id: 1});
+
+        backend.flush();
+        expect(gc.system).toBe(system);
+      });
+
+      it('$creates without the nested association', function() {
+        var gc;
+        GridController.$create().then(function(response) {
+          gc = response;
+        });
+
+        backend.expectPOST('http://api.faculty.com/grid-controller.json', {})
+          .respond({id: 2});
+
+        backend.flush();
+        expect(gc.id).toBe(2);
+      });
+
+      it('$saves', function() {
+        var gc = GridController.new();
+        gc.$save().then(function(response) {
+          gc = response;
+        });
+
+        backend.expectPOST('http://api.faculty.com/grid-controller.json', {})
+          .respond({id: 3});
+
+        backend.flush();
+        expect(gc.id).toBe(3);
+      });
+    });
+
     describe('base#belongsTo', function() {
       it('establishes the belongsTo relationship', function() {
         var sensor;
@@ -266,7 +409,7 @@ describe('ActiveResource', function() {
 
           author.posts.$create({title: 'Do Or Do Not, There Is No Try'})
             .then(function(response) { 
-              post   = response; 
+              post = response; 
             });
 
           backend.expectPOST('http://api.faculty.com/post.json',
@@ -667,7 +810,8 @@ describe('ActiveResource', function() {
 
       it('finds by any attr', function() {
         var foundSystems;
-        System.where({placement: 'window'}, {lazy: true}).then(function(response) { foundSystems = response; });
+        System.where({placement: 'window'}, {lazy: true})
+          .then(function(response) { foundSystems = response; });
         backend.expectGET('http://api.faculty.com/system/?placement=window')
           .respond([{id: 8, placement: 'window', name: 'Bretts System'},
                     {id: 9, placement: 'window', name: 'Matts System'},
@@ -703,9 +847,15 @@ describe('ActiveResource', function() {
 
       beforeEach(function() {
         system.$save().then(function(response) { system = response });
-        backend.expectPOST('http://api.faculty.com/system.json', {id: 1, sensors: []}).respond({id: 1});
-        backend.expectPOST('http://api.faculty.com/system.json', {placement: 'door', sensors: []}).respond({id: 2, placement: 'door'});
-        backend.expectPOST('http://api.faculty.com/system.json', {placement: 'door', sensors: []}).respond({id: 3, placement: 'door'});
+        backend.expectPOST('http://api.faculty.com/system.json', 
+          {id: 1, sensors: []})
+           .respond({id: 1});
+        backend.expectPOST('http://api.faculty.com/system.json', 
+          {placement: 'door', sensors: []})
+            .respond({id: 2, placement: 'door'});
+        backend.expectPOST('http://api.faculty.com/system.json', 
+          {placement: 'door', sensors: []})
+           .respond({id: 3, placement: 'door'});
         System.$create({placement: 'door'}).then(function(response) { system2 = response; });
         System.$create({placement: 'door'}).then(function(response) { system3 = response; });
         backend.flush();

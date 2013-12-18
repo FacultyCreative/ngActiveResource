@@ -5,7 +5,6 @@ angular
       function(ActiveResource) {
       function Sensor(data) {
         if (!data) data = {};
-        this.id     = data.id     || undefined;
         this.state  = data.state  || undefined;
         this.system = data.system || undefined;
         this.belongsTo('system',
