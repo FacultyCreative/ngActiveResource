@@ -236,9 +236,13 @@ describe('ActiveResource', function() {
         expect(system2.gridController.id).toEqual(1);
       });
 
-      it('has the nested association', function() {
-        var gc = system.gridController.new();
-        expect(gc.system).toBe(system);
+      it('does not require new to be called', function() {
+        expect(function() { system.gridController.new() }).toThrow();
+      });
+
+      it('instantiates hasOnes on their associated models', function() {
+        system.gridController.id = 1;
+        expect(system.gridController.id).toBe(1);
       });
 
       it('grabs the association on find', function() {
@@ -332,17 +336,8 @@ describe('ActiveResource', function() {
         expect(gc.system).toEqual(system);
       });
 
-      it('$creates', function() {
-        var gc;
-        system.gridController.$create().then(function(response) {
-          gc = response;
-        });
-
-        backend.expectPOST('http://api.faculty.com/grid-controller.json', {system_id: 1})
-          .respond({id: 1, system_id: 1});
-
-        backend.flush();
-        expect(gc.system).toBe(system);
+      it('does not contain $create on the association', function() {
+        expect(function() { system.gridController.$create() }).toThrow();
       });
 
       it('$creates without the nested association', function() {
