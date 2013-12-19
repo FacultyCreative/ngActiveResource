@@ -236,6 +236,11 @@ describe('ActiveResource', function() {
         expect(system2.gridController.id).toEqual(1);
       });
 
+      it('sets the inverse association', function() {
+        var system2 = System.new({gridController: {id: 1}});
+        expect(system2.gridController.system).toBe(system2);
+      });
+
       it('instantiates with an existing instance', function() {
         var gc = GridController.new({id: 1});
         var system2 = System.new({gridController: gc});
