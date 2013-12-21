@@ -1523,6 +1523,14 @@ describe('ActiveResource', function() {
         expect(error).toBe('Instance is invalid');
       });
 
+      it('saves if no validations are provided', function() {
+        author = Author.new();
+        author.$save().then(function() { });
+        backend.expectPOST('http://api.faculty.com/author.json').respond({_id: 1});
+        backend.flush();
+        expect(author._id).toBe(1);
+      });
+
       it('sets the proper errors if the instance is invalid on save', function() {
         user.name = undefined;
         user.$save().then(function(instance) {}, function(error) {});
