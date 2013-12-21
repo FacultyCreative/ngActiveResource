@@ -1209,8 +1209,6 @@ describe('ActiveResource', function() {
       author      = Author.new();
       post.author = author;
 
-      User.new({id: 1, username: 'brettshollenberger'});
-
       user = User.new({
         name: 'Brett',
         username: 'brettcassette',
@@ -1489,6 +1487,62 @@ describe('ActiveResource', function() {
         user.uniqueIdentifier = 'Invalid';
         user.valid;
         expect(user.errors.uniqueIdentifier).toContain('Invalid uuid');
+      });
+    });
+
+    ddescribe('Saving with Validations', function() {
+      it('saves if the values are valid', function() {
+        expect(user.valid).toBe(true);
+        user.$save();
+        backend.expectPOST('http://api.faculty.com/user.json')
+          .respond({
+            id: 1,
+            name: 'Brett',
+            username: 'brettcassette',
+            email: 'brett.shollenberger@gmail.com',
+            zip: '19454',
+            uniqueIdentifier: '02140',
+            termsOfService: true,
+            password: 'awesomesauce',
+            passwordConfirmation: 'awesomesauce',
+            size: 'small'
+          });
+        backend.flush();
+        expect(user.valid).toBe(true);
+      });
+
+      it('does not save the values if the instance is not valid', function() {
+        user.name = undefined;
+        var error;
+        user.$save().then(function(instance) {
+          user = instance;
+        }, function(failure) {
+          error = failure;
+        });
+        $timeout.flush();
+        expect(error).toBe('Instance is invalid');
+      });
+
+      it('sets the proper errors if the instance is invalid on save', function() {
+        user.name = undefined;
+        user.$save().then(function(instance) {}, function(error) {});
+        $timeout.flush();
+        expect(user.errors.name).toContain('Must provide name');
+      });
+
+      it('allows aspect-oriented fail to be called on failure', function() {
+        spyOn(window, 'alert');
+
+        User.fail('$save', function(instance) {
+          for (var error in instance.errors) {
+            window.alert(instance.errors[error]);
+          }
+        });
+
+        user.name = undefined;
+        user.$save().then(function() {});
+        $timeout.flush();
+        expect(window.alert).toHaveBeenCalledWith(['Must provide name']);
       });
     });
   });

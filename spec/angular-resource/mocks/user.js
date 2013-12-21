@@ -43,6 +43,7 @@ angular
       }
 
       User = ActiveResource.Base.apply(User);
+      User.api.set('http://api.faculty.com');
       return User;
     }];
   });
