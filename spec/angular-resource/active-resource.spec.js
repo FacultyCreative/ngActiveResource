@@ -2,7 +2,7 @@
 
 describe('ActiveResource', function() {
 
-  var ActiveResource, Mocks, Sensor, System, GridController, Post, Comment, Author, 
+  var ActiveResource, Mocks, Sensor, System, GridController, Post, Comment, Author, User,
     system, backend, $timeout, $http;
 
   beforeEach(module('ActiveResource'));
@@ -18,6 +18,7 @@ describe('ActiveResource', function() {
     Post           = Mocks.Post;
     Comment        = Mocks.Comment;
     Author         = Mocks.Author;
+    User           = Mocks.User;
     backend        = _$httpBackend_;
     $timeout       = _$timeout_;
     $http          = _$http_;
@@ -1195,6 +1196,300 @@ describe('ActiveResource', function() {
       Post.$create({title: 'Gr8 p0$t'}).then(function(response) { post2 = response; });
       backend.flush();
       expect(window.alert).toHaveBeenCalledWith('Gr8 p0$t created!');
+    });
+  });
+
+  describe('Validations', function() {
+    var post, author, user;
+    beforeEach(function() {
+      post = Post.new({
+        content: 'Great post!'
+      });
+
+      author      = Author.new();
+      post.author = author;
+
+      User.new({id: 1, username: 'brettshollenberger'});
+
+      user = User.new({
+        name: 'Brett',
+        username: 'brettcassette',
+        email: 'brett.shollenberger@gmail.com',
+        zip: '19454',
+        uniqueIdentifier: '02140',
+        termsOfService: true,
+        password: 'awesomesauce',
+        passwordConfirmation: 'awesomesauce',
+        size: 'small'
+      });
+    });
+
+    describe('Error messages', function() {
+      it('does not set error messages until validated', function() {
+        var post = Post.new();
+        expect(Object.keys(post.errors).length).toBe(0);
+      });
+
+      it('sets errors per field on validation', function() {
+        var post = Post.new();
+        post.valid;
+        expect(post.errors.content).toContain("Can't be blank");
+      });
+    });
+
+    describe('Presence validation', function() {
+      it('is valid if all required fields have values', function() {
+        expect(post.valid).toBe(true);
+      });
+
+      it('is invalid if undefined', function() {
+        var post = Post.new();
+        expect(post.valid).toBe(false);
+      });
+
+      it('provides the error message "Is required"', function() {
+        post.author = undefined;
+        post.valid;
+        expect(post.errors.author).toContain("Can't be blank");
+      });
+
+      it('uses a unique error message if provided', function() {
+        user.name = '';
+        user.valid;
+        expect(user.errors.name).toContain('Must provide name');
+      });
+    });
+
+    describe('Email validation', function() {
+        it('is invalid if it does not contain a valid email address', function() {
+          user.email = 'porky';
+          expect(user.valid).toBe(false);
+        });
+
+        it('sets the email error message', function() {
+          user.email = 'pig@net';
+          user.valid;
+          expect(user.errors.email).toContain('Is not a valid email address');
+        });
+
+        it('is valid if it contains a valid email address', function() {
+          expect(user.valid).toBe(true);
+        });
+    });
+
+    describe('Zip validation', function() {
+      it('is invalid if it does not contain a valid zip code', function() {
+        user.zip = 111111;
+        expect(user.valid).toBe(false);
+      });
+
+      it('sets the zip error message', function() {
+        user.zip = 111111;
+        user.valid;
+        expect(user.errors.zip).toContain('Is not a valid zip code');
+      });
+
+      it('is valid if the zip contains a hyphen', function() {
+        user.zip = '11111-2222';
+        expect(user.valid).toBe(true);
+      });
+
+      it('is invalid if it contains a hyphen but not 9 numbers', function() {
+        user.zip = '11111-';
+        expect(user.valid).toBe(false);
+      });
+
+      it('is valid if it contains 9 numbers but no hyphen', function() {
+        user.zip = '111112222';
+        expect(user.valid).toBe(true);
+      });
+
+      it('isinvalid if it contains a hyphen in the wrong spot', function() {
+        user.zip = '1111-22222';
+        expect(user.valid).toBe(false);
+      });
+    });
+
+    describe('Acceptance validation', function() {
+      it('is valid if true', function() {
+        expect(user.valid).toBe(true);
+      });
+
+      it('is invalid if false', function() {
+        user.termsOfService = false;
+        expect(user.valid).toBe(false);
+      });
+
+      it('is invalid if anything else', function() {
+        user.termsOfService = 'pie';
+        expect(user.valid).toBe(false);
+      });
+
+      it('sets acceptance error', function() {
+        user.termsOfService = false;
+        user.valid;
+        expect(user.errors.termsOfService).toContain('Must be accepted');
+      });
+    });
+
+    describe('Length validations', function() {
+      describe('Length in validation', function() {
+        it('is invalid if the length is less than required', function() {
+          post.content = '';
+          expect(post.valid).toBe(false);
+        });
+
+        it('is invalid if the length is greater than required', function() {
+          post.content = 'The very best post in the world!';
+          expect(post.valid).toBe(false);
+        });
+
+        it('sets the error message', function() {
+          post.content = '';
+          post.valid;
+          expect(post.errors.content).toContain('Must be between 1 and 11 characters');
+        });
+
+        it('is valid if it is in the correct length', function() {
+          expect(post.valid).toBe(true);
+        });
+      });
+
+      describe('Min/Max validations', function() {
+        it('is invalid if the length is less than required', function() {
+          user.username = 'Andy'
+          expect(user.valid).toBe(false);
+        });
+
+        it('is invalid if the length is greater than allowed by max', function() {
+          user.username = 'Maximum Danger the Maximal Ranger';
+          expect(user.valid).toBe(false);
+        });
+
+        it('sets a min error message', function() {
+          user.username = 'Andy';
+          user.valid;
+          expect(user.errors.username).toContain('Must be at least 5 characters');
+        });
+
+        it('sets a max error message', function() {
+          user.username = 'Maximum Danger the Maximal Ranger';
+          user.valid;
+          expect(user.errors.username).toContain('Must be no more than 20 characters');
+        });
+
+        it('is valid if the length is within the allowed range', function() {
+          expect(user.valid).toBe(true);
+        });
+      });
+
+      describe('Length is validations', function() {
+        it('is invalid if the length is not exactly correct', function() {
+          user.uniqueIdentifier = '02140-0006';
+          expect(user.valid).toBe(false);
+        });
+
+        it('sets the length is error message', function() {
+          user.uniqueIdentifier = '02140-0006';
+          user.valid;
+          expect(user.errors.uniqueIdentifier).toContain('Must be exactly 5 characters');
+        });
+
+        it('is valid if it is exactly the correct number of characters', function() {
+          expect(user.valid).toBe(true);
+        });
+      });
+    });
+
+    describe('Confirmation validation', function() {
+      it('is invalid if it does not match the confirmation field', function() {
+        user.passwordConfirmation = '';
+        expect(user.valid).toBe(false);
+      });
+
+      it('sets the appropriate error message', function() {
+        user.passwordConfirmation = '';
+        user.valid;
+        expect(user.errors.password).toContain('Must match confirmation field');
+      });
+
+      it('is valid if it matches the confirmation field', function() {
+        expect(user.valid).toBe(true);
+      });
+    });
+
+    describe('Inclusion validation', function() {
+      it('is valid if the value is included in the acceptable list', function() {
+        expect(user.valid).toBe(true);
+      });
+
+      it('is invalid if the value is not included in the acceptable list', function() {
+        user.size = 'tall';
+        expect(user.valid).toBe(false);
+      });
+
+      it('sets the appropriate error message', function() {
+        user.size = 'tall';
+        user.valid;
+        expect(user.errors.size).toContain('Must be included in small, medium, or large');
+      });
+    });
+
+    describe('Exclusion validation', function() {
+      it('is valid if the value is not included in the unacceptable list', function() {
+        expect(user.valid).toBe(true);
+      });
+
+      it('is invalid if the value is included in the unacceptable list', function() {
+        user.size = 'XL';
+        expect(user.valid).toBe(false);
+      });
+
+      it('sets the appropriate error message', function() {
+        user.size = 'XL';
+        user.valid;
+        expect(user.errors.size).toContain('Must not be XL or XXL');
+      });
+    });
+
+    describe('Numericality validation', function() {
+      it('is invalid if the value is not a number', function() {
+        user.uniqueIdentifier = 'pi';
+        expect(user.valid).toBe(false);
+      });
+
+      it('is valid if the value is a number', function() {
+        user.uniqueIdentifier = 12345;
+        expect(user.valid).toBe(true);
+      });
+
+      it('can be set to ignore non-number characters', function() {
+        user.zip = '12345-6789';
+        expect(user.valid).toBe(true);
+      });
+
+      it('sets the appropriate error message', function() {
+        user.zip = 'abcdefg';
+        user.valid;
+        expect(user.errors.zip).toContain('Must be a number');
+      });
+    });
+
+    describe('Custom Validations', function() {
+      it('is valid if it passes the custom validation', function() {
+        expect(user.valid).toBe(true);
+      });
+
+      it('is invalid if it does not pass the custom validation', function() {
+        user.uniqueIdentifier = 'asdfjkl';
+        expect(user.valid).toBe(false);
+      });
+
+      it('sets a custom error message if provided', function() {
+        user.uniqueIdentifier = 'Invalid';
+        user.valid;
+        expect(user.errors.uniqueIdentifier).toContain('Invalid uuid');
+      });
     });
   });
 });

@@ -24,8 +24,10 @@ module.exports = function(config) {
       'bower_components/async/lib/async.js',
       'bower_components/meld/meld.js',
       'lib/json/json.js',
+      'lib/simple-form/**/*.js',
       'lib/angular-resource/**/*.js',
-      'spec/angular-resource/**/*.js'
+      'spec/angular-resource/**/*.js',
+      'spec/simple-form/**/*.js'
     ],
     // list of files / patterns to exclude
     exclude: [],

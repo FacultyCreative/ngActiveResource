@@ -5,17 +5,25 @@ angular
       function(ActiveResource) {
       function Post(data) {
         if (!data) data = {};
-        this.title  = data.title  || undefined;
+        var content;
         
+        this.title  = data.title  || undefined;
+
         this.belongsTo('author', {foreignKey: 'author_id'});
         this.hasMany('comments');
 
         var content;
         Object.defineProperty(this, 'content', {
-          enumerable: false,
+          enumerable: true,
           get: function()    { return content; },
           set: function(val) { content = val;  }
-        });
+        }); 
+        this.content = data.content;
+        
+        this.validates = {
+          content:              { presence: true, length: { in: _.range(1, 12) }  },
+          author:               { presence: true },
+        };
 
       };
 
