@@ -152,8 +152,86 @@ Now when you destroy a post, any associated comments will also be destroyed.
 Models can describe validations required before data will be persisted
 successfully:
 
-    User.validates({name: 'presence', email: {format: 'email'} });
+    function User(data) {
+      this.name  = data.name;
+      this.email = data.email;
 
-Validations also work with Wrangler's form helper to perform easy form styling.
-For instance, a field with `ng-model` set to `user.email` will set the class
-`ng-invalid` when the user has yet to enter a valid email.
+      this.validates = {
+        name: {presence: true},
+        email: { format: { email: { validates: true, message: 'Must provide valid email' } } } 
+    }
+
+Validations also work with the Simple Form directive to perform easy form
+styling. 
+
+### Helper Methods:
+
+    user.valid
+    >> false 
+
+    user.invalid
+    >> true
+
+    user.errors
+    >> { name: ['Must be defined'] }
+
+#### Presence:
+
+Validates that a user has entered a value:
+
+      name: {presence: true}
+
+#### Absence:
+
+Validates that a field does not have a value:
+
+      name: {absence: true}
+
+#### Length:
+
+Validates using ranges, min, max, or exact length:
+
+      username: { length: { in: _.range(1, 20); } },
+      email:    { length: { min: 5, max: 20 } },
+      zip:      { length: { is: 5 } }
+
+#### Format:
+
+Validates several built-in formats, and validates custom formats using the `regex`
+key:
+
+      zip:   { format: { zip: true   } },
+      email: { format: { email: true } },
+      uuid:  { format: { regex: /\d{3}\w{5}/ } } 
+
+#### Numericality:
+
+Validates that a value can be cast to a number. Can be set to ignore values like
+commas and hyphens:
+
+      zip:    { numericality: { ignore: /[\-]/g } }
+
+#### Acceptance: 
+
+Validates truthiness, as in checkbox acceptance:
+
+      termsOfService: { acceptance: true }
+
+#### Inclusion:
+
+Validates inclusion in a set of terms:
+
+      size: { inclusion: { in: ['small', 'medium', 'large'] } }
+
+#### Exclusion:
+
+Validates exclusion from a set of terms:
+
+      size: { exclusion: { from: ['XS', 'XL'] } } 
+
+#### Confirmation:
+
+Validates that two fields match:
+
+      password:             { confirmation: true },
+      passwordConfirmation: { presence: true }
