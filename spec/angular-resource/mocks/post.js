@@ -19,11 +19,6 @@ angular
           set: function(val) { content = val;  }
         }); 
         this.content = data.content;
-        
-        this.validates = {
-          content:              { presence: true, length: { in: _.range(1, 12) }  },
-          author:               { presence: true },
-        };
 
       };
 

@@ -85,6 +85,7 @@ describe('ActiveResource', function() {
     spyOn($http, 'get').andCallThrough();
     spyOn($http, 'post').andCallThrough();
     spyOn($http, 'delete').andCallThrough();
+    spyOn($http, 'put').andCallThrough();
     system = System.new({id: 1});
   }]));
 
@@ -967,7 +968,7 @@ describe('ActiveResource', function() {
       });
 
       it('creates an update url', function() {
-        expect(System.api.updateURL).toEqual('http://api.faculty.com/system/[:attrs]');
+        expect(System.api.updateURL).toEqual('http://api.faculty.com/system.json');
       });
     });
 
@@ -1200,15 +1201,8 @@ describe('ActiveResource', function() {
   });
 
   describe('Validations', function() {
-    var post, author, user;
+    var user;
     beforeEach(function() {
-      post = Post.new({
-        content: 'Great post!'
-      });
-
-      author      = Author.new();
-      post.author = author;
-
       user = User.new({
         name: 'Brett',
         username: 'brettcassette',
@@ -1224,31 +1218,25 @@ describe('ActiveResource', function() {
 
     describe('Error messages', function() {
       it('does not set error messages until validated', function() {
-        var post = Post.new();
-        expect(Object.keys(post.errors).length).toBe(0);
+        var user = User.new();
+        expect(Object.keys(user.errors).length).toBe(0);
       });
 
       it('sets errors per field on validation', function() {
-        var post = Post.new();
-        post.valid;
-        expect(post.errors.content).toContain("Can't be blank");
+        var user = User.new();
+        user.valid;
+        expect(user.errors.name).toContain("Must provide name");
       });
     });
 
     describe('Presence validation', function() {
       it('is valid if all required fields have values', function() {
-        expect(post.valid).toBe(true);
+        expect(user.valid).toBe(true);
       });
 
       it('is invalid if undefined', function() {
-        var post = Post.new();
-        expect(post.valid).toBe(false);
-      });
-
-      it('provides the error message "Is required"', function() {
-        post.author = undefined;
-        post.valid;
-        expect(post.errors.author).toContain("Can't be blank");
+        var user = User.new();
+        expect(user.valid).toBe(false);
       });
 
       it('uses a unique error message if provided', function() {
@@ -1331,28 +1319,6 @@ describe('ActiveResource', function() {
     });
 
     describe('Length validations', function() {
-      describe('Length in validation', function() {
-        it('is invalid if the length is less than required', function() {
-          post.content = '';
-          expect(post.valid).toBe(false);
-        });
-
-        it('is invalid if the length is greater than required', function() {
-          post.content = 'The very best post in the world!';
-          expect(post.valid).toBe(false);
-        });
-
-        it('sets the error message', function() {
-          post.content = '';
-          post.valid;
-          expect(post.errors.content).toContain('Must be between 1 and 11 characters');
-        });
-
-        it('is valid if it is in the correct length', function() {
-          expect(post.valid).toBe(true);
-        });
-      });
-
       describe('Min/Max validations', function() {
         it('is invalid if the length is less than required', function() {
           user.username = 'Andy'
@@ -1490,7 +1456,7 @@ describe('ActiveResource', function() {
       });
     });
 
-    ddescribe('Saving with Validations', function() {
+    describe('Saving with Validations', function() {
       it('saves if the values are valid', function() {
         expect(user.valid).toBe(true);
         user.$save();
@@ -1511,19 +1477,8 @@ describe('ActiveResource', function() {
         expect(user.valid).toBe(true);
       });
 
-      it('does not save the values if the instance is not valid', function() {
-        user.name = undefined;
-        var error;
-        user.$save().then(function(instance) {
-          user = instance;
-        }, function(failure) {
-          error = failure;
-        });
-        $timeout.flush();
-        expect(error).toBe('Instance is invalid');
-      });
-
       it('saves if no validations are provided', function() {
+        var author;
         author = Author.new();
         author.$save().then(function() { });
         backend.expectPOST('http://api.faculty.com/author.json').respond({_id: 1});
@@ -1551,6 +1506,60 @@ describe('ActiveResource', function() {
         user.$save().then(function() {});
         $timeout.flush();
         expect(window.alert).toHaveBeenCalledWith(['Must provide name']);
+      });
+
+      it('uses validations with $create', function() {
+        var user, error;
+        User.$create().then(function(response) { user = response; },
+          function(instance) { user = instance; });
+        $timeout.flush();
+        expect(user.errors.name).toContain('Must provide name');
+      });
+    });
+    describe('Updating with Validations', function() {
+
+      var user;
+      beforeEach(function() {
+        User.find({id: 1}).then(function(response) { user = response; });
+        backend.expectGET('http://api.faculty.com/user/?id=1').respond({
+          id: 1,
+          name: 'Brett',
+          username: 'brettcassette',
+          email: 'brett.shollenberger@gmail.com',
+          zip: '19454',
+          uniqueIdentifier: '02140',
+          termsOfService: true,
+          password: 'awesomesauce',
+          passwordConfirmation: 'awesomesauce',
+          size: 'small'
+        });
+        backend.flush();
+      });
+
+      it('Does not update if the instance is invalid', function() {
+        user.name = undefined;
+        user.$update().then(function(instance) { user = instance; },
+          function(instance) { user = instance; });
+
+        $timeout.flush();
+        expect($http.put).not.toHaveBeenCalled();
+      });
+
+      it('Updates is the instance is valid', function() {
+        user.$update().then(function(instance) { user = instance; },
+          function(instance) { user = instance; });
+
+        backend.expectPUT('http://api.faculty.com/user.json')
+          .respond({});
+        backend.flush();
+        expect($http.put).toHaveBeenCalledWith('http://api.faculty.com/user.json', '{"name":"Brett","username":"brettcassette","email":"brett.shollenberger@gmail.com","zip":"19454","uniqueIdentifier":"02140","termsOfService":true,"password":"awesomesauce","passwordConfirmation":"awesomesauce","size":"small","id":1}');
+      });
+
+      it('Sets errors if the instance is invalid', function() {
+        user.name = undefined;
+        user.$update().then(function(instance) { user = instance; },
+          function(instance) { user = instance; });
+        expect(user.errors.name).toContain('Must provide name');
       });
     });
   });
