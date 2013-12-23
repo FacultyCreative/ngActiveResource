@@ -5,6 +5,10 @@ describe('ActiveResource', function() {
   var ActiveResource, Mocks, Sensor, System, GridController, Post, Comment, Author, User,
     system, backend, $timeout, $http;
 
+  function numkeys(object) {
+    return Object.keys(object).length;
+  };
+
   beforeEach(module('ActiveResource'));
   beforeEach(module('ActiveResource.Mocks'));
 
@@ -1216,10 +1220,63 @@ describe('ActiveResource', function() {
       });
     });
 
+    describe('Model.instance#validate()', function() {
+      describe('Validating Individual Fields', function() {
+        it('validates an individual field', function() {
+          var user = User.new();
+          expect(user.validate('name')).toBe(false);
+        });
+
+        it('adds errors for just the validated field', function() {
+          var user = User.new();
+          user.validate('name');
+          expect(user.errors).toEqual({ name : [ 'Must provide name' ] });
+        });
+      });
+
+      describe('Validating All Fields', function() {
+        beforeEach(function() {
+          user.name = undefined;
+        });
+
+        it('validates all fields', function() {
+          expect(user.validate()).toBe(false);
+        });
+
+        it('uses `valid` as a shorthand for running all validations', function() {
+          expect(user.valid).toBe(false);
+        });
+
+        it('also has an `invalid` helper', function() {
+          expect(user.invalid).toBe(true);
+        });
+
+        it('sets errors on all invalid fields & required fields', function() {
+          var user = User.new();
+          user.validate();
+          expect(numkeys(user.errors)).toBe(2);
+        });
+      });
+    });
+
+    describe('Edge Cases', function() {
+      describe('Non-required fields', function() {
+        it('is valid if blank and not required', function() {
+          user.email = undefined;
+          expect(user.valid).toBe(true);
+        });
+
+        it('is valid if empty string and not required', function() {
+          user.email = '';
+          expect(user.valid).toBe(true);
+        });
+      });
+    });
+
     describe('Error messages', function() {
       it('does not set error messages until validated', function() {
         var user = User.new();
-        expect(Object.keys(user.errors).length).toBe(0);
+        expect(numkeys(user.errors)).toBe(0);
       });
 
       it('sets errors per field on validation', function() {
@@ -1241,8 +1298,13 @@ describe('ActiveResource', function() {
 
       it('uses a unique error message if provided', function() {
         user.name = '';
-        user.valid;
+        user.validate();
         expect(user.errors.name).toContain('Must provide name');
+      });
+
+      it('runs all validations if presence is required', function() {
+        user.email = 'bigbad@wolfnet';
+        expect(user.valid).toBe(false);
       });
     });
 
@@ -1260,6 +1322,13 @@ describe('ActiveResource', function() {
 
         it('is valid if it contains a valid email address', function() {
           expect(user.valid).toBe(true);
+        });
+
+
+        it('sets no errors if blank and not required', function() {
+          user.email = undefined;
+          user.validate();
+          expect(numkeys(user.errors)).toBe(0);
         });
     });
 
@@ -1294,6 +1363,11 @@ describe('ActiveResource', function() {
         user.zip = '1111-22222';
         expect(user.valid).toBe(false);
       });
+
+      it('is valid if not present, and not required', function() {
+        user.zip = undefined;
+        expect(user.valid).toBe(true);
+      });
     });
 
     describe('Acceptance validation', function() {
@@ -1315,6 +1389,11 @@ describe('ActiveResource', function() {
         user.termsOfService = false;
         user.valid;
         expect(user.errors.termsOfService).toContain('Must be accepted');
+      });
+
+      it('is valid if not present and not required', function() {
+        user.termsOfService = undefined;
+        expect(user.valid).toBe(true);
       });
     });
 
@@ -1345,6 +1424,11 @@ describe('ActiveResource', function() {
         it('is valid if the length is within the allowed range', function() {
           expect(user.valid).toBe(true);
         });
+
+        it('is valid if blank and not required', function() {
+          user.username = '';
+          expect(user.valid).toBe(true);
+        });
       });
 
       describe('Length is validations', function() {
@@ -1360,6 +1444,11 @@ describe('ActiveResource', function() {
         });
 
         it('is valid if it is exactly the correct number of characters', function() {
+          expect(user.valid).toBe(true);
+        });
+
+        it('is valid if blank and not required', function() {
+          user.uniqueIdentifier = '';
           expect(user.valid).toBe(true);
         });
       });
@@ -1380,6 +1469,18 @@ describe('ActiveResource', function() {
       it('is valid if it matches the confirmation field', function() {
         expect(user.valid).toBe(true);
       });
+
+      it('is valid if both fields are blank and neither is required', function() {
+        user.social = '';
+        user.socialConfirmation = '';
+        expect(user.valid).toBe(true);
+      });
+
+      it('is invalid if one of the fields is filled in, even if neither is required', function() {
+        user.social = '';
+        user.socialConfirmation = 'hi';
+        expect(user.valid).toBe(false);
+      });
     });
 
     describe('Inclusion validation', function() {
@@ -1397,6 +1498,11 @@ describe('ActiveResource', function() {
         user.valid;
         expect(user.errors.size).toContain('Must be included in small, medium, or large');
       });
+
+      it('is valid if blank and not required', function() {
+        user.size = '';
+        expect(user.valid).toBe(true);
+      });
     });
 
     describe('Exclusion validation', function() {
@@ -1413,6 +1519,11 @@ describe('ActiveResource', function() {
         user.size = 'XL';
         user.valid;
         expect(user.errors.size).toContain('Must not be XL or XXL');
+      });
+
+      it('is valid if blank and not required', function() {
+        user.size = '';
+        expect(user.valid).toBe(true);
       });
     });
 
@@ -1437,6 +1548,11 @@ describe('ActiveResource', function() {
         user.valid;
         expect(user.errors.zip).toContain('Must be a number');
       });
+
+      it('is valid if blank and not required', function() {
+        user.zip = '';
+        expect(user.valid).toBe(true);
+      });
     });
 
     describe('Custom Validations', function() {
@@ -1453,6 +1569,11 @@ describe('ActiveResource', function() {
         user.uniqueIdentifier = 'Invalid';
         user.valid;
         expect(user.errors.uniqueIdentifier).toContain('Invalid uuid');
+      });
+
+      it('is valid if blank, and not required', function() {
+        user.uniqueIdentifier = '';
+        expect(user.valid).toBe(true);
       });
     });
 
