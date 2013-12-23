@@ -5,7 +5,6 @@ angular
     this.$get = ['ActiveResource', function(ActiveResource) {
 
       function uuid(uuid) {
-        if(!uuid) return true;
         return /(^\d{5}$)|(^\d{5}-{0,1}\d{4}$)/.test(uuid);
       };
 
@@ -20,16 +19,16 @@ angular
         this.termsOfService       = data.termsOfService;
         this.password             = data.password;
         this.passwordConfirmation = data.passwordConfirmation;
+        this.social               = data.social;
+        this.socialConfirmation   = data.socialConfirmation;
         this.size                 = data.size;
         this.validates = {
           name:                 { presence: { validates: true, message: 'Must provide name' } },
-          username:             { presence: true, 
-                                  length: { min: 5, max: 20 } },
-          email:                { presence: true, format: { email: true } },
+          username:             { length: { min: 5, max: 20 } },
+          email:                { format: { email: true } },
           zip:                  { format: { zip: true },
                                   numericality: { ignore: /[\-]/g } },
-          uniqueIdentifier:     { presence: true, 
-                                  uuid: { validates: uuid,
+          uniqueIdentifier:     { uuid: { validates: uuid,
                                           message: 'Invalid uuid' },
                                   numericality: true,
                                   length: { is: 5 }
@@ -37,6 +36,7 @@ angular
           termsOfService:       { acceptance: true },
           password:             { confirmation: true },
           passwordConfirmation: { presence: true },
+          social:               { confirmation: true},
           size:                 { inclusion: { in: ['small', 'medium', 'large'] },
                                   exclusion: { from: ['XL', 'XXL'] } }
         }
