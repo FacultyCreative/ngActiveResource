@@ -38,5 +38,17 @@ facultyAPI.addResource({
   collection: db.sensor
 });
 
+facultyAPI.addResource({
+  app: app,
+  resourceName: 'post',
+  collection: db.post
+});
+
+facultyAPI.addResource({
+  app: app,
+  resourceName: 'comment',
+  collection: db.comment
+});
+
 app.set('port', process.env.PORT || 3000);
 

@@ -4,6 +4,8 @@
   <meta charset="utf-8">
   <title>AngularJS test</title>
 
+  <link rel="stylesheet" type="text/css" href="http://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css">
+
   <script src="http://code.angularjs.org/1.2.4/angular.js"></script>
   <script src="../angular-route/angular-route.js"></script>
 
@@ -13,31 +15,33 @@
   <script src="../active-support/active-support.js"></script>
   <script src="../angular-resource/active-resource.js"></script>
   <script src="../angular-resource/api/api.js"></script>
-  <script src="../angular-resource/collection/collection.js"></script>
   <script src="../angular-resource/association/association.js"></script>
+  <script src="../angular-resource/event-emitter/event-emitter.js"></script>
+  <script src="../angular-resource/validation/validation.js"></script>
   <script src="../angular-resource/base/base.js"></script>
   <script src="scripts/app.js"></script>
+  <script src="scripts/models/post.js"></script>
+  <script src="scripts/models/comment.js"></script>
+  <script src="scripts/controllers/main.js"></script>
+
 </head>
 <body>
-  <h1>Sensors</h1>
-
   <div ng-controller="MainCtrl">
-    <table>
-      <thead>
-        <th>ID</th>
-        <th>Name</th>
-      </thead>
-      <tbody>
-        <tr ng-repeat="sensor in system.sensors">
-          <td>{{sensor._id}}</td>
-          <td>{{sensor.name}}</td>
-          <td><button class="btn btn-primary" ng-click="sensor.$delete()">Delete</button></td>
-        </tr>
-      </tbody>
-    </table>
-    <form ng-submit="sensor.$save()">
-      <input ng-model="sensor.name">
-      <input type="submit" id="submit" value="Submit" />
-    </form>
-  </body>
+    <div class="container">
+      <h1>{{post.title}}</h1>
+      <p>{{post.body}}</p>
+      <div ng-repeat="comment in post.comments">
+        <p class="alert alert-info">{{comment.body}}</p>
+        <button class="btn btn-primary" ng-click="comment.$delete()">Delete</button><br><br>
+      </div>
+    </div>
+    <div class="container">
+      <form ng-submit="comment.$save()">
+        <h2>New Comment</h2>
+        <textarea class="col-md-3" ng-model="comment.body"></textarea><br><br><br>
+        <input class="col-md-3 btn btn-primary" type="submit" id="submit" value="Submit" />
+      </form>
+    </div>
+  </div>
+</body>
 </html>

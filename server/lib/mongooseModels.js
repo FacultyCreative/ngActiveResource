@@ -37,6 +37,25 @@ schema.sensor = new mongoose.Schema({
   }
 });
 
+schema.post = new mongoose.Schema({
+  title: {
+    type: String
+  },
+  body: {
+    type: String
+  }
+});
+
+schema.comment = new mongoose.Schema({
+  body: {
+    type: String
+  },
+  post_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true
+  }
+});
+
 odmApi.schema   = schema;
 odmApi.mongoose = mongoose;
 for (var i in schema) {
