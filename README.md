@@ -174,6 +174,16 @@ styling.
 
     user.errors
     >> { name: ['Must be defined'] }
+    
+### Usage in Forms:
+
+Helper methods make form validation simple:
+
+    <input ng-model="user.name" ng-blur="user.validate('name')">
+    
+Displaying errors is equally simple. Errors will only be added for a given field once it's been validated. Validate them one-by-one with directives like `ng-blur` or `ng-change`, or validate them all at once by passing no arguments to the `validate` method:
+
+    <div ng-show="user.errors.name" class="alert alert-warning">{{user.errors.name}}</div>
 
 #### Presence:
 
