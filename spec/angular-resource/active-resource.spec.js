@@ -1162,6 +1162,7 @@ describe('ActiveResource', function() {
         alert(options.instance.title + ' updated!');
       });
       post.update({_id: 2});
+      $timeout.flush();
       expect(window.alert).toHaveBeenCalledWith('Great post! updated!');
     });
 
