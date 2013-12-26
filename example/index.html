@@ -36,9 +36,20 @@
       </div>
     </div>
     <div class="container">
+      <div ng-show="comment.errors.body" ng-repeat="error in comment.errors.body">
+        <div class="alert alert-warning">Comment {{error}}</div>
+      </div>
       <form ng-submit="comment.$save()">
         <h2>New Comment</h2>
-        <textarea class="col-md-3" ng-model="comment.body"></textarea><br><br><br>
+        <textarea 
+         class="col-md-3" 
+         ng-model="comment.body" 
+         ng-blur="comment.validate('body')"
+         ng-change="comment.validateIfErrored('body')">
+       </textarea>
+       <br>
+       <br>
+       <br>
         <input class="col-md-3 btn btn-primary" type="submit" id="submit" value="Submit" />
       </form>
     </div>
