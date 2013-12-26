@@ -1258,6 +1258,20 @@ describe('ActiveResource', function() {
           expect(numkeys(user.errors)).toBe(2);
         });
       });
+
+      describe('Validate If Errored', function() {
+        it('does not validate if there are no errors', function() {
+          expect(user.validateIfErrored('name')).toBe(undefined);
+        });
+
+        it('validates the field if there are errors on the field', function() {
+          user.name = '';
+          user.validate();
+          user.name = 'Awesome';
+          user.validateIfErrored('name');
+          expect(user.errors.name).toBe(undefined);
+        });
+      });
     });
 
     describe('Edge Cases', function() {
