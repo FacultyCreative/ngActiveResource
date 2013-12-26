@@ -1,0 +1,353 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>ngActiveResource by FacultyCreative</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <script src="javascripts/scale.fix.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1 class="header">ngActiveResource</h1>
+        <p class="header">Connects business objects and REST web services for Angular.js</p>
+
+        <ul>
+          <li class="download"><a class="buttons" href="https://github.com/FacultyCreative/ngActiveResource/zipball/master">Download ZIP</a></li>
+          <li class="download"><a class="buttons" href="https://github.com/FacultyCreative/ngActiveResource/tarball/master">Download TAR</a></li>
+          <li><a class="buttons github" href="https://github.com/FacultyCreative/ngActiveResource">View On GitHub</a></li>
+        </ul>
+
+        <p class="header">This project is maintained by <a class="header name" href="https://github.com/FacultyCreative">FacultyCreative</a></p>
+
+
+      </header>
+      <section>
+        <h1>
+<a name="activeresource-for-angularjs" class="anchor" href="#activeresource-for-angularjs"><span class="octicon octicon-link"></span></a>ActiveResource for Angular.js</h1>
+
+<p>ActiveResource provides a Base class to make modelling with Angular easier. It
+provides associations, caching, API integration, validations, and Active Record
+pattern persistence methods.</p>
+
+<h2>
+<a name="simple" class="anchor" href="#simple"><span class="octicon octicon-link"></span></a>Simple:</h2>
+
+<p>Say you want a form to add comments to a post:</p>
+
+<pre><code>&lt;form ng-submit="comment.$save"&gt;
+  &lt;input ng-model="comment.text"&gt;
+  &lt;input type="submit"&gt;
+&lt;/form&gt;
+
+&lt;div ng-repeat="comment in post.comments"&gt;
+  {{comment.text}}
+&lt;/div&gt;
+</code></pre>
+
+<p>In your controller, all you have to setup is something like this:</p>
+
+<pre><code>Post.find(postId).then(function(response) {
+  $scope.post      = response;
+  $scope.comment   = $scope.post.comments.new();
+
+  Comment.after('$save', function() {
+    $scope.comment = $scope.post.comments.new();
+  });
+};
+</code></pre>
+
+<p>You don't even have to tell <code>ng-repeat</code> to load in the new comment. The new
+comment will already be added to the post by association. Simply tell the
+<code>comment</code> object on the scope to clear, so that the user can enter another
+comment.</p>
+
+<h2>
+<a name="writing-a-model" class="anchor" href="#writing-a-model"><span class="octicon octicon-link"></span></a>Writing a Model:</h2>
+
+<p>Create an Angular factory or provider that relies on ActiveResource:</p>
+
+<pre><code>angular.module('app', ['ActiveResource')
+  .factory('Post', ['ActiveResource', function(ActiveResource) {
+
+    function Post(data) {
+      this.id = data.id;
+      this.hasMany('comments');
+      this.belongsTo('author);
+    };
+
+    Post = ActiveResource.Base.apply(Post);
+    Post.api.set('http://api.faculty.com');
+    Post.dependentDestroy('comments');
+
+    return User;
+  });
+</code></pre>
+
+<p>The model is terse, but gains a lot of functionality from ActiveResource.Base.</p>
+
+<p>It declares a has-many relationship on Comment, allowing it to say things like:</p>
+
+<pre><code>var post    = Post.new({title: "My First Post"});
+var comment = post.comments.new({text: "Great post!"});
+</code></pre>
+
+<p>The new comment will be an instance of the class Comment, which will be defined
+in its own model.</p>
+
+<p>It also declares a belongs-to relationship on Author. This allows it to say
+things like:</p>
+
+<pre><code>var author     = Author.new();
+comment.author = author;
+comment.$save().then(function(response) { comment = response; });
+</code></pre>
+
+<p>This will also cause author.comments to include this instance of Comment.</p>
+
+<p>Post also declares a dependent-destroy relationship on comments, meaning:</p>
+
+<pre><code>post.$delete().then(function(response) { post = comment = response; });
+expect(post).not.toBeDefined();
+expect(comment).not.toBeDefined();
+expect(Post.find({title: "My First Post"}).not.toBeDefined();
+expect(Comment.find({text: "Great post!"}).not.toBeDefined();
+</code></pre>
+
+<p>This means the post and its comments have been deleted both locally and from the
+database.</p>
+
+<p>The astute reader will notice methods prefaced with <code>$</code> are interacting with an
+API. The API calls are established in the model definition under
+<code>Post.api.set()</code>.</p>
+
+<h2>
+<a name="establish-associations" class="anchor" href="#establish-associations"><span class="octicon octicon-link"></span></a>Establish Associations:</h2>
+
+<p>A has many association can be setup by naming the field. If the field name is
+also the name of the provider that contains the foreign model, this is all you
+have to say. If the name of the provider is different, you can set it explicitly
+via the <code>provider</code> option: </p>
+
+<pre><code>this.hasMany('comments', {provider: 'CommentModel'});
+</code></pre>
+
+<p>Foreign keys will also be intuited. For instance:</p>
+
+<pre><code>this.belongsTo('post');
+</code></pre>
+
+<p>Expect the model to define a <code>post_id</code> attribute mapping to the primary key of
+the post to which it belongs. If the foreign key is different, you can set it
+explicitly: </p>
+
+<pre><code>this.belongsTo('post', {foreign_key: 'my_post_id'});
+</code></pre>
+
+<p>Any number of options can be set on the association:</p>
+
+<pre><code>this.belongsTo('post', {provider: 'PostModel', foreign_key: 'my_post_id'});
+</code></pre>
+
+<h2>
+<a name="methods" class="anchor" href="#methods"><span class="octicon octicon-link"></span></a>Methods:</h2>
+
+<p>ActiveResource adds two types of methods to your models and instances:</p>
+
+<p>1) API-updating methods. These are prefaced with <code>$</code>, such as <code>$create</code>,
+<code>$save</code>, <code>$update</code>, and <code>$delete</code>, and are the 'unsafe' methods in a RESTful API 
+(POST, PUT, and DELETE). These methods will call the API using the URLs you've
+set as ModelName.api.createURL, ModelName.api.updateURL, and ModelName.api.deleteURL.
+The api.set method sets default API URLs for you, but you can override these defaults by setting
+them explicitly.</p>
+
+<p>2) Local-instance creating and finding methods. These include <code>new</code>, <code>find</code>,
+<code>where</code>, and <code>update</code>. <code>new</code> creates a new instance of a model on the client,
+and <code>update</code> updates that instance without issuing a PUT request. <code>find</code> will
+attempt to find local instances in the model's client-side cache before issuing
+a GET request, and <code>where</code> will always issue a GET request to ensure it has all
+instances of a model that match given terms. These are the 'safe' methods in a
+RESTful API (GET).</p>
+
+<h2>
+<a name="custom-primary-keys" class="anchor" href="#custom-primary-keys"><span class="octicon octicon-link"></span></a>Custom Primary Keys</h2>
+
+<p>By default, models will assume a primary key field labeled <code>id</code>, but you can set
+a custom one like so:</p>
+
+<pre><code>function Post(data) {
+  primaryKey('_id');
+}
+</code></pre>
+
+<h2>
+<a name="destroy-dependent-associations" class="anchor" href="#destroy-dependent-associations"><span class="octicon octicon-link"></span></a>Destroy Dependent Associations</h2>
+
+<p>If you want a model to delete certain associated resources when they themselves
+are deleted, use <code>dependentDestroy</code>:</p>
+
+<pre><code>Post.dependentDestroy('comments');
+</code></pre>
+
+<p>Now when you destroy a post, any associated comments will also be destroyed.</p>
+
+<h2>
+<a name="write-validations" class="anchor" href="#write-validations"><span class="octicon octicon-link"></span></a>Write Validations:</h2>
+
+<p>Models can describe validations required before data will be persisted
+successfully:</p>
+
+<pre><code>function User(data) {
+  this.name  = data.name;
+  this.email = data.email;
+
+  this.validates({
+    name: {presence: true},
+    email: { format: { email: { validates: true, message: 'Must provide valid email' } } } 
+  });
+</code></pre>
+
+<p>Validations also work with the Simple Form directive to perform easy form
+styling. </p>
+
+<h3>
+<a name="helper-methods" class="anchor" href="#helper-methods"><span class="octicon octicon-link"></span></a>Helper Methods:</h3>
+
+<pre><code>user.valid
+&gt;&gt; false 
+
+user.invalid
+&gt;&gt; true
+
+user.errors
+&gt;&gt; { name: ['Must be defined'] }
+
+user.validate('name')
+&gt;&gt; true
+
+user.validateIfErrored('name')
+&gt;&gt; true
+</code></pre>
+
+<h3>
+<a name="usage-in-forms" class="anchor" href="#usage-in-forms"><span class="octicon octicon-link"></span></a>Usage in Forms:</h3>
+
+<p>Helper methods make form validation simple:</p>
+
+<pre><code>&lt;input ng-model="user.name" ng-blur="user.validate('name')"&gt;
+</code></pre>
+
+<p>Displaying errors is equally simple. Errors will only be added for a given field once it's been validated. Validate them one-by-one with directives like <code>ng-blur</code> or <code>ng-change</code>, or validate them all at once by passing no arguments to the <code>validate</code> method:</p>
+
+<pre><code>&lt;div ng-show="user.errors.name" class="alert alert-warning"&gt;{{user.errors.name}}&lt;/div&gt;
+</code></pre>
+
+<p>The interaction we prefer at Faculty Creative usually looks like this:</p>
+
+<pre><code>&lt;input
+ ng-model="user.name"
+ ng-blur="user.validate('name')
+ ng-change="user.validateIfErrored('name')&gt;
+</code></pre>
+
+<p>This causes validations to run on blur, and, if errors exist on the field, to
+run on change, so that as soon as a user corrects an error, the error will
+disappear immediately.</p>
+
+<p>When a model instance is saved, all validations are automatically run, so errors
+will appear if the form contains any errors.</p>
+
+<h4>
+<a name="presence" class="anchor" href="#presence"><span class="octicon octicon-link"></span></a>Presence:</h4>
+
+<p>Validates that a user has entered a value:</p>
+
+<pre><code>  name: {presence: true}
+</code></pre>
+
+<h4>
+<a name="absence" class="anchor" href="#absence"><span class="octicon octicon-link"></span></a>Absence:</h4>
+
+<p>Validates that a field does not have a value:</p>
+
+<pre><code>  name: {absence: true}
+</code></pre>
+
+<h4>
+<a name="length" class="anchor" href="#length"><span class="octicon octicon-link"></span></a>Length:</h4>
+
+<p>Validates using ranges, min, max, or exact length:</p>
+
+<pre><code>  username: { length: { in: _.range(1, 20); } },
+  email:    { length: { min: 5, max: 20 } },
+  zip:      { length: { is: 5 } }
+</code></pre>
+
+<h4>
+<a name="format" class="anchor" href="#format"><span class="octicon octicon-link"></span></a>Format:</h4>
+
+<p>Validates several built-in formats, and validates custom formats using the <code>regex</code>
+key:</p>
+
+<pre><code>  zip:   { format: { zip: true   } },
+  email: { format: { email: true } },
+  uuid:  { format: { regex: /\d{3}\w{5}/ } } 
+</code></pre>
+
+<h4>
+<a name="numericality" class="anchor" href="#numericality"><span class="octicon octicon-link"></span></a>Numericality:</h4>
+
+<p>Validates that a value can be cast to a number. Can be set to ignore values like
+commas and hyphens:</p>
+
+<pre><code>  zip:    { numericality: { ignore: /[\-]/g } }
+</code></pre>
+
+<h4>
+<a name="acceptance" class="anchor" href="#acceptance"><span class="octicon octicon-link"></span></a>Acceptance:</h4>
+
+<p>Validates truthiness, as in checkbox acceptance:</p>
+
+<pre><code>  termsOfService: { acceptance: true }
+</code></pre>
+
+<h4>
+<a name="inclusion" class="anchor" href="#inclusion"><span class="octicon octicon-link"></span></a>Inclusion:</h4>
+
+<p>Validates inclusion in a set of terms:</p>
+
+<pre><code>  size: { inclusion: { in: ['small', 'medium', 'large'] } }
+</code></pre>
+
+<h4>
+<a name="exclusion" class="anchor" href="#exclusion"><span class="octicon octicon-link"></span></a>Exclusion:</h4>
+
+<p>Validates exclusion from a set of terms:</p>
+
+<pre><code>  size: { exclusion: { from: ['XS', 'XL'] } } 
+</code></pre>
+
+<h4>
+<a name="confirmation" class="anchor" href="#confirmation"><span class="octicon octicon-link"></span></a>Confirmation:</h4>
+
+<p>Validates that two fields match:</p>
+
+<pre><code>  password:             { confirmation: true },
+  passwordConfirmation: { presence: true }
+</code></pre>
+      </section>
+      <footer>
+        <p><small>Hosted on <a href="http://pages.github.com">GitHub Pages</a> using the Dinky theme</small></p>
+      </footer>
+    </div>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+		
+  </body>
+</html>
