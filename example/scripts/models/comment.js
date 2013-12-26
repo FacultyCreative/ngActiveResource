@@ -4,11 +4,13 @@ angular.module('app')
       function(ActiveResource) {
 
       function Comment(data) {
-        this.body = data.body;
+        this.body   = data.body;
+        this.author = data.author;
         this.belongsTo('post');
 
         this.validates({
-          body: { presence: true, length: { in: _.range(1, 140) } }
+          body:   { presence: true, length: { in: _.range(1, 140) } },
+          author: { presence: true }
         });
       };
 

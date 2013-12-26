@@ -33,13 +33,19 @@
       <h1>{{post.title}}</h1>
       <p>{{post.body}}</p>
       <div ng-repeat="comment in post.comments">
-        <p class="alert alert-info">{{comment.body}}</p>
+        <p class="alert alert-info">
+          <span>{{comment.author}}</span>
+          <span>{{comment.body}}</span>
+        </p>
         <button class="btn btn-primary" ng-click="comment.$delete()">Delete</button><br><br>
       </div>
     </div>
     <div class="container">
       <div ng-show="comment.errors.body" ng-repeat="error in comment.errors.body">
-        <div class="alert alert-warning">Comment {{error}}</div>
+        <div class="alert alert-warning">Body {{error}}</div>
+      </div>
+      <div ng-show="comment.errors.author" ng-repeat="error in comment.errors.author">
+        <div class="alert alert-warning">Author {{error}}</div>
       </div>
       <form ng-submit="comment.$save()">
         <h2>New Comment</h2>
@@ -49,6 +55,12 @@
          ng-blur="comment.validate('body')"
          ng-change="comment.validateIfErrored('body')">
        </textarea>
+       <br><br><br>
+       <input
+        class="col-md-3"
+        ng-model="comment.author"
+        ng-blur="comment.validate('author')"
+        ng-change="comment.validateIfErrored('author')">
        <br>
        <br>
        <br>
