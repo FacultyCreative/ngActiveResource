@@ -1,19 +1,20 @@
 describe('Simple Form', function () {
 
-  var $compile, $rootScope, parentScope, zipValidator,
+  var $compile, $rootScope, parentScope, zipValidator, $timeout,
   $scope, html, element, f, ngFormCtrl, User, user, ActiveResource, Mocks;
 
   beforeEach(module('simpleForm'));
   beforeEach(module('ActiveResource'));
   beforeEach(module('ActiveResource.Mocks'));
 
-  beforeEach(inject(['ActiveResource', 'ActiveResource.Mocks', '$compile', '$rootScope', 
-      function(_ActiveResource_, _ARMocks_, _$compile_, _$rootScope_) {
+  beforeEach(inject(['ActiveResource', 'ActiveResource.Mocks', '$compile', '$rootScope', '$timeout',
+      function(_ActiveResource_, _ARMocks_, _$compile_, _$rootScope_, _$timeout_) {
     ActiveResource   = _ActiveResource_;
     Mocks            = _ARMocks_;
     User             = Mocks.User;
     $compile         = _$compile_;
     $rootScope       = _$rootScope_;
+    $timeout         = _$timeout_;
 
     // Simulate a controller scope that ng-model will inherit from
     parentScope      = $rootScope.$new();
@@ -55,6 +56,7 @@ describe('Simple Form', function () {
 
     ngFormCtrl       = element.controller('form');
     user             = parentScope.user;
+    $scope.$digest();
   }]));
 
   describe('form creation and validation', function() {

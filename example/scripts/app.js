@@ -1,5 +1,5 @@
 angular
-  .module('app', ['ng', 'ngRoute', 'ActiveResource'])
+  .module('app', ['ng', 'ngRoute', 'ActiveResource', 'simpleForm'])
   .config(['$routeProvider', '$httpProvider', function(Router, $http) {
     Router
       .when('/', {
