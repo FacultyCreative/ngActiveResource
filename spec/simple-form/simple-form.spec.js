@@ -312,7 +312,6 @@ describe('Simple Form', function () {
     });
 
     describe('custom validations', function() {
-
       it('adds ng-valid css class to inputs when valid', function() {
         ngFormCtrl.$fields['user.zip'].$setViewValue('11111-1111');
         user.validate();
@@ -340,6 +339,16 @@ describe('Simple Form', function () {
         ngFormCtrl.$fields['user.zip'].$setViewValue('abcdefg');
         user.validate();
         expect(element.html().match(/ng-invalid-zip/)).not.toBeNull();
+      });
+    });
+
+    describe('error stacking', function() {
+      it('stacks errors when validating individual fields', function() {
+        ngFormCtrl.$fields['user.zip'].$setViewValue('1');
+        user.validate('zip');
+        ngFormCtrl.$fields['user.name'].$setViewValue('');
+        user.validate('name');
+        expect(Object.keys(user.errors).length).toBe(2);
       });
     });
   });
