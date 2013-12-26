@@ -202,6 +202,9 @@ This causes validations to run on blur, and, if errors exist on the field, to
 run on change, so that as soon as a user corrects an error, the error will
 disappear immediately.
 
+When a model instance is saved, all validations are automatically run, so errors
+will appear if the form contains any errors.
+
 #### Presence:
 
 Validates that a user has entered a value:
