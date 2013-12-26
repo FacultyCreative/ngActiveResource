@@ -174,6 +174,12 @@ styling.
 
     user.errors
     >> { name: ['Must be defined'] }
+
+    user.validate('name')
+    >> true
+
+    user.validateIfErrored('name')
+    >> true
     
 ### Usage in Forms:
 
@@ -184,6 +190,17 @@ Helper methods make form validation simple:
 Displaying errors is equally simple. Errors will only be added for a given field once it's been validated. Validate them one-by-one with directives like `ng-blur` or `ng-change`, or validate them all at once by passing no arguments to the `validate` method:
 
     <div ng-show="user.errors.name" class="alert alert-warning">{{user.errors.name}}</div>
+
+The interaction we prefer at Faculty Creative usually looks like this:
+
+    <input
+     ng-model="user.name"
+     ng-blur="user.validate('name')
+     ng-change="user.validateIfErrored('name')>
+
+This causes validations to run on blur, and, if errors exist on the field, to
+run on change, so that as soon as a user corrects an error, the error will
+disappear immediately.
 
 #### Presence:
 
