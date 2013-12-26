@@ -24,7 +24,7 @@ angular
         this.size                 = data.size;
         this.accountBalance       = data.accountBalance;
         this.badField             = data.badField;
-        this.validates = {
+        this.validates({
           name:                 { presence: { validates: true, message: 'Must provide name' } },
           username:             { length: { min: 5, max: 20 } },
           email:                { format: { email: true } },
@@ -43,8 +43,8 @@ angular
                                   exclusion: { from: ['XL', 'XXL'] } },
           accountBalance:       { numericality: { ignore: /[\,]/g } },
           badField:             { absence: true }
-        }
-      }
+        });
+      };
 
       User = ActiveResource.Base.apply(User);
       User.api.set('http://api.faculty.com');

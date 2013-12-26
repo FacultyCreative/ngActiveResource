@@ -156,10 +156,10 @@ successfully:
       this.name  = data.name;
       this.email = data.email;
 
-      this.validates = {
+      this.validates({
         name: {presence: true},
         email: { format: { email: { validates: true, message: 'Must provide valid email' } } } 
-    }
+      });
 
 Validations also work with the Simple Form directive to perform easy form
 styling. 

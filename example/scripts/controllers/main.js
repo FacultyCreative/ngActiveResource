@@ -9,7 +9,7 @@ angular.module('app')
         }, 0);
 
         function setScopes(post) {
-          $scope.post = post;
+          $scope.post    = post;
           $scope.comment = $scope.post.comments.new();
         };
 

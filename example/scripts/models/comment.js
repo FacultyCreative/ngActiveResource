@@ -7,9 +7,9 @@ angular.module('app')
         this.body = data.body;
         this.belongsTo('post');
 
-        this.validates = {
+        this.validates({
           body: { presence: true, length: { in: _.range(1, 140) } }
-        };
+        });
       };
 
       Comment = ActiveResource.Base.apply(Comment);
