@@ -1244,12 +1244,12 @@ describe('ActiveResource', function() {
           expect(user.validate()).toBe(false);
         });
 
-        it('uses `valid` as a shorthand for running all validations', function() {
+        it('uses `$valid` as a shorthand for running all validations', function() {
           expect(user.$valid).toBe(false);
         });
 
-        it('also has an `invalid` helper', function() {
-          expect(user.invalid).toBe(true);
+        it('also has an `$invalid` helper', function() {
+          expect(user.$invalid).toBe(true);
         });
 
         it('sets errors on all invalid fields & required fields', function() {
