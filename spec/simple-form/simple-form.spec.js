@@ -320,7 +320,7 @@ describe('Simple Form', function () {
 
       it('adds ng-invalid css class to inputs when invalid', function() {
         ngFormCtrl.$fields['user.zip'].$setViewValue('abcdefg');
-        user.valid;
+        user.$valid;
         expect(element.html().match(/ng-invalid/)).not.toBeNull();
       });
 

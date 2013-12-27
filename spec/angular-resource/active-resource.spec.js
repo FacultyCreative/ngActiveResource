@@ -1245,7 +1245,7 @@ describe('ActiveResource', function() {
         });
 
         it('uses `valid` as a shorthand for running all validations', function() {
-          expect(user.valid).toBe(false);
+          expect(user.$valid).toBe(false);
         });
 
         it('also has an `invalid` helper', function() {
@@ -1278,12 +1278,12 @@ describe('ActiveResource', function() {
       describe('Non-required fields', function() {
         it('is valid if blank and not required', function() {
           user.email = undefined;
-          expect(user.valid).toBe(true);
+          expect(user.$valid).toBe(true);
         });
 
         it('is valid if empty string and not required', function() {
           user.email = '';
-          expect(user.valid).toBe(true);
+          expect(user.$valid).toBe(true);
         });
       });
     });
@@ -1296,19 +1296,19 @@ describe('ActiveResource', function() {
 
       it('sets errors per field on validation', function() {
         var user = User.new();
-        user.valid;
+        user.$valid;
         expect(user.$errors.name).toContain("Must provide name");
       });
     });
 
     describe('Presence validation', function() {
       it('is valid if all required fields have values', function() {
-        expect(user.valid).toBe(true);
+        expect(user.$valid).toBe(true);
       });
 
       it('is invalid if undefined', function() {
         var user = User.new();
-        expect(user.valid).toBe(false);
+        expect(user.$valid).toBe(false);
       });
 
       it('uses a unique error message if provided', function() {
@@ -1319,24 +1319,24 @@ describe('ActiveResource', function() {
 
       it('runs all validations if presence is required', function() {
         user.email = 'bigbad@wolfnet';
-        expect(user.valid).toBe(false);
+        expect(user.$valid).toBe(false);
       });
     });
 
     describe('Email validation', function() {
         it('is invalid if it does not contain a valid email address', function() {
           user.email = 'porky';
-          expect(user.valid).toBe(false);
+          expect(user.$valid).toBe(false);
         });
 
         it('sets the email error message', function() {
           user.email = 'pig@net';
-          user.valid;
+          user.$valid;
           expect(user.$errors.email).toContain('Is not a valid email address');
         });
 
         it('is valid if it contains a valid email address', function() {
-          expect(user.valid).toBe(true);
+          expect(user.$valid).toBe(true);
         });
 
 
@@ -1350,65 +1350,65 @@ describe('ActiveResource', function() {
     describe('Zip validation', function() {
       it('is invalid if it does not contain a valid zip code', function() {
         user.zip = 111111;
-        expect(user.valid).toBe(false);
+        expect(user.$valid).toBe(false);
       });
 
       it('sets the zip error message', function() {
         user.zip = 111111;
-        user.valid;
+        user.$valid;
         expect(user.$errors.zip).toContain('Is not a valid zip code');
       });
 
       it('is valid if the zip contains a hyphen', function() {
         user.zip = '11111-2222';
-        expect(user.valid).toBe(true);
+        expect(user.$valid).toBe(true);
       });
 
       it('is invalid if it contains a hyphen but not 9 numbers', function() {
         user.zip = '11111-';
-        expect(user.valid).toBe(false);
+        expect(user.$valid).toBe(false);
       });
 
       it('is valid if it contains 9 numbers but no hyphen', function() {
         user.zip = '111112222';
-        expect(user.valid).toBe(true);
+        expect(user.$valid).toBe(true);
       });
 
       it('isinvalid if it contains a hyphen in the wrong spot', function() {
         user.zip = '1111-22222';
-        expect(user.valid).toBe(false);
+        expect(user.$valid).toBe(false);
       });
 
       it('is valid if not present, and not required', function() {
         user.zip = undefined;
-        expect(user.valid).toBe(true);
+        expect(user.$valid).toBe(true);
       });
     });
 
     describe('Acceptance validation', function() {
       it('is valid if true', function() {
-        expect(user.valid).toBe(true);
+        expect(user.$valid).toBe(true);
       });
 
       it('is invalid if false', function() {
         user.termsOfService = false;
-        expect(user.valid).toBe(false);
+        expect(user.$valid).toBe(false);
       });
 
       it('is invalid if anything else', function() {
         user.termsOfService = 'pie';
-        expect(user.valid).toBe(false);
+        expect(user.$valid).toBe(false);
       });
 
       it('sets acceptance error', function() {
         user.termsOfService = false;
-        user.valid;
+        user.$valid;
         expect(user.$errors.termsOfService).toContain('Must be accepted');
       });
 
       it('is valid if not present and not required', function() {
         user.termsOfService = undefined;
-        expect(user.valid).toBe(true);
+        expect(user.$valid).toBe(true);
       });
     });
 
@@ -1416,55 +1416,55 @@ describe('ActiveResource', function() {
       describe('Min/Max validations', function() {
         it('is invalid if the length is less than required', function() {
           user.username = 'Andy'
-          expect(user.valid).toBe(false);
+          expect(user.$valid).toBe(false);
         });
 
         it('is invalid if the length is greater than allowed by max', function() {
           user.username = 'Maximum Danger the Maximal Ranger';
-          expect(user.valid).toBe(false);
+          expect(user.$valid).toBe(false);
         });
 
         it('sets a min error message', function() {
           user.username = 'Andy';
-          user.valid;
+          user.$valid;
           expect(user.$errors.username).toContain('Must be at least 5 characters');
         });
 
         it('sets a max error message', function() {
           user.username = 'Maximum Danger the Maximal Ranger';
-          user.valid;
+          user.$valid;
           expect(user.$errors.username).toContain('Must be no more than 20 characters');
         });
 
         it('is valid if the length is within the allowed range', function() {
-          expect(user.valid).toBe(true);
+          expect(user.$valid).toBe(true);
         });
 
         it('is valid if blank and not required', function() {
           user.username = '';
-          expect(user.valid).toBe(true);
+          expect(user.$valid).toBe(true);
         });
       });
 
       describe('Length is validations', function() {
         it('is invalid if the length is not exactly correct', function() {
           user.uniqueIdentifier = '02140-0006';
-          expect(user.valid).toBe(false);
+          expect(user.$valid).toBe(false);
         });
 
         it('sets the length is error message', function() {
           user.uniqueIdentifier = '02140-0006';
-          user.valid;
+          user.$valid;
           expect(user.$errors.uniqueIdentifier).toContain('Must be exactly 5 characters');
         });
 
         it('is valid if it is exactly the correct number of characters', function() {
-          expect(user.valid).toBe(true);
+          expect(user.$valid).toBe(true);
         });
 
         it('is valid if blank and not required', function() {
           user.uniqueIdentifier = '';
-          expect(user.valid).toBe(true);
+          expect(user.$valid).toBe(true);
         });
       });
     });
@@ -1472,129 +1472,129 @@ describe('ActiveResource', function() {
     describe('Confirmation validation', function() {
       it('is invalid if it does not match the confirmation field', function() {
         user.passwordConfirmation = '';
-        expect(user.valid).toBe(false);
+        expect(user.$valid).toBe(false);
       });
 
       it('sets the appropriate error message', function() {
         user.passwordConfirmation = '';
-        user.valid;
+        user.$valid;
         expect(user.$errors.password).toContain('Must match confirmation field');
       });
 
       it('is valid if it matches the confirmation field', function() {
-        expect(user.valid).toBe(true);
+        expect(user.$valid).toBe(true);
       });
 
       it('is valid if both fields are blank and neither is required', function() {
         user.social = '';
         user.socialConfirmation = '';
-        expect(user.valid).toBe(true);
+        expect(user.$valid).toBe(true);
       });
 
       it('is invalid if one of the fields is filled in, even if neither is required', function() {
         user.social = '';
         user.socialConfirmation = 'hi';
-        expect(user.valid).toBe(false);
+        expect(user.$valid).toBe(false);
       });
     });
 
     describe('Inclusion validation', function() {
       it('is valid if the value is included in the acceptable list', function() {
-        expect(user.valid).toBe(true);
+        expect(user.$valid).toBe(true);
       });
 
       it('is invalid if the value is not included in the acceptable list', function() {
         user.size = 'tall';
-        expect(user.valid).toBe(false);
+        expect(user.$valid).toBe(false);
       });
 
       it('sets the appropriate error message', function() {
         user.size = 'tall';
-        user.valid;
+        user.$valid;
         expect(user.$errors.size).toContain('Must be included in small, medium, or large');
       });
 
       it('is valid if blank and not required', function() {
         user.size = '';
-        expect(user.valid).toBe(true);
+        expect(user.$valid).toBe(true);
       });
     });
 
     describe('Exclusion validation', function() {
       it('is valid if the value is not included in the unacceptable list', function() {
-        expect(user.valid).toBe(true);
+        expect(user.$valid).toBe(true);
       });
 
       it('is invalid if the value is included in the unacceptable list', function() {
         user.size = 'XL';
-        expect(user.valid).toBe(false);
+        expect(user.$valid).toBe(false);
       });
 
       it('sets the appropriate error message', function() {
         user.size = 'XL';
-        user.valid;
+        user.$valid;
         expect(user.$errors.size).toContain('Must not be XL or XXL');
       });
 
       it('is valid if blank and not required', function() {
         user.size = '';
-        expect(user.valid).toBe(true);
+        expect(user.$valid).toBe(true);
       });
     });
 
     describe('Numericality validation', function() {
       it('is invalid if the value is not a number', function() {
         user.uniqueIdentifier = 'pi';
-        expect(user.valid).toBe(false);
+        expect(user.$valid).toBe(false);
       });
 
       it('is valid if the value is a number', function() {
         user.uniqueIdentifier = 12345;
-        expect(user.valid).toBe(true);
+        expect(user.$valid).toBe(true);
       });
 
       it('can be set to ignore non-number characters', function() {
         user.zip = '12345-6789';
-        expect(user.valid).toBe(true);
+        expect(user.$valid).toBe(true);
       });
 
       it('sets the appropriate error message', function() {
         user.zip = 'abcdefg';
-        user.valid;
+        user.$valid;
         expect(user.$errors.zip).toContain('Must be a number');
       });
 
       it('is valid if blank and not required', function() {
         user.zip = '';
-        expect(user.valid).toBe(true);
+        expect(user.$valid).toBe(true);
       });
     });
 
     describe('Custom Validations', function() {
       it('is valid if it passes the custom validation', function() {
-        expect(user.valid).toBe(true);
+        expect(user.$valid).toBe(true);
       });
 
       it('is invalid if it does not pass the custom validation', function() {
         user.uniqueIdentifier = 'asdfjkl';
-        expect(user.valid).toBe(false);
+        expect(user.$valid).toBe(false);
       });
 
       it('sets a custom error message if provided', function() {
         user.uniqueIdentifier = 'Invalid';
-        user.valid;
+        user.$valid;
         expect(user.$errors.uniqueIdentifier).toContain('Invalid uuid');
       });
 
       it('is valid if blank, and not required', function() {
         user.uniqueIdentifier = '';
-        expect(user.valid).toBe(true);
+        expect(user.$valid).toBe(true);
       });
     });
 
     describe('Saving with Validations', function() {
       it('saves if the values are valid', function() {
-        expect(user.valid).toBe(true);
+        expect(user.$valid).toBe(true);
         user.$save();
         backend.expectPOST('http://api.faculty.com/user.json')
           .respond({
@@ -1610,7 +1610,7 @@ describe('ActiveResource', function() {
             size: 'small'
           });
         backend.flush();
-        expect(user.valid).toBe(true);
+        expect(user.$valid).toBe(true);
       });
 
       it('saves if no validations are provided', function() {
