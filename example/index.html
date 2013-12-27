@@ -41,10 +41,10 @@
       </div>
     </div>
     <div class="container">
-      <div ng-show="comment.errors.body" ng-repeat="error in comment.errors.body">
+      <div ng-show="comment.$errors.body" ng-repeat="error in comment.$errors.body">
         <div class="alert alert-warning">Body {{error}}</div>
       </div>
-      <div ng-show="comment.errors.author" ng-repeat="error in comment.errors.author">
+      <div ng-show="comment.$errors.author" ng-repeat="error in comment.$errors.author">
         <div class="alert alert-warning">Author {{error}}</div>
       </div>
       <form ng-submit="comment.$save()">
