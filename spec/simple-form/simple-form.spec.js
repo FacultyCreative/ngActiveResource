@@ -278,7 +278,7 @@ describe('Simple Form', function () {
         it('is invalid (by default) if commas are present', function() {
           ngFormCtrl.$fields['user.zip'].$setViewValue('1,111');
           user.validate();
-          expect(user.errors.zip).toContain('Must be a number');
+          expect(user.$errors.zip).toContain('Must be a number');
         });
 
         it('is invalid (by default) if hyphens are present', function() {
@@ -348,7 +348,7 @@ describe('Simple Form', function () {
         user.validate('zip');
         ngFormCtrl.$fields['user.name'].$setViewValue('');
         user.validate('name');
-        expect(Object.keys(user.errors).length).toBe(2);
+        expect(Object.keys(user.$errors).length).toBe(2);
       });
     });
   });

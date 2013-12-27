@@ -1231,7 +1231,7 @@ describe('ActiveResource', function() {
         it('adds errors for just the validated field', function() {
           var user = User.new();
           user.validate('name');
-          expect(user.errors).toEqual({ name : [ 'Must provide name' ] });
+          expect(user.$errors).toEqual({ name : [ 'Must provide name' ] });
         });
       });
 
@@ -1255,7 +1255,7 @@ describe('ActiveResource', function() {
         it('sets errors on all invalid fields & required fields', function() {
           var user = User.new();
           user.validate();
-          expect(numkeys(user.errors)).toBe(2);
+          expect(numkeys(user.$errors)).toBe(2);
         });
       });
 
@@ -1269,7 +1269,7 @@ describe('ActiveResource', function() {
           user.validate();
           user.name = 'Awesome';
           user.validateIfErrored('name');
-          expect(user.errors.name).toBe(undefined);
+          expect(user.$errors.name).toBe(undefined);
         });
       });
     });
@@ -1291,13 +1291,13 @@ describe('ActiveResource', function() {
     describe('Error messages', function() {
       it('does not set error messages until validated', function() {
         var user = User.new();
-        expect(numkeys(user.errors)).toBe(0);
+        expect(numkeys(user.$errors)).toBe(0);
       });
 
       it('sets errors per field on validation', function() {
         var user = User.new();
         user.valid;
-        expect(user.errors.name).toContain("Must provide name");
+        expect(user.$errors.name).toContain("Must provide name");
       });
     });
 
@@ -1314,7 +1314,7 @@ describe('ActiveResource', function() {
       it('uses a unique error message if provided', function() {
         user.name = '';
         user.validate();
-        expect(user.errors.name).toContain('Must provide name');
+        expect(user.$errors.name).toContain('Must provide name');
       });
 
       it('runs all validations if presence is required', function() {
@@ -1332,7 +1332,7 @@ describe('ActiveResource', function() {
         it('sets the email error message', function() {
           user.email = 'pig@net';
           user.valid;
-          expect(user.errors.email).toContain('Is not a valid email address');
+          expect(user.$errors.email).toContain('Is not a valid email address');
         });
 
         it('is valid if it contains a valid email address', function() {
@@ -1343,7 +1343,7 @@ describe('ActiveResource', function() {
         it('sets no errors if blank and not required', function() {
           user.email = undefined;
           user.validate();
-          expect(numkeys(user.errors)).toBe(0);
+          expect(numkeys(user.$errors)).toBe(0);
         });
     });
 
@@ -1356,7 +1356,7 @@ describe('ActiveResource', function() {
       it('sets the zip error message', function() {
         user.zip = 111111;
         user.valid;
-        expect(user.errors.zip).toContain('Is not a valid zip code');
+        expect(user.$errors.zip).toContain('Is not a valid zip code');
       });
 
       it('is valid if the zip contains a hyphen', function() {
@@ -1403,7 +1403,7 @@ describe('ActiveResource', function() {
       it('sets acceptance error', function() {
         user.termsOfService = false;
         user.valid;
-        expect(user.errors.termsOfService).toContain('Must be accepted');
+        expect(user.$errors.termsOfService).toContain('Must be accepted');
       });
 
       it('is valid if not present and not required', function() {
@@ -1427,13 +1427,13 @@ describe('ActiveResource', function() {
         it('sets a min error message', function() {
           user.username = 'Andy';
           user.valid;
-          expect(user.errors.username).toContain('Must be at least 5 characters');
+          expect(user.$errors.username).toContain('Must be at least 5 characters');
         });
 
         it('sets a max error message', function() {
           user.username = 'Maximum Danger the Maximal Ranger';
           user.valid;
-          expect(user.errors.username).toContain('Must be no more than 20 characters');
+          expect(user.$errors.username).toContain('Must be no more than 20 characters');
         });
 
         it('is valid if the length is within the allowed range', function() {
@@ -1455,7 +1455,7 @@ describe('ActiveResource', function() {
         it('sets the length is error message', function() {
           user.uniqueIdentifier = '02140-0006';
           user.valid;
-          expect(user.errors.uniqueIdentifier).toContain('Must be exactly 5 characters');
+          expect(user.$errors.uniqueIdentifier).toContain('Must be exactly 5 characters');
         });
 
         it('is valid if it is exactly the correct number of characters', function() {
@@ -1478,7 +1478,7 @@ describe('ActiveResource', function() {
       it('sets the appropriate error message', function() {
         user.passwordConfirmation = '';
         user.valid;
-        expect(user.errors.password).toContain('Must match confirmation field');
+        expect(user.$errors.password).toContain('Must match confirmation field');
       });
 
       it('is valid if it matches the confirmation field', function() {
@@ -1511,7 +1511,7 @@ describe('ActiveResource', function() {
       it('sets the appropriate error message', function() {
         user.size = 'tall';
         user.valid;
-        expect(user.errors.size).toContain('Must be included in small, medium, or large');
+        expect(user.$errors.size).toContain('Must be included in small, medium, or large');
       });
 
       it('is valid if blank and not required', function() {
@@ -1533,7 +1533,7 @@ describe('ActiveResource', function() {
       it('sets the appropriate error message', function() {
         user.size = 'XL';
         user.valid;
-        expect(user.errors.size).toContain('Must not be XL or XXL');
+        expect(user.$errors.size).toContain('Must not be XL or XXL');
       });
 
       it('is valid if blank and not required', function() {
@@ -1561,7 +1561,7 @@ describe('ActiveResource', function() {
       it('sets the appropriate error message', function() {
         user.zip = 'abcdefg';
         user.valid;
-        expect(user.errors.zip).toContain('Must be a number');
+        expect(user.$errors.zip).toContain('Must be a number');
       });
 
       it('is valid if blank and not required', function() {
@@ -1583,7 +1583,7 @@ describe('ActiveResource', function() {
       it('sets a custom error message if provided', function() {
         user.uniqueIdentifier = 'Invalid';
         user.valid;
-        expect(user.errors.uniqueIdentifier).toContain('Invalid uuid');
+        expect(user.$errors.uniqueIdentifier).toContain('Invalid uuid');
       });
 
       it('is valid if blank, and not required', function() {
@@ -1626,15 +1626,15 @@ describe('ActiveResource', function() {
         user.name = undefined;
         user.$save().then(function(instance) {}, function(error) {});
         $timeout.flush();
-        expect(user.errors.name).toContain('Must provide name');
+        expect(user.$errors.name).toContain('Must provide name');
       });
 
       it('allows aspect-oriented fail to be called on failure', function() {
         spyOn(window, 'alert');
 
         User.fail('$save', function(instance) {
-          for (var error in instance.errors) {
-            window.alert(instance.errors[error]);
+          for (var error in instance.$errors) {
+            window.alert(instance.$errors[error]);
           }
         });
 
@@ -1649,7 +1649,7 @@ describe('ActiveResource', function() {
         User.$create().then(function(response) { user = response; },
           function(instance) { user = instance; });
         $timeout.flush();
-        expect(user.errors.name).toContain('Must provide name');
+        expect(user.$errors.name).toContain('Must provide name');
       });
     });
     describe('Updating with Validations', function() {
@@ -1695,7 +1695,7 @@ describe('ActiveResource', function() {
         user.name = undefined;
         user.$update().then(function(instance) { user = instance; },
           function(instance) { user = instance; });
-        expect(user.errors.name).toContain('Must provide name');
+        expect(user.$errors.name).toContain('Must provide name');
       });
     });
   });
