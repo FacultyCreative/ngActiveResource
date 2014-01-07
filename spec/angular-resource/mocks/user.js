@@ -27,7 +27,7 @@ angular
         this.validates({
           name:                 { presence: { validates: true, message: 'Must provide name' } },
           username:             { length: { min: 5, max: 20 } },
-          email:                { format: { email: true } },
+          email:                { format: { email: true, message: 'Must provide email' } },
           zip:                  { format: { zip: true },
                                   numericality: { ignore: /[\-]/g } },
           uniqueIdentifier:     { uuid: { validates: uuid,
