@@ -1,0 +1,41 @@
+{
+  "name": "ActiveSupport",
+  "version": "0.0.6",
+  "homepage": "https://github.com/brettshollenberger/jsActiveSupport",
+  "authors": [
+    "Brett Shollenberger <brett.shollenberger@gmail.com>"
+  ],
+  "description": "Essential Javascript utilities",
+  "main": "lib/active-support.js",
+  "keywords": [
+    "active-support",
+    "javascript",
+    "rails",
+    "node",
+    "singularize",
+    "pluralize",
+    "camelize",
+    "underscore",
+    "classify",
+    "ordinalize",
+    "titleize",
+    "titlecase"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "_release": "0.0.6",
+  "_resolution": {
+    "type": "version",
+    "tag": "v0.0.6",
+    "commit": "8d672c2f288e3297dd8c46963ab841cfc96d8a4f"
+  },
+  "_source": "git://github.com/brettshollenberger/ActiveSupport.js.git",
+  "_target": "0.0.6",
+  "_originalSource": "active-support"
+}

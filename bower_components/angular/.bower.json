@@ -1,0 +1,16 @@
+{
+  "name": "angular",
+  "version": "1.2.7",
+  "main": "./angular.js",
+  "dependencies": {},
+  "homepage": "https://github.com/angular/bower-angular",
+  "_release": "1.2.7",
+  "_resolution": {
+    "type": "version",
+    "tag": "v1.2.7",
+    "commit": "9eb4c616d6970deafcd19193eef87985ad11f301"
+  },
+  "_source": "git://github.com/angular/bower-angular.git",
+  "_target": "1.2.7",
+  "_originalSource": "angular"
+}
