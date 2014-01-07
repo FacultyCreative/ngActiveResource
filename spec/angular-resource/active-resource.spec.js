@@ -1299,6 +1299,13 @@ describe('ActiveResource', function() {
         user.$valid;
         expect(user.$errors.name).toContain("Must provide name");
       });
+
+      it('allows custom error messages using the message key', function() {
+        var user = User.new();
+        user.email = 'invalid';
+        user.validate();
+        expect(user.$errors.email).toContain('Must provide email');
+      });
     });
 
     describe('Presence validation', function() {
@@ -1332,7 +1339,7 @@ describe('ActiveResource', function() {
         it('sets the email error message', function() {
           user.email = 'pig@net';
           user.$valid;
-          expect(user.$errors.email).toContain('Is not a valid email address');
+          expect(user.$errors.email).toContain('Must provide email');
         });
 
         it('is valid if it contains a valid email address', function() {
