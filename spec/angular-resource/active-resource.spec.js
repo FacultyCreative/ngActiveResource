@@ -98,6 +98,10 @@ describe('ActiveResource', function() {
       expect(System.cached).toBeDefined();
     });
 
+    it('has #isEmpty method to tell you whether or not the cache is empty', function() {
+      expect(System.cached.isEmpty()).toBe(false);
+    });
+
     it('adds new instances to the cache', function() {
       expect(System.cached[1]).toBe(system);
     });
