@@ -1598,7 +1598,17 @@ describe('ActiveResource', function() {
         expect(user.$valid).toBe(true);
       });
     });
-
+    
+    describe('Nested object validations', function(){
+        
+      it('validates properties of nested objects', function(){
+        user.echeck = {};
+        user.echeck.type = '12345678912345678922222';
+        expect(user.$valid).toBe(false);   
+      });
+          
+    });
+    
     describe('Saving with Validations', function() {
       it('saves if the values are valid', function() {
         expect(user.$valid).toBe(true);

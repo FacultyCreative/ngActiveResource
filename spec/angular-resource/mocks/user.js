@@ -24,6 +24,12 @@ angular
         this.size                 = data.size;
         this.accountBalance       = data.accountBalance;
         this.badField             = data.badField;
+        this.echeck               = data.echeck;
+        
+        if(data.echeck){
+            this.echeck.type      = data.echeck.type;
+        }
+        
         this.validates({
           name:                 { presence: { validates: true, message: 'Must provide name' } },
           username:             { length: { min: 5, max: 20 } },
@@ -42,7 +48,8 @@ angular
           size:                 { inclusion: { in: ['small', 'medium', 'large'] },
                                   exclusion: { from: ['XL', 'XXL'] } },
           accountBalance:       { numericality: { ignore: /[\,]/g } },
-          badField:             { absence: true }
+          badField:             { absence: true },
+          'echeck.type':        { length: {max: 20} }
         });
       };
 
