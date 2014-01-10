@@ -1278,6 +1278,23 @@ describe('ActiveResource', function() {
       });
     });
 
+    describe('Model.instance#clearErrors()', function() {
+      it('clears all errors', function() {
+        user.name = undefined;
+        user.validate();
+        user.clearErrors();
+        expect(numkeys(user.$errors)).toBe(0);
+      });
+
+      it('clears all errors on a given field', function() {
+        user.name  = undefined;
+        user.email = 'awesome';
+        user.validate();
+        user.clearErrors('name');
+        expect(numkeys(user.$errors)).toBe(1);
+      });
+    });
+
     describe('Edge Cases', function() {
       describe('Non-required fields', function() {
         it('is valid if blank and not required', function() {
