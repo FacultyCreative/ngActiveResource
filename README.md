@@ -166,13 +166,13 @@ styling.
 
 ### Helper Methods:
 
-    user.valid
+    user.$valid
     >> false 
 
-    user.invalid
+    user.$invalid
     >> true
 
-    user.errors
+    user.$errors
     >> { name: ['Must be defined'] }
 
     user.validate('name')
