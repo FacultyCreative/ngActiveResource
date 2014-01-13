@@ -166,13 +166,13 @@ styling.
 
 ### Helper Methods:
 
-    user.valid
+    user.$valid
     >> false 
 
-    user.invalid
+    user.$invalid
     >> true
 
-    user.errors
+    user.$errors
     >> { name: ['Must be defined'] }
 
     user.validate('name')
@@ -204,6 +204,12 @@ disappear immediately.
 
 When a model instance is saved, all validations are automatically run, so errors
 will appear if the form contains any errors.
+
+You can also clear errors on a given field, or on the whole instance:
+
+    <button ng-submit="user.clearErrors()"></button>
+    
+    <button ng-submit="user.clearErrors('name')"></button>
 
 #### Presence:
 
