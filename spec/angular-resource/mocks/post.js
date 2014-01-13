@@ -20,6 +20,11 @@ angular
         }); 
         this.content = data.content;
 
+        this.circularRef = {
+          ref: '1',
+          post: this
+        }
+
       };
 
       var date;

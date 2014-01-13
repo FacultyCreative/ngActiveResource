@@ -162,11 +162,10 @@ describe('ActiveResource', function() {
 
     it('saves using the primary key', function() {
       post.$save().then(function(response) { post = response; });
-      backend.expectPOST('http://api.faculty.com/post.json', {"_id": "52a8b80d251c5395b485cfe6", "title": "My Great Post", comments: []})
-        .respond({"_id": "52a8b80d251c5395b485cfe6", "title": "My Great Post"});
+      backend.expectPOST('http://api.faculty.com/post.json', {"title":"My Great Post","comments":[],"circularRef":{"ref":"1","post":{"title":"My Great Post","comments":{"$ref":"#comments"},"circularRef":{"$ref":"#circularRef"},"_id":"52a8b80d251c5395b485cfe6"}},"_id":"52a8b80d251c5395b485cfe6"})
+      .respond({"_id": "52a8b80d251c5395b485cfe6", "title": "My Great Post"});
       backend.flush(); 
-      expect($http.post).toHaveBeenCalledWith('http://api.faculty.com/post.json',
-       '{"title":"My Great Post","comments":[],"_id":"52a8b80d251c5395b485cfe6"}');
+      expect($http.post).toHaveBeenCalledWith('http://api.faculty.com/post.json', '{"title":"My Great Post","comments":[],"circularRef":{"ref":"1","post":{"title":"My Great Post","comments":{"$ref":"#comments"},"circularRef":{"$ref":"#circularRef"}}}}');
     });
 
     it('deletes using the primary key', function() {
@@ -218,6 +217,20 @@ describe('ActiveResource', function() {
 
     it('parses foreign key responses into model objects', function() {
       expect(comment.author).toBe(author);
+    });
+  });
+
+  describe('POSTing JSON', function() {
+    var post;
+
+    beforeEach(function() {
+      post = Post.new();
+    });
+
+    it('JSONifies circular references that are NOT foreign keys', function() {
+      post.$save();
+      backend.flush();
+      expect($http.post).toHaveBeenCalledWith('http://api.faculty.com/post.json', '{"comments":[],"circularRef":{"ref":"1","post":{"comments":{"$ref":"#comments"},"circularRef":{"$ref":"#circularRef"}}}}');
     });
   });
 
@@ -450,7 +463,11 @@ describe('ActiveResource', function() {
             });
 
           backend.expectPOST('http://api.faculty.com/post.json',
-            {"title":"Do Or Do Not, There Is No Try","author_id": 1,"comments":[]})
+            {"title":"Do Or Do Not, There Is No Try","author_id": 1,"comments":[], 
+             "circularRef":{"ref":"1","post":{"title":"Do Or Do Not, There Is No Try",
+             "author":{"name":"Master Yoda","comments":[],"posts":[
+             {"$ref":"#circularRef.post"}],"_id":1},"comments":{"$ref":"#comments"},
+             "circularRef":{"$ref":"#circularRef"}}}})
             .respond({'_id': 1, title: 'Do Or Do Not, There Is No Try', 
               author_id: 1});
 
@@ -498,7 +515,6 @@ describe('ActiveResource', function() {
         });
       });
     });
-
   });
 
   describe('Eager Loading', function() {
