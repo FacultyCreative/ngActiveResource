@@ -143,6 +143,17 @@ describe('ActiveResource', function() {
       expect(post.serialize()).toEqual('{"comments":[],"circularRef":{"ref":"1","post":{"comments":{"$ref":"#comments"},"circularRef":{"$ref":"#circularRef"}}}}');
     });
 
+    it('has includeEmptyKeys option', function() {
+      var post = Post.new();
+      post = post.serialize({includeEmptyKeys: true});
+      expect(post.slice(1, 12)).toEqual('"title":" "');
+    });
+
+    it('has prettyPrint option', function() {
+      var post = Post.new();
+      post = post.serialize({prettyPrint: true});
+      expect(post.slice(1, 2)).toEqual("\n");
+    });
   });
 
   describe('Primary Keys', function() {
