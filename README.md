@@ -147,6 +147,22 @@ are deleted, use `dependentDestroy`:
 
 Now when you destroy a post, any associated comments will also be destroyed.
 
+## Serialize/toJSON
+
+The `serialize` and `toJSON` methods (aliases of one another) change associations to foreign keys and remove circular references.
+
+    post.serialize()
+    
+These methods also take several options:
+
+    post.serialize({prettyPrint: true})
+    
+Prints a formatted JSON string.
+
+    post.serialize({includeEmptyKeys: true})
+    
+Changes instances of null or undefined to empty strings, in the event your backend requires all properties to be sent with values. If you include `presence` validations on these fields, they will still fail as empty strings, and will not be sent using the built-in methods.
+
 ## Write Validations:
 
 Models can describe validations required before data will be persisted
