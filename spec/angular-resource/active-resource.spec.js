@@ -132,6 +132,19 @@ describe('ActiveResource', function() {
     });
   });
 
+  describe('Conversion to JSON', function() {
+    it('converts to JSON', function() {
+      var post = Post.new();
+      expect(post.toJSON()).toEqual('{"comments":[],"circularRef":{"ref":"1","post":{"comments":{"$ref":"#comments"},"circularRef":{"$ref":"#circularRef"}}}}');
+    });
+
+    it('is aliased as "serialize"', function() {
+      var post = Post.new();
+      expect(post.serialize()).toEqual('{"comments":[],"circularRef":{"ref":"1","post":{"comments":{"$ref":"#comments"},"circularRef":{"$ref":"#circularRef"}}}}');
+    });
+
+  });
+
   describe('Primary Keys', function() {
     // Each model's primary key defaults to "id," but can be overridden in the model
     // definition using the `primaryKey` method:
