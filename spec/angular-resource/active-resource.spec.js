@@ -133,26 +133,37 @@ describe('ActiveResource', function() {
   });
 
   describe('Conversion to JSON', function() {
+
+    var post;
+    beforeEach(function() {
+      post = Post.new();
+    });
+
     it('converts to JSON', function() {
-      var post = Post.new();
-      expect(post.toJSON()).toEqual('{"comments":[],"circularRef":{"ref":"1","post":{"comments":{"$ref":"#comments"},"circularRef":{"$ref":"#circularRef"}}}}');
+      expect(post.toJSON()).toEqual(
+        '{"comments":[],"circularRef":{"ref":"1","post":{"comments":{"$ref":"#comments"},"circularRef":{"$ref":"#circularRef"}}}}');
     });
 
     it('is aliased as "serialize"', function() {
-      var post = Post.new();
-      expect(post.serialize()).toEqual('{"comments":[],"circularRef":{"ref":"1","post":{"comments":{"$ref":"#comments"},"circularRef":{"$ref":"#circularRef"}}}}');
+      expect(post.serialize()).toEqual(
+        '{"comments":[],"circularRef":{"ref":"1","post":{"comments":{"$ref":"#comments"},"circularRef":{"$ref":"#circularRef"}}}}');
     });
 
     it('has includeEmptyKeys option', function() {
-      var post = Post.new();
       post = post.serialize({includeEmptyKeys: true});
       expect(post.slice(1, 12)).toEqual('"title":" "');
     });
 
     it('has prettyPrint option', function() {
-      var post = Post.new();
       post = post.serialize({prettyPrint: true});
       expect(post.slice(1, 2)).toEqual("\n");
+    });
+
+    it('has instance option', function() {
+      var post = Post.new();
+      var dummyData = {hi: "there"};
+      post = post.serialize({instance: dummyData});
+      expect(post).toEqual('{"hi":"there"}');
     });
   });
 
