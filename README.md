@@ -163,6 +163,18 @@ Prints a formatted JSON string.
     
 Changes instances of null or undefined to empty strings, in the event your backend requires all properties to be sent with values. If you include `presence` validations on these fields, they will still fail as empty strings, and will not be sent using the built-in methods.
 
+  var dummyData = {hi: 'there'};
+  post.serialize({instance: dummyData});
+
+Can tap into ActiveResource's serialization method to serialize arbitrary
+Javascript objects. If the `instance` option is not passed, the model instance
+itself will be serialized.
+
+`serialize` and `toJSON` are non-mutating methods. They will not change the
+instance itself. To save the serialized data as a variable, assign it:
+
+  var json = post.serialize();
+
 ## Write Validations:
 
 Models can describe validations required before data will be persisted
