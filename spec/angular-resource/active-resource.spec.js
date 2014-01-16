@@ -874,6 +874,11 @@ describe('ActiveResource', function() {
         post.update({date: 'February 24, 2013'});
         expect(post.date).toBe('February 24, 2013');
       });
+
+      it('maintains associations on update', function() {
+        post.update({comments: [{id: 1}]});
+        expect(post.comments.new).toBeDefined();
+      });
     });
   });
 
