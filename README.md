@@ -122,12 +122,71 @@ The api.set method sets default API URLs for you, but you can override these def
 them explicitly.
 
 2) Local-instance creating and finding methods. These include `new`, `find`,
-`where`, and `update`. `new` creates a new instance of a model on the client,
+`where`, `all`, and `update`. `new` creates a new instance of a model on the client,
 and `update` updates that instance without issuing a PUT request. `find` will
 attempt to find local instances in the model's client-side cache before issuing
-a GET request, and `where` will always issue a GET request to ensure it has all
+a GET request, and `where` and `all` will always issue a GET request to ensure it has all
 instances of a model that match given terms. These are the 'safe' methods in a
 RESTful API (GET).
+
+## Query Interface:
+
+ActiveRecord provides several out-of-the-box query methods:
+
+### Find:
+
+  Post.find({title: 'My Great Post'})
+
+`find` returns only the first instance it finds. If the instance is already
+stored into the browser's cache, it will not make a backend request. To force a
+backend request, you can add the `forceGET` request option:
+
+  Post.find({title: 'My Great Post'}, {forceGET: true});
+
+By default, find will also eagerly load a single level of associations. If a
+Post has many comments, and we find a post, its comments will be loaded as well,
+but the comments will not load their authors, or other comment-based
+associations. To load associations' associations, pass the option:
+
+  {overEager: true}
+
+To lazily load associations (not load even the first level of associations, aka
+comments in the example above), pass the option:
+
+  {lazy: true}
+
+Let's say you're working with a sort of crummy API. It doesn't have an endpoint
+to find a single instance of a particular model, or it won't parse a variety of
+options (like `title` for our post). Maybe it only parses by `id`, and you
+_must_ find the post by title. In that case, hit your index API (the endpoint
+that returns all instances of a given resource), and pass the option:
+
+  {noInstanceEndpoint: true}
+
+This option will do the parsing on the client-side for you to overcome the
+gnarly API.
+
+### Where:
+
+Similar to the `find` method, but it will pull all instances matching the given
+parameters. Where will _always_ query the backend, assuming that it does not
+have the necessary instances.
+
+  Post.where({author_id: author.id})
+
+### All:
+
+Returns all instances. Takes no parameters:
+
+  Post.all()
+
+### Promise-based:
+
+All queries are promise-based:
+
+  Post.where({author_id: author.id}).then(function(response) {
+    post = response;
+  });
 
 ## Custom Primary Keys
 
