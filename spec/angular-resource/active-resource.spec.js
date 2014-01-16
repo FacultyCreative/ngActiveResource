@@ -768,57 +768,78 @@ describe('ActiveResource', function() {
     });
 
     describe('association#where', function() {
-      var post, comments;
+      var post, comments, system, gridController;
       beforeEach(function() {
         Post.$create().then(function(response) {
           post = response;
         });
 
+        System.$create().then(function(response) {
+          system = response;
+        });
+
         backend.expectPOST('http://api.faculty.com/post.json')
           .respond({_id: 1});
 
+        backend.expectPOST('http://api.faculty.com/system.json')
+          .respond({id: 1});
+
         backend.flush();
+      });
 
-        describe('where', function() {
-          beforeEach(function() {
-            post.comments.where({}).then(function(response) {
-              comments = response;
-            });
-
-            backend.expectGET('http://api.faculty.com/comment/?post_id=1')
-              .respond([{id: 1}, {id: 2}]);
-
-            backend.flush();
+      describe('where', function() {
+        beforeEach(function() {
+          post.comments.all().then(function(response) {
+            comments = response;
           });
 
-          it('associates itself with the parent relationship', function() {
-            expect(post.comments.first.post).toBe(post);
+          system.gridController.find().then(function(response) {
+            gridController = response;
           });
 
-          it('adds each association to the child relationship', function() {
-            expect(post.comments.length).toBe(2);
-          });
+          backend.expectGET('http://api.faculty.com/comment/?post_id=1')
+            .respond([{id: 1}, {id: 2}]);
+
+          backend.expectGET('http://api.faculty.com/grid-controller/?system_id=1')
+            .respond({id: 1});
+
+          backend.flush();
         });
 
-        describe('all', function() {
+        it('associates itself with the parent relationship', function() {
+          expect(post.comments.first.post).toBe(post);
+        });
 
-          beforeEach(function() {
-            post.comments.all().then(function(response) {
-              comments = response;
-            });
+        it('adds each association to the child relationship', function() {
+          expect(post.comments.length).toBe(2);
+        });
 
-            backend.expectGET('http://api.faculty.com/comment/?post_id=1')
-              .respond([{id: 1}, {id: 2}]);
+        it('works via hasOne association', function() {
+          expect(gridController.system).toBe(system);
+        });
 
-            backend.flush();
-          });
-
-          it('adds #all method', function() {
-            expect(post.comments.length).toBe(2);
-          });
+        it('adds the inverse association to the child relationship', function() {
+          expect(system.gridController).toBe(gridController);
         });
       });
 
+      describe('all', function() {
+
+        beforeEach(function() {
+          post.comments.all().then(function(response) {
+            comments = response;
+          });
+
+          backend.expectGET('http://api.faculty.com/comment/?post_id=1')
+            .respond([{id: 1}, {id: 2}]);
+
+          backend.flush();
+        });
+
+        it('adds #all method', function() {
+          expect(post.comments.length).toBe(2);
+        });
+      });
     });
 
     describe('association#find', function() {
@@ -1070,6 +1091,33 @@ describe('ActiveResource', function() {
         System.find({id: 1}, {lazy: true}).then(function(response) { foundSystem = response; });
         $timeout.flush();
         expect(foundSystem).toEqual(system);
+      });
+
+      it('queries the backend if forceGET is present in options', function() {
+        var foundSystem;
+        System.find({id: 1}, {lazy: true, forceGET: true, noInstanceEndpoint: true})
+          .then(function(response) { foundSystem = response; });
+
+        backend.expectGET('http://api.faculty.com/system/?id=1')
+          .respond([{id: 2, name: 'Wrong System'}, {id: 1, name: 'Right System'}]);
+
+        backend.flush();
+        expect(foundSystem.id).toEqual(1);
+      });
+
+      it('finds the correct data instead of first data if noInstanceEndpoint option is passed', function() {
+        // This is expected to be backend functionality, so it is not included by default. 
+        // If absolutely necessary, the frontend can loop through the data to ensure it
+        // returns an instance that matches the given parameters.
+        var foundSystem;
+        System.find({id: 6, name: 'Right System'}, {lazy: true, noInstanceEndpoint: true})
+          .then(function(response) { foundSystem = response; });
+
+        backend.expectGET('http://api.faculty.com/system/?id=6&name=Right System')
+          .respond([{id: 2, name: 'Wrong System'}, {id: 6, name: 'Right System'}]);
+
+        backend.flush();
+        expect(foundSystem.id).toEqual(6);
       });
 
       it('accepts any attributes', function() {
