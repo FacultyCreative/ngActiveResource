@@ -577,7 +577,7 @@ describe('ActiveResource', function() {
   });
 
   describe('Syntax Options', function() {
-    describe('Assocations', function() {
+    describe('Associations', function() {
       describe('Name-Module-Provider Syntax', function() {
         // When writing your models, this looks like:
         //
@@ -765,7 +765,87 @@ describe('ActiveResource', function() {
           });
         });
       });
+    });
 
+    describe('association#where', function() {
+      var post, comments;
+      beforeEach(function() {
+        Post.$create().then(function(response) {
+          post = response;
+        });
+
+        backend.expectPOST('http://api.faculty.com/post.json')
+          .respond({_id: 1});
+
+        backend.flush();
+
+        describe('where', function() {
+          beforeEach(function() {
+            post.comments.where({}).then(function(response) {
+              comments = response;
+            });
+
+            backend.expectGET('http://api.faculty.com/comment/?post_id=1')
+              .respond([{id: 1}, {id: 2}]);
+
+            backend.flush();
+          });
+
+          it('associates itself with the parent relationship', function() {
+            expect(post.comments.first.post).toBe(post);
+          });
+
+          it('adds each association to the child relationship', function() {
+            expect(post.comments.length).toBe(2);
+          });
+        });
+
+        describe('all', function() {
+
+          beforeEach(function() {
+            post.comments.all().then(function(response) {
+              comments = response;
+            });
+
+            backend.expectGET('http://api.faculty.com/comment/?post_id=1')
+              .respond([{id: 1}, {id: 2}]);
+
+            backend.flush();
+          });
+
+          it('adds #all method', function() {
+            expect(post.comments.length).toBe(2);
+          });
+        });
+      });
+
+    });
+
+    describe('association#find', function() {
+      var post, comment;
+      beforeEach(function() {
+        Post.$create().then(function(response) {
+          post = response;
+        });
+
+        backend.expectPOST('http://api.faculty.com/post.json')
+          .respond({_id: 1});
+
+        backend.flush();
+
+        post.comments.find().then(function(response) {
+          comment = response;
+        });
+
+        backend.expectGET('http://api.faculty.com/comment/?post_id=1')
+          .respond([{id: 1}]);
+      
+        backend.flush();
+      });
+
+      it('associates itself with the parent relationship', function() {
+        expect(post.comments.first.post).toBe(post);
+      });
     });
 
     it('updates the relationships when set via setters IFF there is an id on the belongsTo relationship', function() {
@@ -941,6 +1021,27 @@ describe('ActiveResource', function() {
         System.where({id: 4}, {lazy: true}).then(function(response) { foundSystems = response; });
         backend.flush();
         expect(System.cached[4]).toBe(foundSystems[0]);
+      });
+
+      it('has associated method #all that returns all instances', function() {
+        var foundSystems;
+        System.all().then(function(response) { foundSystems = response; });
+        backend.expectGET('http://api.faculty.com/system/')
+          .respond([{id: 8, placement: 'window', name: 'Bretts System'},
+                    {id: 9, placement: 'window', name: 'Matts System'},
+                    {id: 10, placement: 'window', name: 'Pickles System'}]);
+
+        backend.expectGET('http://api.faculty.com/sensor/?system_id=8')
+          .respond([]);
+
+        backend.expectGET('http://api.faculty.com/sensor/?system_id=9')
+          .respond([]);
+
+        backend.expectGET('http://api.faculty.com/sensor/?system_id=10')
+          .respond([]);
+
+        backend.flush();
+        expect(System.cached[8]).toBe(system8);
       });
     });
 
