@@ -879,6 +879,11 @@ describe('ActiveResource', function() {
         post.update({comments: [{id: 1}]});
         expect(post.comments.new).toBeDefined();
       });
+
+      it('maintains inverse associations on update', function() {
+        post.update({comments: [{id: 1}]});
+        expect(post.comments.first.post).toBe(post);
+      });
     });
   });
 
