@@ -1105,6 +1105,18 @@ describe('ActiveResource', function() {
         expect(foundSystem.id).toEqual(1);
       });
 
+      it('updates the cached instance if forceGET is present in options', function() {
+        var foundSystem;
+        System.find({id: 1}, {lazy: true, forceGET: true, noInstanceEndpoint: true})
+          .then(function(response) { foundSystem = response; });
+
+        backend.expectGET('http://api.faculty.com/system/?id=1')
+          .respond([{id: 2, name: 'Wrong System'}, {id: 1, name: 'Right System'}]);
+
+        backend.flush();
+        expect(System.cached[1].name).toEqual('Right System');
+      });
+
       it('finds the correct data instead of first data if noInstanceEndpoint option is passed', function() {
         // This is expected to be backend functionality, so it is not included by default. 
         // If absolutely necessary, the frontend can loop through the data to ensure it
