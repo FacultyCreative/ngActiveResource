@@ -131,13 +131,45 @@ RESTful API (GET).
 
 ## Query Interface:
 
-ActiveRecord provides several out-of-the-box query methods:
+### Getting Set Up:
+
+Best case scenario: You have an API that adheres to ActiveResource's RESTful
+convention. Here's that convention:
+
+| HTTP Verb | CRUD     | Path            | Action | Used To                                                           |
+| --------- |:--------:|:---------------:|:------:|:---------------------                                             |
+| GET       | Retrieve | /users/?query   | index  | Display a list of all users, or all users filtered by querystring |
+| GET       | Retrieve | /users/?query   | show   | Display a specific user, found by querystring                     |
+| POST      | Create   | /users          | create | Create a user                                                     |
+| PUT       | Update   | /users/:id      | update | Update a specific user                                            |
+| DELETE    | Destroy  | /users/:id      | destroy| Delete a specific user                                            |
+
+Please notice that the update action differs from the URLs you might display to
+a user in Ruby on Rails: we won't refer to a specific primary key or username
+in the URL, as a valid PUT request will instead send this data as an opaque
+block of data.
+
+If you do have an API that follows these conventions, hooking it up to ActiveResource is as easy as:
+
+    Post.api.set('http://api.faculty.com');
+
+If you need to override specific URLs:
+
+    Post.api.indexURL = 'http://api.faculty.com/list-all-the-users';
+    Post.api.showURL  = 'http://api.faculty.com/show-me-user/[:params]';
+
+`[:params]` will be substituted for you automatically using the parameters
+specified by the query methods listed below.
 
 ### Find:
 
 ```
   Post.find({title: 'My Great Post'})
 ```
+
+`find` is used to retrieve a single instance of a model. It is a method akin to
+the `show` action in a RESTful API. Therefore, it first attempts to use the `showURL`, and
+will fall back on the `indexURL` if a `showURL` is not defined.
 
 `find` returns only the first instance it finds. If the instance is already
 stored into the browser's cache, it will not make a backend request. To force a
@@ -182,6 +214,10 @@ Similar to the `find` method, but it will pull all instances matching the given
 parameters. Where will _always_ query the backend, assuming that it does not
 have the necessary instances.
 
+`where` is akin to the `index` action in a RESTful API, and therefore first
+attempts to use the `indexURL`, and will fall back on the `showURL` if an
+`indexURL` is not defined.
+
 ```
   Post.where({author_id: author.id})
 ```
@@ -193,6 +229,9 @@ Returns all instances. Takes no parameters:
 ```
   Post.all()
 ```
+
+`all` is just a shorthand for a `where` request with no search parameters
+specified. It therefore will use the `whereURL`, if defined.
 
 ### Promise-based:
 

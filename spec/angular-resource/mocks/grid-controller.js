@@ -15,8 +15,8 @@ angular
 
         GridController = ActiveResource.Base.apply(GridController);
         GridController.api.set('http://api.faculty.com');
-        GridController.api.findURL = 'http://api.faculty.com/grid-controller/[:attrs]';
-        GridController.api.createURL = 'http://api.faculty.com/grid-controller.json';
+        GridController.api.showURL = 'http://api.faculty.com/grid-controllers/[:attrs]';
+        GridController.api.createURL = 'http://api.faculty.com/grid-controllers';
 
         return GridController;
     }];
