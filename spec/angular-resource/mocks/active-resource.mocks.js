@@ -2,8 +2,8 @@ angular
   .module('ActiveResource.Mocks', [])
   .provider('ActiveResource.Mocks', function() {
     this.$get = ['ARMockSystem', 'ARMockSensor', 'ARMockGridController',
-      'Post', 'Comment', 'Author', 'User',
-      function(System, Sensor, GridController, Post, Comment, Author, User) {
+      'Post', 'Comment', 'Author', 'User', 'Tshirt',
+      function(System, Sensor, GridController, Post, Comment, Author, User, Tshirt) {
         Mocks                = {};
         Mocks.System         = System;
         Mocks.Sensor         = Sensor;
@@ -12,6 +12,7 @@ angular
         Mocks.Comment        = Comment;
         Mocks.Author         = Author;
         Mocks.User           = User;
+        Mocks.Tshirt         = Tshirt;
       
         return Mocks;
     }];

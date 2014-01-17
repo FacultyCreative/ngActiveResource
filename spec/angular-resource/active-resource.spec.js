@@ -991,79 +991,101 @@ describe('ActiveResource', function() {
   describe('Querying', function() {
     describe('base#where', function() {
 
-      var system8, system9, system10;
+      describe('utilizes findURL by default', function() {
+        var system8, system9, system10;
 
-      beforeEach(function() {
-        // Backend will respond with {id: 1}
-        system.$save().then(function(response) { system = response; });
-        
-        // Backend will respond with {id: 8, placement: 'window'}
-        System.$create({placement: 'window', name: 'Bretts System'}).then(function(response) { system8 = response; });
-        
-        // Backend will respond with {id: 9, placement: 'door'}
-        System.$create({placement: 'window', name: 'Matts System'}).then(function(response)  { system9 = response; });
-        backend.flush();
-      });
+        beforeEach(function() {
+          // Backend will respond with {id: 1}
+          system.$save().then(function(response) { system = response; });
+          
+          // Backend will respond with {id: 8, placement: 'window'}
+          System.$create({placement: 'window', name: 'Bretts System'}).then(function(response) { system8 = response; });
+          
+          // Backend will respond with {id: 9, placement: 'door'}
+          System.$create({placement: 'window', name: 'Matts System'}).then(function(response)  { system9 = response; });
+          backend.flush();
+        });
 
-      it('finds by id', function() {
-        var foundSystems;
-        System.where({id: 1}, {lazy: true}).then(function(response) { foundSystems = response; });
-        backend.flush();
-        expect(foundSystems).toEqual([system]);
-      });
+        it('finds by id', function() {
+          var foundSystems;
+          System.where({id: 1}, {lazy: true}).then(function(response) { foundSystems = response; });
+          backend.flush();
+          expect(foundSystems).toEqual([system]);
+        });
 
-      it('finds by any attr', function() {
-        var foundSystems;
-        System.where({placement: 'window'}, {lazy: true})
-          .then(function(response) { foundSystems = response; });
-        backend.expectGET('http://api.faculty.com/system/?placement=window')
-          .respond([{id: 8, placement: 'window', name: 'Bretts System'},
-                    {id: 9, placement: 'window', name: 'Matts System'},
-                    {id: 10, placement: 'window', name: 'Pickles System'}]);
-        backend.flush();
-        System.find(10).then(function(response) { system10 = response; });
-        $timeout.flush();
-        expect(foundSystems).toEqual([system8, system9, system10]);
-      });
+        it('finds by any attr', function() {
+          var foundSystems;
+          System.where({placement: 'window'}, {lazy: true})
+            .then(function(response) { foundSystems = response; });
+          backend.expectGET('http://api.faculty.com/system/?placement=window')
+            .respond([{id: 8, placement: 'window', name: 'Bretts System'},
+                      {id: 9, placement: 'window', name: 'Matts System'},
+                      {id: 10, placement: 'window', name: 'Pickles System'}]);
+          backend.flush();
+          System.find(10).then(function(response) { system10 = response; });
+          $timeout.flush();
+          expect(foundSystems).toEqual([system8, system9, system10]);
+        });
 
-      it('always queries the backend to get all instances, even if some are found in the cache', function() {
-        var foundSystems; 
-        System.where({placement: 'window'}, {lazy: true}).then(function(response) { foundSystems = response; });
-        backend.expectGET('http://api.faculty.com/system/?placement=window')
-          .respond([{id: 8, placement: 'window', name: 'Bretts System'},
-                    {id: 9, placement: 'window', name: 'Matts System'},
-                    {id: 10, placement: 'window', name: 'Pickles System'}]);
-        backend.flush();
-        expect($http.get).toHaveBeenCalledWith('http://api.faculty.com/system/?placement=window');
-      });
+        it('always queries the backend to get all instances, even if some are found in the cache', function() {
+          var foundSystems; 
+          System.where({placement: 'window'}, {lazy: true}).then(function(response) { foundSystems = response; });
+          backend.expectGET('http://api.faculty.com/system/?placement=window')
+            .respond([{id: 8, placement: 'window', name: 'Bretts System'},
+                      {id: 9, placement: 'window', name: 'Matts System'},
+                      {id: 10, placement: 'window', name: 'Pickles System'}]);
+          backend.flush();
+          expect($http.get).toHaveBeenCalledWith('http://api.faculty.com/system/?placement=window');
+        });
 
-      it('adds the instance to the cache', function() {
-        var foundSystems;
-        System.where({id: 4}, {lazy: true}).then(function(response) { foundSystems = response; });
-        backend.flush();
+        it('adds the instance to the cache', function() {
+          var foundSystems;
+          System.where({id: 4}, {lazy: true}).then(function(response) { foundSystems = response; });
+          backend.flush();
         expect(System.cached[4]).toBe(foundSystems[0]);
+        });
+
+        it('has associated method #all that returns all instances', function() {
+          var foundSystems;
+          System.all().then(function(response) { foundSystems = response; });
+          backend.expectGET('http://api.faculty.com/system/')
+            .respond([{id: 8, placement: 'window', name: 'Bretts System'},
+                      {id: 9, placement: 'window', name: 'Matts System'},
+                      {id: 10, placement: 'window', name: 'Pickles System'}]);
+
+          backend.expectGET('http://api.faculty.com/sensor/?system_id=8')
+            .respond([]);
+
+          backend.expectGET('http://api.faculty.com/sensor/?system_id=9')
+            .respond([]);
+
+          backend.expectGET('http://api.faculty.com/sensor/?system_id=10')
+            .respond([]);
+
+          backend.flush();
+          expect(System.cached[8]).toBe(system8);
+        });
       });
 
-      it('has associated method #all that returns all instances', function() {
-        var foundSystems;
-        System.all().then(function(response) { foundSystems = response; });
-        backend.expectGET('http://api.faculty.com/system/')
-          .respond([{id: 8, placement: 'window', name: 'Bretts System'},
-                    {id: 9, placement: 'window', name: 'Matts System'},
-                    {id: 10, placement: 'window', name: 'Pickles System'}]);
+      describe('using whereURL to GET multiple instances', function() {
+        var tshirts;
+        beforeEach(function() {
+          Tshirt.where({size: 'M'}).then(function(response) {
+            tshirts = response;
+          });
 
-        backend.expectGET('http://api.faculty.com/sensor/?system_id=8')
-          .respond([]);
+          backend.expectGET('http://api.faculty.com/tshirts/?size=M')
+            .respond([{id: 1, size: 'M'}, {id: 2, size: 'M'}]);
 
-        backend.expectGET('http://api.faculty.com/sensor/?system_id=9')
-          .respond([]);
+          backend.flush();
+        });
 
-        backend.expectGET('http://api.faculty.com/sensor/?system_id=10')
-          .respond([]);
-
-        backend.flush();
-        expect(System.cached[8]).toBe(system8);
+        it('uses the whereURL instead of the findURL if the whereURL is specified', function() {
+          expect(tshirts.length).toBe(2);
+        });
       });
+
+      
     });
 
     describe('base#find', function() {
