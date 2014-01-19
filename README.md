@@ -41,7 +41,8 @@ Create an Angular factory or provider that relies on ActiveResource:
       .factory('Post', ['ActiveResource', function(ActiveResource) {
 
         function Post(data) {
-          this.id = data.id;
+          this.number('id');
+          this.string('title');
           this.hasMany('comments');
           this.belongsTo('author);
         };
