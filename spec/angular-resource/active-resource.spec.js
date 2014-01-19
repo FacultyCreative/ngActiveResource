@@ -94,6 +94,123 @@ describe('ActiveResource', function() {
     system = System.new({id: 1});
   }]));
 
+  describe('Adding Properties', function() {
+
+    var tshirt;
+    beforeEach(function() {
+      tshirt = Tshirt.new({order_id: 1, price: 10.99, available: true, name: 'Ragin Shirt'});
+    });
+
+    describe('Integer property type', function() {
+      it('is valid if the property is an integer', function() {
+        expect(tshirt.$valid).toBe(true);
+      });
+
+      it('is invalid if the value is a float', function() {
+        tshirt.order_id = 1.5;
+        expect(tshirt.$valid).toBe(false);
+      });
+
+      it('is invalid if the value is a string', function() {
+        tshirt.order_id = 'NaN';
+        expect(tshirt.$valid).toBe(false);
+      });
+
+      it('is invalid if the value is an array', function() {
+        tshirt.order_id = ['value'];
+        expect(tshirt.$valid).toBe(false);
+      });
+
+      it('is invalid if the value is an object', function() {
+        tshirt.order_id = Tshirt.new();
+        expect(tshirt.$valid).toBe(false);
+      });
+
+      it('is valid if it contains commas', function() {
+        tshirt.order_id = '1,111';
+        expect(tshirt.$valid).toBe(true);
+      });
+    });
+
+    describe('Number property type', function() {
+      it('is valid if the property is an integer', function() {
+        tshirt.price = '10';
+        expect(tshirt.$valid).toBe(true);
+      });
+
+      it('is valid if the value is a float', function() {
+        expect(tshirt.$valid).toBe(true);
+      });
+
+      it('is invalid if the value is a string', function() {
+        tshirt.price = 'NaN';
+        expect(tshirt.$valid).toBe(false);
+      });
+
+      it('is invalid if the value is an array', function() {
+        tshirt.price = ['value'];
+        expect(tshirt.$valid).toBe(false);
+      });
+
+      it('is invalid if the value is an object', function() {
+        tshirt.price = Tshirt.new();
+        expect(tshirt.$valid).toBe(false);
+      });
+
+      it('is valid if it contains commas', function() {
+        tshirt.price = '1,111';
+        expect(tshirt.$valid).toBe(true);
+      });
+    });
+
+    describe('Boolean property type', function() {
+      it('is valid if true', function() {
+        expect(tshirt.$valid).toBe(true);
+      });
+
+      it('is valid if false', function() {
+        tshirt.available = 'false';
+        expect(tshirt.$valid).toBe(true);
+      });
+
+      it('is invalid if the value is a string', function() {
+        tshirt.available = 'NaN';
+        expect(tshirt.$valid).toBe(false);
+      });
+
+      it('is invalid if the value is a number', function() {
+        tshirt.available = 1;
+        expect(tshirt.$valid).toBe(false);
+      });
+
+      it('is invalid if the value is an object', function() {
+        tshirt.available = Tshirt.new();
+        expect(tshirt.$valid).toBe(false);
+      });
+    });
+
+    describe('String property type', function() {
+      it('is valid if parseable to string', function() {
+        expect(tshirt.$valid).toBe(true);
+      });
+
+      it('is valid if parseable to string', function() {
+        tshirt.name = 5;
+        expect(tshirt.$valid).toBe(true);
+      });
+
+      it('is invalid if array', function() {
+        tshirt.name = [1, 2, 3]
+        expect(tshirt.$valid).toBe(false);
+      });
+
+      it('is invalid if object', function() {
+        tshirt.name = {};
+        expect(tshirt.$valid).toBe(false);
+      });
+    });
+  });
+
   describe('Caching', function() {
     it('adds a cache to the model', function() {
       expect(System.cached).toBeDefined();
@@ -1537,7 +1654,7 @@ describe('ActiveResource', function() {
         it('sets errors on all invalid fields & required fields', function() {
           var user = User.new();
           user.validate();
-          expect(numkeys(user.$errors)).toBe(2);
+          expect(numkeys(user.$errors)).toBe(3);
         });
       });
 

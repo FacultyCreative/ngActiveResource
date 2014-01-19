@@ -3,7 +3,15 @@ angular
   .provider('Tshirt', function() {
 
     this.$get = ['ActiveResource', function(ActiveResource) {
-      function Tshirt() {
+      function Tshirt(attributes) {
+        this.integer('order_id');
+        this.number('price');
+        this.boolean('available');
+        this.string('name');
+
+        this.validates({
+          size: { inclusion: { in: ['small', 'medium', 'large'] } }
+        });
       }
 
       Tshirt = ActiveResource.Base.apply(Tshirt);
