@@ -7,8 +7,10 @@ angular
       }
 
       Tshirt = ActiveResource.Base.apply(Tshirt);
-      Tshirt.api.indexURL = 'http://api.faculty.com/tshirts/[:attrs]';
-      Tshirt.api.showURL = 'http://api.faculty.com/tshirt/:id';
+      Tshirt.primaryKey    = '_id';
+      Tshirt.api.indexURL  = 'http://api.faculty.com/tshirts/[:attrs]';
+      Tshirt.api.showURL   = 'http://api.faculty.com:3000/tshirt/:_id';
+      Tshirt.api.deleteURL = 'http://api.faculty.com:3000/tshirt/:_id';
 
       return Tshirt;
     }];

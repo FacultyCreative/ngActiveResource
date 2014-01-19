@@ -8,10 +8,10 @@ angular.module('app')
           this.hasMany('comments');
         };
 
-
         Post = ActiveResource.Base.apply(Post);
         Post.primaryKey = '_id';
         Post.api.set('http://0.0.0:3000/api');
+        Post.api.showURL   = 'http://localhost:3000/api/post/[:params]';
         Post.api.createURL = 'http://0.0.0:3000/api/post';
 
         return Post;

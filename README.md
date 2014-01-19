@@ -136,13 +136,13 @@ RESTful API (GET).
 Best case scenario: You have an API that adheres to ActiveResource's RESTful
 convention. Here's that convention:
 
-| HTTP Verb | CRUD     | Path            | Action | Used To                                                           |
-| --------- |:--------:|:---------------:|:------:|:---------------------                                             |
-| GET       | Retrieve | /users/?query   | index  | Display a list of all users, or all users filtered by querystring |
-| GET       | Retrieve | /users/?query   | show   | Display a specific user, found by querystring                     |
-| POST      | Create   | /users          | create | Create a user                                                     |
-| PUT       | Update   | /users/:id      | update | Update a specific user                                            |
-| DELETE    | Destroy  | /users/:id      | destroy| Delete a specific user                                            |
+| HTTP Verb | CRUD     | Path                    | Action | Used To                                                           |
+| --------- |:--------:|:-----------------------:|:------:|:---------------------                                             |
+| GET       | Retrieve | /users/[:querystring]   | index  | Display a list of all users, or all users filtered by querystring |
+| GET       | Retrieve | /users/[:querystring]   | show   | Display a specific user, found by querystring                     |
+| POST      | Create   | /users                  | create | Create a user                                                     |
+| PUT       | Update   | /users/:id              | update | Update a specific user                                            |
+| DELETE    | Destroy  | /users/:id              | destroy| Delete a specific user                                            |
 
 Please notice that the update action differs from the URLs you might display to
 a user in Ruby on Rails: we won't refer to a specific primary key or username
@@ -155,11 +155,35 @@ If you do have an API that follows these conventions, hooking it up to ActiveRes
 
 If you need to override specific URLs:
 
-    Post.api.indexURL = 'http://api.faculty.com/list-all-the-users';
-    Post.api.showURL  = 'http://api.faculty.com/show-me-user/[:params]';
+    Post.api.indexURL  = 'http://api.faculty.com/list-all-the-users';
+    Post.api.showURL   = 'http://api.faculty.com/show-me-user/[:querystring]';
+    Post.api.deleteURL = 'http://api.faculty.com/show-me-user/:param';
 
 `[:params]` will be substituted for you automatically using the parameters
 specified by the query methods listed below.
+
+### Parameterized URLS versus Query Strings:
+
+To signal to ActiveResource that you want it to replace parameters in your URL,
+simply type them following a colon:
+
+    Post.api.showURL = /posts/:id
+    Post.api.showURL = /posts/:_id  // MongoDB
+
+The parameters themselves will be replaced:
+
+    Post.find({id: 1})
+    >> http://my.api.com/posts/1
+
+To signal that you want to use a query string, simply surround any word in
+`[:brackets]`:
+
+    Post.api.indexURL = /posts/[:findMyPosts]
+
+The brackets will be replaced depending on the query:
+
+    Post.$delete({author_id: 1})
+    >> http://my.api.com/posts/?author_id=1
 
 ### Find:
 

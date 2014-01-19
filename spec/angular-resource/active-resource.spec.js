@@ -714,6 +714,22 @@ describe('ActiveResource', function() {
         it('still contains all other members', function() {
           expect(system.sensors[0].id).toEqual(2);
         });
+
+        describe('using parameterized deleteURL', function() {
+          var tshirt;
+          beforeEach(function() {
+            tshirt = Tshirt.new({_id: 1});
+            tshirt.$delete().then(function(response) { tshirt = response });
+            backend.expectDELETE('http://api.faculty.com:3000/tshirt/1')
+              .respond({});
+
+            backend.flush();
+          });
+
+          it('uses the parameters provided instead of a querystring', function(){ 
+            expect(tshirt).toBe(undefined);
+          }); 
+        });
       });
 
       describe('Destruction of parent', function() {
@@ -1093,16 +1109,17 @@ describe('ActiveResource', function() {
             tshirt = response;
           });
 
-          backend.expectGET('http://api.faculty.com/tshirt/1')
-            .respond({id: 1, size: 'M'});
+          backend.expectGET('http://api.faculty.com:3000/tshirt/1')
+            .respond({_id: 1, size: 'M'});
 
           backend.flush();
         });
 
         it('uses the parameters provided instead of a querystring', function(){ 
-          expect(tshirt.id).toBe(1);
+          expect(tshirt._id).toBe(1);
         }); 
       });
+
     });
 
     describe('base#find', function() {
