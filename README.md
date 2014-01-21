@@ -94,6 +94,23 @@ The astute reader will notice methods prefaced with `$` are interacting with an
 API. The API calls are established in the model definition under
 `Post.api.set()`.
 
+## Computed Properties:
+
+Following the syntax of Ember.js' computed properties, you can create properties
+that auto-magically update with or without Angular's two-way binding:
+
+  function TShirt() {
+    this.number('price');
+
+    this.computedProperty('salePrice', function() {
+      return this.price - (this.price * 0.2);
+    }, 'price');
+
+    this.computedProperty('superSalePrice', function() {
+      return this.price - this.salePrice;
+    }, ['price', 'salePrice']);
+  }
+
 ## Establish Associations:
 
 A has many association can be setup by naming the field. If the field name is
