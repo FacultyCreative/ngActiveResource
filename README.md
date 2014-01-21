@@ -53,7 +53,7 @@ Create an Angular factory or provider that relies on ActiveResource:
           this.belongsTo('author);
         };
 
-        Post = ActiveResource.Base.apply(Post);
+        Post.inherits(ActiveResource.Base);
         Post.api.set('http://api.faculty.com');
         Post.dependentDestroy('comments');
 
