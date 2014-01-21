@@ -43,6 +43,12 @@ Create an Angular factory or provider that relies on ActiveResource:
         function Post(data) {
           this.number('id');
           this.string('title');
+          this.string('subtitle');
+
+          this.computedProperty('fullTitle', function() {
+            return this.title + this.subtitle;
+          }, ['title', 'subtitle']);
+
           this.hasMany('comments');
           this.belongsTo('author);
         };
