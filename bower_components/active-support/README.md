@@ -50,6 +50,14 @@ expect('SuperDuperClass'.underscore()).toEqual('super_duper_class');
 expect('SuperHTMLParser'.underscore()).toEqual('super_html_parser');
 ```
 
+#### String#hyphenate
+
+```
+expect('activeModel'.hyphenate()).toEqual('active-model');
+expect('SuperDuperClass'.hyphenate()).toEqual('super-duper-class');
+expect('SuperHTMLParser'.hyphenate()).toEqual('super-html-parser');
+```
+
 #### String#humanize
 
 ```

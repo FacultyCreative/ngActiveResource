@@ -99,17 +99,17 @@ API. The API calls are established in the model definition under
 Following the syntax of Ember.js' computed properties, you can create properties
 that auto-magically update with or without Angular's two-way binding:
 
-  function TShirt() {
-    this.number('price');
+    function TShirt() {
+      this.number('price');
 
-    this.computedProperty('salePrice', function() {
-      return this.price - (this.price * 0.2);
-    }, 'price');
+      this.computedProperty('salePrice', function() {
+        return this.price - (this.price * 0.2);
+      }, 'price');
 
-    this.computedProperty('superSalePrice', function() {
-      return this.price - this.salePrice;
-    }, ['price', 'salePrice']);
-  }
+      this.computedProperty('superSalePrice', function() {
+        return this.price - this.salePrice;
+      }, ['price', 'salePrice']);
+    }
 
 ## Establish Associations:
 

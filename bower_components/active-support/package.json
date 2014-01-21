@@ -4,7 +4,7 @@
   "repository": { 
     "url": "https://github.com/brettshollenberger/ActiveSupport.js"
   },
-  "version": "0.0.6",
+  "version": "0.0.7",
   "main": "active-support-node.js",
   "devDependencies": {
     "grunt": "~0.4.1",

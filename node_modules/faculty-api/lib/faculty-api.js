@@ -55,7 +55,9 @@ module.exports.addResource = function(options) {
 
     var data = req.body;
     postHash = {};
-    paths.forEach(function(key) { postHash[key] = data[key] || undefined; });
+    paths.forEach(function(key) { 
+      if (data[key] && key != '_id') postHash[key] = data[key]; 
+    });
 
     collection.create(postHash, function(error, resource) {
       if (!error) {

@@ -280,6 +280,14 @@ describe('Inflector', function() {
     });
   });
 
+  describe('String#hyphenate', function() {
+    it('changes a string to hyphen case', function() {
+      expect('activeModel'.hyphenate()).toEqual('active-model');
+      expect('SuperDuperClass'.hyphenate()).toEqual('super-duper-class');
+      expect('SuperHTMLParser'.hyphenate()).toEqual('super-html-parser');
+    });
+  });
+
   // Capitalizes the first word and turns underscores into spaces and strips a
   // trailing "_id", if any. Like +titleize+, this is meant for creating pretty
   // output.

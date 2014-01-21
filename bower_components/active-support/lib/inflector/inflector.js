@@ -101,6 +101,16 @@ module.exports = (function() {
     }
   });
 
+  Object.defineProperty(STRPROTO, 'hyphenate', {
+    enumerable: false,
+    value: function() {
+      var word = _.clone(this);
+      word     = word.underscore();
+      word     = word.replace(/\_/g, '-');
+      return word;
+    }
+  });
+
   // Capitalizes the first word and turns underscores into spaces and strips a
   // trailing "_id", if any. Like +titleize+, this is meant for creating pretty
   // output.
