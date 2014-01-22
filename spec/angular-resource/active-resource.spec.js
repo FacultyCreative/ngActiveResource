@@ -346,7 +346,7 @@ describe('ActiveResource', function() {
 
     it('saves using the primary key', function() {
       post.$save().then(function(response) { post = response; });
-      backend.expectPOST('http://api.faculty.com/posts', {"title":"My Great Post","comments":[],"circularRef":{"ref":"1","post":{"title":"My Great Post","comments":{"$ref":"#comments"},"circularRef":{"$ref":"#circularRef"},"_id":"52a8b80d251c5395b485cfe6"}},"_id":"52a8b80d251c5395b485cfe6"})
+      backend.expectPUT('http://api.faculty.com/posts/52a8b80d251c5395b485cfe6', {"title":"My Great Post","comments":[],"circularRef":{"ref":"1","post":{"title":"My Great Post","comments":{"$ref":"#comments"},"circularRef":{"$ref":"#circularRef"},"_id":"52a8b80d251c5395b485cfe6"}},"_id":"52a8b80d251c5395b485cfe6"})
       .respond({"_id": "52a8b80d251c5395b485cfe6", "title": "My Great Post"});
       backend.flush(); 
       expect($http.post).toHaveBeenCalledWith('http://api.faculty.com/posts', '{"title":"My Great Post","comments":[],"circularRef":{"ref":"1","post":{"title":"My Great Post","comments":{"$ref":"#comments"},"circularRef":{"$ref":"#circularRef"}}}}');
@@ -367,7 +367,6 @@ describe('ActiveResource', function() {
       backend.flush();
       expect($http.get).toHaveBeenCalledWith('http://api.faculty.com/posts/?_id=52a8b80d251c5395b485cfe7');
     });
-
   });
 
   describe('Foreign Keys', function() {
@@ -1051,29 +1050,58 @@ describe('ActiveResource', function() {
 
   describe('Persistence', function() {
     describe('base#save', function() {
-      var sensor;
-      beforeEach(function() {
-        sensor = system.sensors.new();
-        sensor.$save().then(function(response) { sensor = response; });
-        backend.flush();
+
+      describe('Intelligently creating versus saving', function() {
+
+        var sensor;
+        beforeEach(function() {
+          sensor = system.sensors.new();
+        });
+
+        it('calls updateURL if there is a primary key on the object', function() {
+          sensor.id = 1;
+          sensor.$save().then(function(response) { sensor = response; });
+          backend.whenPUT('http://api.faculty.com/sensors/1')
+            .respond({id: 1});
+          backend.flush();
+          expect($http.put).toHaveBeenCalledWith('http://api.faculty.com/sensors/1', '{"id":1,"system_id":1}');
+        });
+
+        it('calls createURL if there is no primary key', function() {
+          sensor.$save().then(function(response) { sensor = response; });
+          backend.whenPOST('http://api.faculty.com/sensors')
+            .respond({id: 1});
+          backend.flush();
+          expect($http.post).toHaveBeenCalledWith('http://api.faculty.com/sensors', '{"system_id":1}');
+        });
       });
 
-      it('adds collection members to the collection', function() {
-        expect(system.sensors[0]).toEqual(sensor);
+      describe('Saving', function() {
+        var sensor;
+        beforeEach(function() {
+          sensor = system.sensors.new();
+          sensor.$save().then(function(response) { sensor = response; });
+          backend.flush();
+        });
+
+        it('adds collection members to the collection', function() {
+          expect(system.sensors[0]).toEqual(sensor);
+        });
+
+        it('adds the new model to the cache', function() {
+          expect(Sensor.cached[3]).toEqual(sensor);
+        });
+
+        it('adds the id that it received from the backend', function() {
+          expect(system.sensors[0].id).toEqual(3);
+        });
       });
 
-      it('adds the new model to the cache', function() {
-        expect(Sensor.cached[3]).toEqual(sensor);
-      });
-
-      it('adds the id that it received from the backend', function() {
-        expect(system.sensors[0].id).toEqual(3);
-      });
     });
 
     describe('base#$create', function() {
       it('adds to the cache', function() {
-        System.$create({id: 1}).then(function(response) { system = response; });
+        System.$create().then(function(response) { system = response; });
         backend.flush();
         expect(System.cached[1]).toEqual(system);
       });
@@ -1083,7 +1111,7 @@ describe('ActiveResource', function() {
 
       var post;
       beforeEach(function() {
-        System.$create({id: 1}).then(function(response) { system = response; });
+        System.$create().then(function(response) { system = response; });
         Post.$create().then(function(response) { post = response; });
         backend.flush();
       });
@@ -1161,6 +1189,7 @@ describe('ActiveResource', function() {
 
         beforeEach(function() {
           // Backend will respond with {id: 1}
+          system.id = undefined;
           system.$save().then(function(response) { system = response; });
           
           // Backend will respond with {id: 8, placement: 'window'}
@@ -1168,6 +1197,7 @@ describe('ActiveResource', function() {
           
           // Backend will respond with {id: 9, placement: 'door'}
           System.$create({placement: 'window', name: 'Matts System'}).then(function(response)  { system9 = response; });
+
           backend.flush();
         });
 
@@ -1276,7 +1306,7 @@ describe('ActiveResource', function() {
 
       beforeEach(function() {
         system.$save().then(function(response) { system = response });
-        backend.expectPOST('http://api.faculty.com/systems', 
+        backend.expectPUT('http://api.faculty.com/systems/1', 
           {id: 1, sensors: []})
            .respond({id: 1});
         backend.expectPOST('http://api.faculty.com/systems', 
@@ -1492,6 +1522,9 @@ describe('ActiveResource', function() {
 
       backend.expectGET('http://api.faculty.com/comments/?post_id=1')
         .respond({});
+
+      backend.whenPUT('http://api.faculty.com/posts/1')
+        .respond({_id: 1});
 
       backend.flush();
     });
