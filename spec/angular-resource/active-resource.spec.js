@@ -2077,16 +2077,54 @@ describe('ActiveResource', function() {
         user.uniqueIdentifier = '';
         expect(user.$valid).toBe(true);
       });
+
+      it('is passed the value of the field to validate, the name of the field, and the instance to validate', 
+          function() {
+        var user = User.new();
+
+        var validators = {};
+
+        validators.uniqueValidator1 = function(value, field, instance) {
+          return value;
+        }
+
+        spyOn(validators, 'uniqueValidator1').andCallThrough();
+
+        user.validates({
+          name: { uniqueValidator1: { validates: validators.uniqueValidator1, message: 'Smooth move, Ferguson' } }
+        });
+
+        user.name = 'cool value!';
+        user.validate('name');
+        expect(validators.uniqueValidator1).toHaveBeenCalledWith('cool value!', 'name', user);
+      });
+
+      it('validates the current instance', function() {
+        var user = User.new();
+        var validators = {};
+        validators.uniqueValidator1 = function(value, field, instance) { return value; }
+        spyOn(validators, 'uniqueValidator1').andCallThrough();
+        user.validates({
+          name: { uniqueValidator1: { validates: validators.uniqueValidator1, message: 'Smooth move, Ferguson' } }
+        });
+        user.name = 'cool value!';
+        user.validate('name');
+        var user2 = User.new();
+        user.validates({
+          name: { uniqueValidator1: { validates: validators.uniqueValidator1, message: 'Smooth move, Ferguson' } }
+        });
+        user2.name = 'whatever, man!';
+        user2.validate('name');
+        expect(validators.uniqueValidator1).toHaveBeenCalledWith('whatever, man!', 'name', user2);
+      });
     });
     
     describe('Nested object validations', function(){
-        
       it('validates properties of nested objects', function(){
         user.echeck = {};
         user.echeck.type = '12345678912345678922222';
         expect(user.$valid).toBe(false);   
       });
-          
     });
     
     describe('Saving with Validations', function() {
