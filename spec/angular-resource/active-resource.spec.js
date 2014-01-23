@@ -1416,7 +1416,7 @@ describe('ActiveResource', function() {
   describe('Base#api', function() {
     describe('Base.api#set', function() {
       it('creates a show url', function() {
-        expect(System.api.showURL).toEqual('http://api.faculty.com/systems/[:attrs]');
+        expect(System.api.showURL).toEqual('http://api.faculty.com/systems');
       });
 
       it('creates a create url', function() {
@@ -1424,11 +1424,11 @@ describe('ActiveResource', function() {
       });
 
       it('creates a delete url', function() {
-        expect(System.api.deleteURL).toEqual('http://api.faculty.com/systems/[:attrs]');
+        expect(System.api.deleteURL).toEqual('http://api.faculty.com/systems');
       });
 
       it('creates an index url', function() {
-        expect(System.api.indexURL).toEqual('http://api.faculty.com/systems/[:attrs]');
+        expect(System.api.indexURL).toEqual('http://api.faculty.com/systems');
       });
 
       it('creates an update url', function() {
