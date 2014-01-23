@@ -32,22 +32,22 @@ describe('ActiveResource', function() {
     // 
     // GET SYSTEM
     // Requests for mock "persisted" systems that will be returned from the mock API
-    backend.whenGET('http://api.faculty.com/systems/?id=1')
+    backend.whenGET('http://api.faculty.com/systems?id=1')
       .respond([{id: 1}]);
 
-    backend.whenGET('http://api.faculty.com/systems/?id=2')
+    backend.whenGET('http://api.faculty.com/systems?id=2')
       .respond([{id: 2}]);
   
-    backend.whenGET('http://api.faculty.com/systems/?id=3')
+    backend.whenGET('http://api.faculty.com/systems?id=3')
       .respond([{id: 3}]);
 
-    backend.whenGET('http://api.faculty.com/systems/?id=4')
+    backend.whenGET('http://api.faculty.com/systems?id=4')
       .respond([{id: 4}]);
 
-    backend.whenGET('http://api.faculty.com/systems/?id=5&placement=door')
+    backend.whenGET('http://api.faculty.com/systems?id=5&placement=door')
       .respond([{id: 5, placement: 'door'}]);
 
-    backend.whenGET('http://api.faculty.com/systems/?placement=window')
+    backend.whenGET('http://api.faculty.com/systems?placement=window')
       .respond([{id: 6, placement: 'window'}, {id: 7, placement: 'window'}]);
 
     // POST SYSTEM
@@ -67,10 +67,10 @@ describe('ActiveResource', function() {
 
     // GET SENSOR
     // Requests for mock "persisted" sensors
-    backend.whenGET('http://api.faculty.com/sensors/?id=1')
+    backend.whenGET('http://api.faculty.com/sensors?id=1')
       .respond({id: 1, system_id: 1});
 
-    backend.whenGET('http://api.faculty.com/sensors/?id=2')
+    backend.whenGET('http://api.faculty.com/sensors?id=2')
       .respond({id: 2, system_id: 2});
 
     // POST SENSOR
@@ -354,7 +354,7 @@ describe('ActiveResource', function() {
 
     it('deletes using the primary key', function() {
       post.$delete();
-      backend.expectDELETE('http://api.faculty.com/posts/?_id=52a8b80d251c5395b485cfe6')
+      backend.expectDELETE('http://api.faculty.com/posts?_id=52a8b80d251c5395b485cfe6')
         .respond({data: 'Success'});
       backend.flush();
       expect($http.delete).toHaveBeenCalledWith('http://api.faculty.com/posts/?_id=52a8b80d251c5395b485cfe6');
@@ -362,7 +362,7 @@ describe('ActiveResource', function() {
 
     it('finds using the primary key if no object is passed to find', function() {
       Post.find('52a8b80d251c5395b485cfe7', {lazy: true}).then(function(response) { post = response; });
-      backend.expectGET('http://api.faculty.com/posts/?_id=52a8b80d251c5395b485cfe7')
+      backend.expectGET('http://api.faculty.com/posts?_id=52a8b80d251c5395b485cfe7')
         .respond({"_id": "52a8b80d251c5395b485cfe7", "title": "An Incredible Post"});
       backend.flush();
       expect($http.get).toHaveBeenCalledWith('http://api.faculty.com/posts/?_id=52a8b80d251c5395b485cfe7');
@@ -488,13 +488,13 @@ describe('ActiveResource', function() {
           system = response;
         });
 
-        backend.expectGET('http://api.faculty.com/systems/?id=100')
+        backend.expectGET('http://api.faculty.com/systems?id=100')
           .respond({id: 100});
 
-        backend.expectGET('http://api.faculty.com/sensors/?system_id=100')
+        backend.expectGET('http://api.faculty.com/sensors?system_id=100')
           .respond([{id: 25, system_id: 100}]);
 
-        backend.expectGET('http://api.faculty.com/grid-controllers/?system_id=100')
+        backend.expectGET('http://api.faculty.com/grid-controllers?system_id=100')
           .respond({id: 25, system_id: 100});
 
         backend.flush();
@@ -508,10 +508,10 @@ describe('ActiveResource', function() {
           gc = response;
         });
 
-        backend.expectGET('http://api.faculty.com/grid-controllers/?id=100')
+        backend.expectGET('http://api.faculty.com/grid-controllers?id=100')
           .respond({id: 100, system_id: 100});
 
-        backend.expectGET('http://api.faculty.com/systems/?id=100')
+        backend.expectGET('http://api.faculty.com/systems?id=100')
           .respond({id: 100});
 
         backend.flush();
@@ -524,11 +524,11 @@ describe('ActiveResource', function() {
           gc = response;
         });
 
-        backend.expectGET('http://api.faculty.com/grid-controllers/?id=100')
+        backend.expectGET('http://api.faculty.com/grid-controllers?id=100')
           .respond({id: 100});
 
         backend.flush();
-        expect($http.get).not.toHaveBeenCalledWith('http://api.faculty.com/systems/?id=100');
+        expect($http.get).not.toHaveBeenCalledWith('http://api.faculty.com/systems?id=100');
       });
 
       it('sets associations for all hasOnes found through #where', function() {
@@ -537,14 +537,14 @@ describe('ActiveResource', function() {
           gcList = response;
         });
 
-        backend.expectGET('http://api.faculty.com/grid-controllers/?status=ready')
+        backend.expectGET('http://api.faculty.com/grid-controllers?status=ready')
           .respond([
             {id: 100, status: 'ready', system_id: 100},
             {id: 25,  status: 'ready', system_id: 25}]);
-        backend.expectGET('http://api.faculty.com/systems/?id=100')
+        backend.expectGET('http://api.faculty.com/systems?id=100')
           .respond({id: 100});
 
-        backend.expectGET('http://api.faculty.com/systems/?id=25')
+        backend.expectGET('http://api.faculty.com/systems?id=25')
           .respond({id: 25});
 
         backend.flush();
@@ -706,10 +706,10 @@ describe('ActiveResource', function() {
       Post.find(1).then(function(response) {
         post = response;
       });
-      backend.expectGET('http://api.faculty.com/posts/?_id=1')
+      backend.expectGET('http://api.faculty.com/posts?_id=1')
         .respond({_id: 1, title: "Great Post"});
 
-      backend.expectGET('http://api.faculty.com/comments/?post_id=1')
+      backend.expectGET('http://api.faculty.com/comments?post_id=1')
         .respond([{id: 1, text: "Great one!", post_id: 1}]);
 
       backend.flush();
@@ -846,7 +846,7 @@ describe('ActiveResource', function() {
           backend.expectPOST('http://api.faculty.com/sensors').respond({id: 2, system_id: 1});
           backend.flush();
           sensor1.$delete();
-          backend.expectDELETE('http://api.faculty.com/sensors/?id=1').respond({data: 'success'});
+          backend.expectDELETE('http://api.faculty.com/sensors?id=1').respond({data: 'success'});
           backend.flush();
         });
 
@@ -889,7 +889,7 @@ describe('ActiveResource', function() {
             backend.expectPOST('http://api.faculty.com/sensors').respond({id: 1, system_id: 1});
             backend.flush();
             system.$delete();
-            backend.expectDELETE('http://api.faculty.com/systems/?id=1').respond({data: 'success'});
+            backend.expectDELETE('http://api.faculty.com/systems?id=1').respond({data: 'success'});
             backend.flush();
           });
 
@@ -910,8 +910,8 @@ describe('ActiveResource', function() {
               .respond({id: 1, post_id: 1});
             backend.flush();
             post.$delete().then(function(response) { post = comment = response; });
-            backend.expectDELETE('http://api.faculty.com/posts/?_id=1').respond({data: 'success'});
-            backend.expectDELETE('http://api.faculty.com/comments/?id=1').respond({data: 'success'});
+            backend.expectDELETE('http://api.faculty.com/posts?_id=1').respond({data: 'success'});
+            backend.expectDELETE('http://api.faculty.com/comments?id=1').respond({data: 'success'});
             backend.flush();
             $timeout.flush();
           });
@@ -961,10 +961,10 @@ describe('ActiveResource', function() {
             gridController = response;
           });
 
-          backend.expectGET('http://api.faculty.com/comments/?post_id=1')
+          backend.expectGET('http://api.faculty.com/comments?post_id=1')
             .respond([{id: 1}, {id: 2}]);
 
-          backend.expectGET('http://api.faculty.com/grid-controllers/?system_id=1')
+          backend.expectGET('http://api.faculty.com/grid-controllers?system_id=1')
             .respond({id: 1});
 
           backend.flush();
@@ -994,7 +994,7 @@ describe('ActiveResource', function() {
             comments = response;
           });
 
-          backend.expectGET('http://api.faculty.com/comments/?post_id=1')
+          backend.expectGET('http://api.faculty.com/comments?post_id=1')
             .respond([{id: 1}, {id: 2}]);
 
           backend.flush();
@@ -1022,7 +1022,7 @@ describe('ActiveResource', function() {
           comment = response;
         });
 
-        backend.expectGET('http://api.faculty.com/comments/?post_id=1')
+        backend.expectGET('http://api.faculty.com/comments?post_id=1')
           .respond([{id: 1}]);
       
         backend.flush();
@@ -1212,7 +1212,7 @@ describe('ActiveResource', function() {
           var foundSystems;
           System.where({placement: 'window'}, {lazy: true})
             .then(function(response) { foundSystems = response; });
-          backend.expectGET('http://api.faculty.com/systems/?placement=window')
+          backend.expectGET('http://api.faculty.com/systems?placement=window')
             .respond([{id: 8, placement: 'window', name: 'Bretts System'},
                       {id: 9, placement: 'window', name: 'Matts System'},
                       {id: 10, placement: 'window', name: 'Pickles System'}]);
@@ -1225,7 +1225,7 @@ describe('ActiveResource', function() {
         it('always queries the backend to get all instances, even if some are found in the cache', function() {
           var foundSystems; 
           System.where({placement: 'window'}, {lazy: true}).then(function(response) { foundSystems = response; });
-          backend.expectGET('http://api.faculty.com/systems/?placement=window')
+          backend.expectGET('http://api.faculty.com/systems?placement=window')
             .respond([{id: 8, placement: 'window', name: 'Bretts System'},
                       {id: 9, placement: 'window', name: 'Matts System'},
                       {id: 10, placement: 'window', name: 'Pickles System'}]);
@@ -1243,18 +1243,18 @@ describe('ActiveResource', function() {
         it('has associated method #all that returns all instances', function() {
           var foundSystems;
           System.all().then(function(response) { foundSystems = response; });
-          backend.expectGET('http://api.faculty.com/systems/')
+          backend.expectGET('http://api.faculty.com/systems')
             .respond([{id: 8, placement: 'window', name: 'Bretts System'},
                       {id: 9, placement: 'window', name: 'Matts System'},
                       {id: 10, placement: 'window', name: 'Pickles System'}]);
 
-          backend.expectGET('http://api.faculty.com/sensors/?system_id=8')
+          backend.expectGET('http://api.faculty.com/sensors?system_id=8')
             .respond([]);
 
-          backend.expectGET('http://api.faculty.com/sensors/?system_id=9')
+          backend.expectGET('http://api.faculty.com/sensors?system_id=9')
             .respond([]);
 
-          backend.expectGET('http://api.faculty.com/sensors/?system_id=10')
+          backend.expectGET('http://api.faculty.com/sensors?system_id=10')
             .respond([]);
 
           backend.flush();
@@ -1269,7 +1269,7 @@ describe('ActiveResource', function() {
             tshirts = response;
           });
 
-          backend.expectGET('http://api.faculty.com/tshirts/?size=M')
+          backend.expectGET('http://api.faculty.com/tshirts?size=M')
             .respond([{id: 1, size: 'M'}, {id: 2, size: 'M'}]);
 
           backend.flush();
@@ -1332,7 +1332,7 @@ describe('ActiveResource', function() {
         System.find({id: 1}, {lazy: true, forceGET: true, noInstanceEndpoint: true})
           .then(function(response) { foundSystem = response; });
 
-        backend.expectGET('http://api.faculty.com/systems/?id=1')
+        backend.expectGET('http://api.faculty.com/systems?id=1')
           .respond([{id: 2, name: 'Wrong System'}, {id: 1, name: 'Right System'}]);
 
         backend.flush();
@@ -1344,7 +1344,7 @@ describe('ActiveResource', function() {
         System.find({id: 1}, {lazy: true, forceGET: true, noInstanceEndpoint: true})
           .then(function(response) { foundSystem = response; });
 
-        backend.expectGET('http://api.faculty.com/systems/?id=1')
+        backend.expectGET('http://api.faculty.com/systems?id=1')
           .respond([{id: 2, name: 'Wrong System'}, {id: 1, name: 'Right System'}]);
 
         backend.flush();
@@ -1359,7 +1359,7 @@ describe('ActiveResource', function() {
         System.find({id: 6, name: 'Right System'}, {lazy: true, noInstanceEndpoint: true})
           .then(function(response) { foundSystem = response; });
 
-        backend.expectGET('http://api.faculty.com/systems/?id=6&name=Right System')
+        backend.expectGET('http://api.faculty.com/systems?id=6&name=Right+System')
           .respond([{id: 2, name: 'Wrong System'}, {id: 6, name: 'Right System'}]);
 
         backend.flush();
@@ -1395,7 +1395,7 @@ describe('ActiveResource', function() {
       });
 
       it('returns the first object only', function() {
-        // No cached system will be found, triggering a $http.get('http://api.faculty.com/systems/?placement=window');
+        // No cached system will be found, triggering a $http.get('http://api.faculty.com/systems?placement=window');
         //
         // The mock API is setup to respond with sensors 6 & 7. Find will only respond with the first instance (6).
         var foundSystem;
@@ -1486,19 +1486,19 @@ describe('ActiveResource', function() {
     beforeEach(function() {
       Post.find(1, {overEager: true}).then(function(response) { post = response; });
 
-      backend.expectGET('http://api.faculty.com/posts/?_id=1')
+      backend.expectGET('http://api.faculty.com/posts?_id=1')
         .respond({_id: 1, title: 'Great post!', author_id: 1});
 
-      backend.expectGET('http://api.faculty.com/authors/?_id=1')
+      backend.expectGET('http://api.faculty.com/authors?_id=1')
         .respond({_id: 1, name: 'Yorn Lomborg'});
 
-      backend.expectGET('http://api.faculty.com/comments/?author_id=1')
+      backend.expectGET('http://api.faculty.com/comments?author_id=1')
         .respond({_id: 1, text: 'Great!', author_id: 1, post_id: 1});
 
-      backend.expectGET('http://api.faculty.com/comments/?post_id=1')
+      backend.expectGET('http://api.faculty.com/comments?post_id=1')
         .respond({_id: 1, text: 'Great!', author_id: 1, post_id: 1});
 
-      backend.expectGET('http://api.faculty.com/posts/?author_id=1')
+      backend.expectGET('http://api.faculty.com/posts?author_id=1')
         .respond({_id: 1, title: 'Great post!', author_id: 1});
 
       backend.flush();
@@ -1514,13 +1514,13 @@ describe('ActiveResource', function() {
     beforeEach(function() {
       spyOn(window, 'alert');
       Post.find(1).then(function(response) { post = response; });
-      backend.expectGET('http://api.faculty.com/posts/?_id=1')
+      backend.expectGET('http://api.faculty.com/posts?_id=1')
         .respond({_id: 1, title: 'Great post!', author_id: 1});
 
-      backend.expectGET('http://api.faculty.com/authors/?_id=1')
+      backend.expectGET('http://api.faculty.com/authors?_id=1')
         .respond({_id: 1, name: 'Yorn Lomborg'});
 
-      backend.expectGET('http://api.faculty.com/comments/?post_id=1')
+      backend.expectGET('http://api.faculty.com/comments?post_id=1')
         .respond({});
 
       backend.whenPUT('http://api.faculty.com/posts/1')
@@ -1549,7 +1549,7 @@ describe('ActiveResource', function() {
       Post.after('$delete', function(instance) { 
         window.alert(instance.title + ' deleted successfully!')});
       post.$delete();
-      backend.expectDELETE('http://api.faculty.com/posts/?_id=1').respond({
+      backend.expectDELETE('http://api.faculty.com/posts?_id=1').respond({
         status: 200});
       backend.flush();
       expect(window.alert).toHaveBeenCalledWith('Great post! deleted successfully!');
@@ -1595,7 +1595,7 @@ describe('ActiveResource', function() {
         alert('Finding instances that match ' + terms.title);
       });
       Post.where({title: 'Great post!'}, {lazy: true});
-      backend.expectGET('http://api.faculty.com/posts/?title=Great post!')
+      backend.expectGET('http://api.faculty.com/posts?title=Great+post!')
         .respond({title: 'Great post!', _id: 1});
       backend.flush();
       expect(window.alert).toHaveBeenCalledWith('Finding instances that match Great post!');
@@ -1606,7 +1606,7 @@ describe('ActiveResource', function() {
         alert('Found em!');
       });
       Post.where({title: 'Great post!'}, {lazy: true});
-      backend.expectGET('http://api.faculty.com/posts/?title=Great post!')
+      backend.expectGET('http://api.faculty.com/posts?title=Great+post!')
         .respond({title: 'Great post!', _id: 1});
       backend.flush();
       expect(window.alert).toHaveBeenCalledWith('Found em!');
@@ -2154,7 +2154,7 @@ describe('ActiveResource', function() {
       var user;
       beforeEach(function() {
         User.find({id: 1}).then(function(response) { user = response; });
-        backend.expectGET('http://api.faculty.com/users/?id=1').respond({
+        backend.expectGET('http://api.faculty.com/users?id=1').respond({
           id: 1,
           name: 'Brett',
           username: 'brettcassette',
