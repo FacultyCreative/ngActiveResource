@@ -357,7 +357,7 @@ describe('ActiveResource', function() {
       backend.expectDELETE('http://api.faculty.com/posts?_id=52a8b80d251c5395b485cfe6')
         .respond({data: 'Success'});
       backend.flush();
-      expect($http.delete).toHaveBeenCalledWith('http://api.faculty.com/posts/?_id=52a8b80d251c5395b485cfe6');
+      expect($http.delete).toHaveBeenCalledWith('http://api.faculty.com/posts', { params : { _id : '52a8b80d251c5395b485cfe6' }, method : 'delete', url : 'http://api.faculty.com/posts' });
     });
 
     it('finds using the primary key if no object is passed to find', function() {
@@ -365,7 +365,7 @@ describe('ActiveResource', function() {
       backend.expectGET('http://api.faculty.com/posts?_id=52a8b80d251c5395b485cfe7')
         .respond({"_id": "52a8b80d251c5395b485cfe7", "title": "An Incredible Post"});
       backend.flush();
-      expect($http.get).toHaveBeenCalledWith('http://api.faculty.com/posts/?_id=52a8b80d251c5395b485cfe7');
+      expect($http.get).toHaveBeenCalledWith('http://api.faculty.com/posts', { params : { _id : '52a8b80d251c5395b485cfe7' }, method : 'get', url : 'http://api.faculty.com/posts' });
     });
   });
 
@@ -499,7 +499,7 @@ describe('ActiveResource', function() {
 
         backend.flush();
 
-        expect($http.get).toHaveBeenCalledWith('http://api.faculty.com/grid-controllers/?system_id=100');
+        expect($http.get).toHaveBeenCalledWith('http://api.faculty.com/grid-controllers', { params : { system_id : 100 }, method : 'get', url : 'http://api.faculty.com/grid-controllers' });
       });
 
       it('grabs the association when the dependent calls find', function() {
@@ -720,7 +720,7 @@ describe('ActiveResource', function() {
     });
 
     it('Uses foreign keys set to query for associations', function() {
-      expect($http.get).toHaveBeenCalledWith('http://api.faculty.com/comments/?post_id=1');
+      expect($http.get).toHaveBeenCalledWith('http://api.faculty.com/comments', { params : { post_id : 1 }, method : 'get', url : 'http://api.faculty.com/comments' });
     });
   });
 
@@ -925,7 +925,7 @@ describe('ActiveResource', function() {
           });
 
           it('calls the backend to delete the dependents', function() {
-            expect($http.delete).toHaveBeenCalledWith('http://api.faculty.com/comments/?id=1');
+            expect($http.delete).toHaveBeenCalledWith('http://api.faculty.com/comments', { params : { id : 1 }, method : 'delete', url : 'http://api.faculty.com/comments' });
           });
         });
       });
@@ -1230,7 +1230,7 @@ describe('ActiveResource', function() {
                       {id: 9, placement: 'window', name: 'Matts System'},
                       {id: 10, placement: 'window', name: 'Pickles System'}]);
           backend.flush();
-          expect($http.get).toHaveBeenCalledWith('http://api.faculty.com/systems/?placement=window');
+          expect($http.get).toHaveBeenCalledWith('http://api.faculty.com/systems', { params : { placement : 'window' }, method : 'get', url : 'http://api.faculty.com/systems' });
         });
 
         it('adds the instance to the cache', function() {
@@ -1470,12 +1470,12 @@ describe('ActiveResource', function() {
       describe('Model#find', function() {
         it('calls GET to the specified API, filling in the correct ID', function() {
           System.find(4);
-          expect($http.get).toHaveBeenCalledWith('http://api.faculty.com/systems/?id=4');
+          expect($http.get).toHaveBeenCalledWith('http://api.faculty.com/systems', { params : { id : 4 }, method : 'get', url : 'http://api.faculty.com/systems' });
         });
 
         it('calls GET with the specified attributes attached to the querystring', function() {
           System.find({placement: 'window'});
-          expect($http.get).toHaveBeenCalledWith('http://api.faculty.com/systems/?placement=window');
+          expect($http.get).toHaveBeenCalledWith('http://api.faculty.com/systems', { params : { placement : 'window' }, method : 'get', url : 'http://api.faculty.com/systems' });
         });
       });
     });
@@ -1505,7 +1505,7 @@ describe('ActiveResource', function() {
     });
 
     it('Loads assocations, and then all associations of associations, etc., recursively', function() {
-      expect($http.get).toHaveBeenCalledWith('http://api.faculty.com/posts/?author_id=1');
+      expect($http.get).toHaveBeenCalledWith('http://api.faculty.com/posts', { params : { _id : 1 }, method : 'get', url : 'http://api.faculty.com/posts' });
     });
   });
 
