@@ -1122,6 +1122,16 @@ describe('ActiveResource', function() {
         expect(system.placement).toEqual('window');
       });
 
+      it('updates when the primary key is 0', function() {
+        var post;
+        Post.find(0, {lazy: true}).then(function(results) { post = results; });
+        backend.expectGET('http://api.faculty.com/posts/?_id=0').respond({_id: 0});
+        backend.flush();
+        var comments = {comments: [{id: 0}, {id: 1}]};
+        post.update(comments);
+        expect(post.comments.length).toBe(2);
+      });
+
       it('updates associated relations if described', function() {
         system.update({sensors: [{id: 1}]});
         expect(system.sensors[0].constructor.name).toBe('Sensor');
