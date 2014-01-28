@@ -1143,9 +1143,9 @@ describe('ActiveResource', function() {
       });
 
       it('removes entities previously in associated collections', function() {
-        for (var i = 0; i<3; i++) { system.sensors.$create(); }
         system.update({sensors: [{id: 1}]});
-        expect(system.sensors.length).toBe(1);
+        system.update({sensors: [{id: 1}, {id: 2}]});
+        expect(system.sensors.length).toBe(2);
       });
 
       it('will not set "unsettable" properties', function() {
