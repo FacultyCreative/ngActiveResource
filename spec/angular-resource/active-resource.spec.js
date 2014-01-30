@@ -603,6 +603,22 @@ describe('ActiveResource', function() {
         backend.flush();
         expect(gc.id).toBe(3);
       });
+
+      it('updates associated instances if found at a later time', function() {
+        var system, gridController;
+        System.find(50, {lazy: true}).then(function(response) { system = response; });
+        backend.expectGET('http://api.faculty.com/systems/?id=50').respond({
+          id: 50
+        });
+        backend.flush();
+        GridController.find(2, {lazy: true}).then(function(response) { gridController = response; });
+        backend.expectGET('http://api.faculty.com/grid-controllers/?id=2').respond({
+          id: 2,
+          system_id: 50
+        });
+        backend.flush();
+        expect(system.gridController).toBe(gridController);
+      });
     });
 
     describe('base#belongsTo', function() {
