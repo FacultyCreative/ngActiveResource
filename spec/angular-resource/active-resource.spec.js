@@ -611,10 +611,9 @@ describe('ActiveResource', function() {
           id: 50
         });
         backend.flush();
-        GridController.find(2, {lazy: true}).then(function(response) { gridController = response; });
-        backend.expectGET('http://api.faculty.com/grid-controllers/?id=2').respond({
-          id: 2,
-          system_id: 50
+        system.gridController.find({lazy: true}).then(function(response) { gridController = response; });
+        backend.expectGET('http://api.faculty.com/grid-controllers/?system_id=50').respond({
+          id: 2
         });
         backend.flush();
         expect(system.gridController).toBe(gridController);
@@ -1636,6 +1635,30 @@ describe('ActiveResource', function() {
         .respond({title: 'Great post!', _id: 1});
       backend.flush();
       expect(window.alert).toHaveBeenCalledWith('Found em!');
+    });
+
+    it('passes the json results to the after where joinpoint', function() {
+      var json;
+      Post.after('where', function(response) {
+        json = response.data;
+      });
+      Post.where({title: 'Great post!'}, {lazy: true});
+      backend.expectGET('http://api.faculty.com/posts/?title=Great post!')
+        .respond({title: 'Great post!', _id: 1});
+      backend.flush();
+      expect(json).toEqual({ title : 'Great post!', _id : 1 });
+    });
+
+    it('passes the instances to the after where joinpoint', function() {
+      var instances;
+      Post.after('where', function(response) {
+        instances = response.instance;
+      });
+      Post.where({title: 'Great post!'}, {lazy: true});
+      backend.expectGET('http://api.faculty.com/posts/?title=Great post!')
+        .respond({title: 'Great post!', _id: 1});
+      backend.flush();
+      expect(instances[0].circularRef).toBeDefined();
     });
 
     it('performs events before update', function() {
