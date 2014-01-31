@@ -935,6 +935,29 @@ describe('ActiveResource', function() {
             expect(post).not.toBeDefined();
           });
 
+          it('deletes the primary resource from collections containing that resource', function() {
+            var posts;
+            Post.all({lazy: true}).then(function(results) { posts = results; });
+            backend.expectGET('http://api.faculty.com/posts/').respond([
+              {
+                _id: 1,
+                title: 'Cool post!'
+              },
+              {
+                _id: 2,
+                title: 'Cooler post!'
+              }
+            ])
+            backend.flush();
+            var post = posts[0];
+            posts[0].$delete();
+            backend.expectDELETE('http://api.faculty.com/posts/?_id=1').respond({
+              status: 200
+            });
+            backend.flush();
+            expect(posts.length).toBe(1);
+          });
+
           it('deletes dependents when the primary resource is destroyed', function() {
             expect(comment).not.toBeDefined();
           });
