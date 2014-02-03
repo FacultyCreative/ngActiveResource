@@ -55,7 +55,7 @@ angular
         });
 
         function sizeIsLarge(value, field, instance) {
-          if (instance.size == 'large') return true;
+          return instance.size == 'large';
         }
       };
 
