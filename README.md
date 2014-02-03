@@ -411,6 +411,17 @@ Validates that a user has entered a value:
 
       name: {presence: true}
 
+#### Required If:
+
+Validates that a user has entered a value if a certain requirement is met:
+
+      username: {requiredIf: { requiredIf: emailIsBlank,  message: 'You must
+enter a username' } }
+
+      function emailIsBlank(value, field, instance) {
+        return !instance.email || instance.email.length === 0;
+      }
+
 #### Absence:
 
 Validates that a field does not have a value:
