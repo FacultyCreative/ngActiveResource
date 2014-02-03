@@ -1882,28 +1882,37 @@ describe('ActiveResource', function() {
       });
     });
 
+    describe('RequiredIf validation', function() {
+      it('is a required field if certain criteria are met', function() {
+        user.size = 'large';
+        user.sometimesRequired = undefined;
+        user.validate();
+        expect(user.$errors.sometimesRequired).toContain('Field required if size is large');
+      });
+    });
+
     describe('Email validation', function() {
-        it('is invalid if it does not contain a valid email address', function() {
-          user.email = 'porky';
-          expect(user.$valid).toBe(false);
-        });
+      it('is invalid if it does not contain a valid email address', function() {
+        user.email = 'porky';
+        expect(user.$valid).toBe(false);
+      });
 
-        it('sets the email error message', function() {
-          user.email = 'pig@net';
-          user.$valid;
-          expect(user.$errors.email).toContain('Must provide email');
-        });
+      it('sets the email error message', function() {
+        user.email = 'pig@net';
+        user.$valid;
+        expect(user.$errors.email).toContain('Must provide email');
+      });
 
-        it('is valid if it contains a valid email address', function() {
-          expect(user.$valid).toBe(true);
-        });
+      it('is valid if it contains a valid email address', function() {
+        expect(user.$valid).toBe(true);
+      });
 
 
-        it('sets no errors if blank and not required', function() {
-          user.email = undefined;
-          user.validate();
-          expect(numkeys(user.$errors)).toBe(0);
-        });
+      it('sets no errors if blank and not required', function() {
+        user.email = undefined;
+        user.validate();
+        expect(numkeys(user.$errors)).toBe(0);
+      });
     });
 
     describe('Zip validation', function() {
