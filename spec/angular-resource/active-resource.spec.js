@@ -2138,6 +2138,116 @@ describe('ActiveResource', function() {
       });
     });
 
+    describe('Validates Association', function() {
+      describe('Has Many/Belongs To', function() {
+        var post, comment;
+        beforeEach(function() {
+          post = Post.new({title: 'Great post!'});
+          comment = post.comments.new({id: 1, text: 'Great post!'});
+
+          comment.validates({
+            text: { presence: true }
+          });
+
+          post.validates({
+            title: { presence: true }
+          });
+        });
+
+        describe('Has Many Association', function() {
+
+          beforeEach(function() {
+            post.validates({
+              comments: { association: 'comments' }
+            });
+          });
+
+          it('is invalid if the association is invalid', function() {
+            comment.text = undefined;
+            post.validate();
+            expect(post.$errors.comments).toContain('Comment invalid');
+          });
+
+          it('is valid if the association is valid', function() {
+            expect(post.$valid).toBe(true);
+          });
+        });
+
+        describe('Belongs To Association', function() {
+          beforeEach(function() {
+            comment.validates({
+              post: { association: 'post' }
+            });
+          });
+
+          it('is invalid if the association is invalid', function() {
+            post.title = undefined;
+            comment.validate();
+            expect(comment.$errors.post).toContain('Post invalid');
+          });
+
+          it('is valid if the association is valid', function() {
+            expect(comment.$valid).toBe(true);
+          });
+        });
+      });
+
+      describe('One-to-One Association', function() {
+
+        var system, gc;
+        beforeEach(function() {
+          system = System.new({name: 'Great System'});
+          gc     = system.gridController;
+
+          gc.validates({
+            status: { presence: true }
+          });
+
+          system.validates({
+            name: { presence: true }
+          });
+        });
+
+        describe('Has One Association', function() {
+          beforeEach(function() {
+            system.validates({
+              gridController: { association: 'gridController' }
+            });
+          });
+
+          it('is invalid if its association is invalid', function() {
+            system.validate();
+            expect(system.$errors.gridController).toContain('GridController invalid');
+          });
+
+          it('valid if the association is valid', function() {
+            gc.status = 'Great!';
+            expect(system.$valid).toBe(true);
+          });
+        });
+
+        describe('Belongs To Association', function() {
+          beforeEach(function() {
+            gc.validates({
+              system: { association: 'system' }
+            });
+
+            gc.status = 'Great!';
+          });
+
+          it('is invalid if its association is invalid', function() {
+            system.name = undefined;
+            gc.validate();
+            expect(gc.$errors.system).toContain('System invalid');
+          });
+
+          it('is valid if its association is valid', function() {
+            expect(gc.$valid).toBe(true);
+          });
+        });
+      });
+    });
+
     describe('Custom Validations', function() {
       it('is valid if it passes the custom validation', function() {
         expect(user.$valid).toBe(true);
