@@ -476,7 +476,15 @@ Validates that two fields match:
 
       password:             { confirmation: true },
       passwordConfirmation: { presence: true }
-      
+
+#### Validates Association:
+
+If an association must be valid in order for an instance to be validate, use
+the `association` validation:
+
+      author: { association: 'author' },
+      comments: { association: 'comments' }
+
 The MIT License (MIT)
 
 Copyright (c) 2013-2014 Brett Shollenberger
