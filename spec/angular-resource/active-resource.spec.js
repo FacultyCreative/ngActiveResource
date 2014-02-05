@@ -2246,6 +2246,22 @@ describe('ActiveResource', function() {
           });
         });
       });
+
+      describe('Validates If Option', function() {
+        var post, comment;
+        beforeEach(function() {
+          post = Post.new({title: 'Great post!'});
+          comment = post.comments.new({id: 1, text: 'Great post!'});
+
+          comment.validates({
+            text: { presence: true }
+          });
+
+          post.validates({
+            title: { presence: true }
+          });
+        });
+      });
     });
 
     describe('Custom Validations', function() {
