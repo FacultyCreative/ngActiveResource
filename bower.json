@@ -5,6 +5,7 @@
     "Brett Shollenberger <brett.shollenberger@gmail.com>"
   ],
   "license": "MIT",
+  "main": "dist/ng-active-resource.min.js",
   "ignore": [
     "**/.*",
     "node_modules",
