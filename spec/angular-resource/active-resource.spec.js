@@ -1063,7 +1063,7 @@ describe('ActiveResource', function() {
 
         backend.expectGET('http://api.faculty.com/comments/?post_id=1')
           .respond([{id: 1}]);
-      
+
         backend.flush();
       });
 

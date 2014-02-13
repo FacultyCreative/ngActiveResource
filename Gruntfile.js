@@ -48,10 +48,11 @@ module.exports = function(grunt) {
         src: 'dist/ng-active-resource.js',
         dest: 'dist/ng-active-resource.min.js'
       }
-    }
+    },
+    clean: [".tmp"]
   });
 
-  grunt.registerTask('build', ['concat:dist', 'ngmin:dist', 'uglify:dist']);
+  grunt.registerTask('build', ['concat:dist', 'ngmin:dist', 'uglify:dist', 'clean']);
   grunt.registerTask('test', 'shell:test');
   grunt.registerTask('autotest', [
     'autotest:unit' 
