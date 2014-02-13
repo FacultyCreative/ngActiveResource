@@ -4,6 +4,12 @@ ActiveResource provides a Base class to make modelling with Angular easier. It
 provides associations, caching, API integration, validations, and Active Record
 pattern persistence methods.
 
+## Installation:
+
+In your bower.json:
+
+    "ngActiveResource": "0.5.7"
+
 ## Simple:
 
 Say you want a form to add comments to a post:
