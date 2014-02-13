@@ -18,6 +18,7 @@ app.configure(function() {
   app.use(allowCrossDomain);
   app.use(express.static(path.join(__dirname, '../bower_components/')));
   app.use(express.static(path.join(__dirname, '../lib/')));
+  app.use(express.static(path.join(__dirname, '../dist/')));
   app.use(express.static(path.join(__dirname, '../example')));
   app.use(express.errorHandler({
     dumpExceptions: true,

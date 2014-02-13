@@ -54,15 +54,11 @@ module.exports = function(grunt) {
   grunt.registerTask('build', ['concat:dist', 'ngmin:dist', 'uglify:dist']);
   grunt.registerTask('test', 'shell:test');
   grunt.registerTask('autotest', [
-    'autotest:unit' // - runs karma unit tests on file change
-    // 'autotest:e2e'        // - runs end 2 end tests on all file changes
-    //                       //   @note we disable this because end 2 end testing on every save
-    //                       //   is overkill.
+    'autotest:unit' 
   ]);
 
   grunt.registerTask('autotest:unit', [
-    'karma:unitAuto' // - runs karma tests using the unitAuto settings
-    //
+    'karma:unitAuto' 
   ]);
 
 }
