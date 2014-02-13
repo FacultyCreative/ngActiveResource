@@ -205,7 +205,7 @@ The parameters themselves will be replaced:
     Post.find({id: 1})
     >> http://my.api.com/posts/1
 
-ActiveResource will use a query string by default.
+If no params are provided, ActiveResource will use a query string by default.
 
     Post.$delete({author_id: 1})
     >> http://my.api.com/posts/?author_id=1
