@@ -357,7 +357,7 @@ describe('ActiveResource', function() {
       backend.expectDELETE('http://api.faculty.com/posts/?_id=52a8b80d251c5395b485cfe6')
         .respond({data: 'Success'});
       backend.flush();
-      expect($http.delete).toHaveBeenCalledWith('http://api.faculty.com/posts/?_id=52a8b80d251c5395b485cfe6');
+      expect($http.delete).toHaveBeenCalledWith('http://api.faculty.com/posts/', { params : { _id : '52a8b80d251c5395b485cfe6' }, method : 'delete', url : 'http://api.faculty.com/posts/' });
     });
 
     it('finds using the primary key if no object is passed to find', function() {
@@ -365,7 +365,7 @@ describe('ActiveResource', function() {
       backend.expectGET('http://api.faculty.com/posts/?_id=52a8b80d251c5395b485cfe7')
         .respond({"_id": "52a8b80d251c5395b485cfe7", "title": "An Incredible Post"});
       backend.flush();
-      expect($http.get).toHaveBeenCalledWith('http://api.faculty.com/posts/?_id=52a8b80d251c5395b485cfe7');
+      expect($http.get).toHaveBeenCalledWith('http://api.faculty.com/posts/', { params : { _id : '52a8b80d251c5395b485cfe7' }, method : 'get', url : 'http://api.faculty.com/posts/' });
     });
   });
 
@@ -499,7 +499,7 @@ describe('ActiveResource', function() {
 
         backend.flush();
 
-        expect($http.get).toHaveBeenCalledWith('http://api.faculty.com/grid-controllers/?system_id=100');
+        expect($http.get).toHaveBeenCalledWith('http://api.faculty.com/grid-controllers/', { params : { system_id : 100 }, method : 'get', url : 'http://api.faculty.com/grid-controllers/' });
       });
 
       it('grabs the association when the dependent calls find', function() {
@@ -735,7 +735,7 @@ describe('ActiveResource', function() {
     });
 
     it('Uses foreign keys set to query for associations', function() {
-      expect($http.get).toHaveBeenCalledWith('http://api.faculty.com/comments/?post_id=1');
+      expect($http.get).toHaveBeenCalledWith('http://api.faculty.com/comments/', { params : { post_id : 1 }, method : 'get', url : 'http://api.faculty.com/comments/' });
     });
   });
 
@@ -882,7 +882,7 @@ describe('ActiveResource', function() {
           beforeEach(function() {
             tshirt = Tshirt.new({_id: 1});
             tshirt.$delete().then(function(response) { tshirt = response });
-            backend.expectDELETE('http://api.faculty.com:3000/tshirt/1')
+            backend.expectDELETE('http://api.faculty.com:3000/tshirt/1/')
               .respond({});
 
             backend.flush();
@@ -963,7 +963,8 @@ describe('ActiveResource', function() {
           });
 
           it('calls the backend to delete the dependents', function() {
-            expect($http.delete).toHaveBeenCalledWith('http://api.faculty.com/comments/?id=1');
+            expect($http.delete).toHaveBeenCalledWith('http://api.faculty.com/comments/', { params : { id : 1 }, method : 'delete', url : 'http://api.faculty.com/comments/' });
+
           });
         });
       });
@@ -1278,7 +1279,7 @@ describe('ActiveResource', function() {
                       {id: 9, placement: 'window', name: 'Matts System'},
                       {id: 10, placement: 'window', name: 'Pickles System'}]);
           backend.flush();
-          expect($http.get).toHaveBeenCalledWith('http://api.faculty.com/systems/?placement=window');
+          expect($http.get).toHaveBeenCalledWith('http://api.faculty.com/systems/', { params : { placement : 'window' }, method : 'get', url : 'http://api.faculty.com/systems/' });
         });
 
         it('adds the instance to the cache', function() {
@@ -1335,7 +1336,7 @@ describe('ActiveResource', function() {
             tshirt = response;
           });
 
-          backend.expectGET('http://api.faculty.com:3000/tshirt/1')
+          backend.expectGET('http://api.faculty.com:3000/tshirt/1/')
             .respond({_id: 1, size: 'M'});
 
           backend.flush();
@@ -1407,7 +1408,7 @@ describe('ActiveResource', function() {
         System.find({id: 6, name: 'Right System'}, {lazy: true, noInstanceEndpoint: true})
           .then(function(response) { foundSystem = response; });
 
-        backend.expectGET('http://api.faculty.com/systems/?id=6&name=Right System')
+        backend.expectGET('http://api.faculty.com/systems/?id=6&name=Right+System')
           .respond([{id: 2, name: 'Wrong System'}, {id: 6, name: 'Right System'}]);
 
         backend.flush();
@@ -1464,7 +1465,7 @@ describe('ActiveResource', function() {
   describe('Base#api', function() {
     describe('Base.api#set', function() {
       it('creates a show url', function() {
-        expect(System.api.showURL).toEqual('http://api.faculty.com/systems/[:attrs]');
+        expect(System.api.showURL).toEqual('http://api.faculty.com/systems');
       });
 
       it('creates a create url', function() {
@@ -1472,11 +1473,11 @@ describe('ActiveResource', function() {
       });
 
       it('creates a delete url', function() {
-        expect(System.api.deleteURL).toEqual('http://api.faculty.com/systems/[:attrs]');
+        expect(System.api.deleteURL).toEqual('http://api.faculty.com/systems');
       });
 
       it('creates an index url', function() {
-        expect(System.api.indexURL).toEqual('http://api.faculty.com/systems/[:attrs]');
+        expect(System.api.indexURL).toEqual('http://api.faculty.com/systems');
       });
 
       it('creates an update url', function() {
@@ -1518,12 +1519,12 @@ describe('ActiveResource', function() {
       describe('Model#find', function() {
         it('calls GET to the specified API, filling in the correct ID', function() {
           System.find(4);
-          expect($http.get).toHaveBeenCalledWith('http://api.faculty.com/systems/?id=4');
+          expect($http.get).toHaveBeenCalledWith('http://api.faculty.com/systems/', { params : { id : 4 }, method : 'get', url : 'http://api.faculty.com/systems/' });
         });
 
         it('calls GET with the specified attributes attached to the querystring', function() {
           System.find({placement: 'window'});
-          expect($http.get).toHaveBeenCalledWith('http://api.faculty.com/systems/?placement=window');
+          expect($http.get).toHaveBeenCalledWith('http://api.faculty.com/systems/', { params : { placement : 'window' }, method : 'get', url : 'http://api.faculty.com/systems/' });
         });
       });
     });
@@ -1552,8 +1553,8 @@ describe('ActiveResource', function() {
       backend.flush();
     });
 
-    it('Loads assocations, and then all associations of associations, etc., recursively', function() {
-      expect($http.get).toHaveBeenCalledWith('http://api.faculty.com/posts/?author_id=1');
+    it('Loads associations, and then all associations of associations, etc., recursively', function() {
+      expect($http.get).toHaveBeenCalledWith('http://api.faculty.com/posts/', { params : { _id : 1 }, method : 'get', url : 'http://api.faculty.com/posts/' });
     });
   });
 
@@ -1643,7 +1644,7 @@ describe('ActiveResource', function() {
         alert('Finding instances that match ' + terms.title);
       });
       Post.where({title: 'Great post!'}, {lazy: true});
-      backend.expectGET('http://api.faculty.com/posts/?title=Great post!')
+      backend.expectGET('http://api.faculty.com/posts/?title=Great+post!')
         .respond({title: 'Great post!', _id: 1});
       backend.flush();
       expect(window.alert).toHaveBeenCalledWith('Finding instances that match Great post!');
@@ -1654,7 +1655,7 @@ describe('ActiveResource', function() {
         alert('Found em!');
       });
       Post.where({title: 'Great post!'}, {lazy: true});
-      backend.expectGET('http://api.faculty.com/posts/?title=Great post!')
+      backend.expectGET('http://api.faculty.com/posts/?title=Great+post!')
         .respond({title: 'Great post!', _id: 1});
       backend.flush();
       expect(window.alert).toHaveBeenCalledWith('Found em!');
@@ -1666,7 +1667,7 @@ describe('ActiveResource', function() {
         json = response.data;
       });
       Post.where({title: 'Great post!'}, {lazy: true});
-      backend.expectGET('http://api.faculty.com/posts/?title=Great post!')
+      backend.expectGET('http://api.faculty.com/posts/?title=Great+post!')
         .respond({title: 'Great post!', _id: 1});
       backend.flush();
       expect(json).toEqual({ title : 'Great post!', _id : 1 });
@@ -1678,7 +1679,7 @@ describe('ActiveResource', function() {
         instances = response.instance;
       });
       Post.where({title: 'Great post!'}, {lazy: true});
-      backend.expectGET('http://api.faculty.com/posts/?title=Great post!')
+      backend.expectGET('http://api.faculty.com/posts/?title=Great+post!')
         .respond({title: 'Great post!', _id: 1});
       backend.flush();
       expect(instances[0].circularRef).toBeDefined();
