@@ -403,12 +403,12 @@ angular.module('ActiveResource').provider('ARAPI', function () {
             url = url + '/';
           this.createURL = url + plural;
           this.updateURL = url + plural + '/:' + primaryKey;
-          this.showURL = this.indexURL = this.deleteURL = url + plural + '/[:attrs]';
+          this.showURL = this.indexURL = this.deleteURL = url + plural;
           return this;
         };
         this.updatePrimaryKey = function (pk) {
           primaryKey = pk;
-          this.updateURL = this.updateURL.replace(/\:\w+/, ':' + pk);
+          this.updateURL = this.updateURL;
         };
       }
       return API;
@@ -1010,8 +1010,14 @@ angular.module('ActiveResource').provider('ARGET', function () {
           terms = instanceAndTerms[1];
           propertyName = instanceAndTerms[2];
         }
-        url = URLify(url, terms);
-        return $http.get(url).then(function (response) {
+        var config = {};
+        if (url.indexOf('/:') !== -1) {
+          url = URLify(url, terms);
+        } else if (Object.keys(terms).length) {
+          config.params = terms;
+        }
+        url += '/';
+        return $http.get(url, config).then(function (response) {
           var data = response.data;
           if (propertyName && associatedInstance) {
             if (data && data.push) {
@@ -1342,9 +1348,16 @@ angular.module('ActiveResource').provider('ARBase', function () {
           var instance = this;
           _this.emit('$delete:called', this);
           var queryterms = {};
+          var config = {};
+          var url = _this.api.deleteURL;
           queryterms[primaryKey] = instance[primaryKey];
-          var url = URLify(_this.api.deleteURL, queryterms);
-          return $http.delete(url).then(function (response) {
+          if (_this.api.deleteURL.indexOf('/:') !== -1) {
+            url = URLify(_this.api.deleteURL, queryterms);
+          } else {
+            config = { params: queryterms };
+          }
+          url += '/';
+          return $http.delete(url, config).then(function (response) {
             if (response.status == 200) {
               removeFromWatchedCollections(instance);
               _this.emit('$delete:complete', instance);
