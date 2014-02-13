@@ -1,6 +1,9 @@
 module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-shell');
+  grunt.loadNpmTasks('grunt-contrib-concat');
+  grunt.loadNpmTasks('grunt-ngmin');
+  grunt.loadNpmTasks('grunt-contrib-uglify');
   require('load-grunt-tasks')(grunt, {scope: ['dependencies', 'devDependencies']});
 
 
@@ -25,9 +28,30 @@ module.exports = function(grunt) {
         autoWatch: true,
         singleRun: false
       },
+    },
+    concat: {
+      dist: {
+        src: ['lib/json/*.js',
+              'lib/angular-resource/**/*.js',
+              'lib/simple-form/*.js'],
+        dest: '.tmp/ng-active-resource.js'
+      }
+    },
+    ngmin: {
+      dist: {
+        src: ['.tmp/ng-active-resource.js'],
+        dest: 'dist/ng-active-resource.js'
+      }
+    },
+    uglify: {
+      dist: {
+        src: 'dist/ng-active-resource.js',
+        dest: 'dist/ng-active-resource.min.js'
+      }
     }
   });
 
+  grunt.registerTask('build', ['concat:dist', 'ngmin:dist', 'uglify:dist']);
   grunt.registerTask('test', 'shell:test');
   grunt.registerTask('autotest', [
     'autotest:unit' // - runs karma unit tests on file change
