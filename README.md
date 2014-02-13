@@ -4,6 +4,12 @@ ActiveResource provides a Base class to make modelling with Angular easier. It
 provides associations, caching, API integration, validations, and Active Record
 pattern persistence methods.
 
+## Installation:
+
+In your bower.json:
+
+    "ngActiveResource": "0.6.0"
+
 ## Simple:
 
 Say you want a form to add comments to a post:
@@ -406,6 +412,17 @@ Validates that a user has entered a value:
 
       name: {presence: true}
 
+#### Required If:
+
+Validates that a user has entered a value if a certain requirement is met:
+
+      username: {requiredIf: { requiredIf: emailIsBlank,  message: 'You must
+enter a username' } }
+
+      function emailIsBlank(value, field, instance) {
+        return !instance.email || instance.email.length === 0;
+      }
+
 #### Absence:
 
 Validates that a field does not have a value:
@@ -460,3 +477,33 @@ Validates that two fields match:
 
       password:             { confirmation: true },
       passwordConfirmation: { presence: true }
+
+#### Validates Association:
+
+If an association must be valid in order for an instance to be validate, use
+the `association` validation:
+
+      author: { association: 'author' },
+      comments: { association: 'comments' }
+
+The MIT License (MIT)
+
+Copyright (c) 2013-2014 Brett Shollenberger
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.

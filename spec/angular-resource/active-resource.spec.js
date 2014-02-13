@@ -603,6 +603,21 @@ describe('ActiveResource', function() {
         backend.flush();
         expect(gc.id).toBe(3);
       });
+
+      it('updates associated instances if found at a later time', function() {
+        var system, gridController;
+        System.find(50, {lazy: true}).then(function(response) { system = response; });
+        backend.expectGET('http://api.faculty.com/systems/?id=50').respond({
+          id: 50
+        });
+        backend.flush();
+        system.gridController.find({lazy: true}).then(function(response) { gridController = response; });
+        backend.expectGET('http://api.faculty.com/grid-controllers/?system_id=50').respond({
+          id: 2
+        });
+        backend.flush();
+        expect(system.gridController).toBe(gridController);
+      });
     });
 
     describe('base#belongsTo', function() {
@@ -920,6 +935,29 @@ describe('ActiveResource', function() {
             expect(post).not.toBeDefined();
           });
 
+          it('deletes the primary resource from collections containing that resource', function() {
+            var posts;
+            Post.all({lazy: true}).then(function(results) { posts = results; });
+            backend.expectGET('http://api.faculty.com/posts/').respond([
+              {
+                _id: 1,
+                title: 'Cool post!'
+              },
+              {
+                _id: 2,
+                title: 'Cooler post!'
+              }
+            ])
+            backend.flush();
+            var post = posts[0];
+            posts[0].$delete();
+            backend.expectDELETE('http://api.faculty.com/posts/?_id=1').respond({
+              status: 200
+            });
+            backend.flush();
+            expect(posts.length).toBe(1);
+          });
+
           it('deletes dependents when the primary resource is destroyed', function() {
             expect(comment).not.toBeDefined();
           });
@@ -1122,6 +1160,16 @@ describe('ActiveResource', function() {
         expect(system.placement).toEqual('window');
       });
 
+      it('updates when the primary key is 0', function() {
+        var post;
+        Post.find(0, {lazy: true}).then(function(results) { post = results; });
+        backend.expectGET('http://api.faculty.com/posts/?_id=0').respond({_id: 0});
+        backend.flush();
+        var comments = {comments: [{id: 0}, {id: 1}]};
+        post.update(comments);
+        expect(post.comments.length).toBe(2);
+      });
+
       it('updates associated relations if described', function() {
         system.update({sensors: [{id: 1}]});
         expect(system.sensors[0].constructor.name).toBe('Sensor');
@@ -1133,9 +1181,9 @@ describe('ActiveResource', function() {
       });
 
       it('removes entities previously in associated collections', function() {
-        for (var i = 0; i<3; i++) { system.sensors.$create(); }
         system.update({sensors: [{id: 1}]});
-        expect(system.sensors.length).toBe(1);
+        system.update({sensors: [{id: 1}, {id: 2}]});
+        expect(system.sensors.length).toBe(2);
       });
 
       it('will not set "unsettable" properties', function() {
@@ -1612,6 +1660,30 @@ describe('ActiveResource', function() {
       expect(window.alert).toHaveBeenCalledWith('Found em!');
     });
 
+    it('passes the json results to the after where joinpoint', function() {
+      var json;
+      Post.after('where', function(response) {
+        json = response.data;
+      });
+      Post.where({title: 'Great post!'}, {lazy: true});
+      backend.expectGET('http://api.faculty.com/posts/?title=Great post!')
+        .respond({title: 'Great post!', _id: 1});
+      backend.flush();
+      expect(json).toEqual({ title : 'Great post!', _id : 1 });
+    });
+
+    it('passes the instances to the after where joinpoint', function() {
+      var instances;
+      Post.after('where', function(response) {
+        instances = response.instance;
+      });
+      Post.where({title: 'Great post!'}, {lazy: true});
+      backend.expectGET('http://api.faculty.com/posts/?title=Great post!')
+        .respond({title: 'Great post!', _id: 1});
+      backend.flush();
+      expect(instances[0].circularRef).toBeDefined();
+    });
+
     it('performs events before update', function() {
       Post.before('update', function(options) {
         options.instance.title = 'My new title';
@@ -1810,28 +1882,37 @@ describe('ActiveResource', function() {
       });
     });
 
+    describe('RequiredIf validation', function() {
+      it('is a required field if certain criteria are met', function() {
+        user.size = 'large';
+        user.sometimesRequired = undefined;
+        user.validate();
+        expect(user.$errors.sometimesRequired).toContain('Field required if size is large');
+      });
+    });
+
     describe('Email validation', function() {
-        it('is invalid if it does not contain a valid email address', function() {
-          user.email = 'porky';
-          expect(user.$valid).toBe(false);
-        });
+      it('is invalid if it does not contain a valid email address', function() {
+        user.email = 'porky';
+        expect(user.$valid).toBe(false);
+      });
 
-        it('sets the email error message', function() {
-          user.email = 'pig@net';
-          user.$valid;
-          expect(user.$errors.email).toContain('Must provide email');
-        });
+      it('sets the email error message', function() {
+        user.email = 'pig@net';
+        user.$valid;
+        expect(user.$errors.email).toContain('Must provide email');
+      });
 
-        it('is valid if it contains a valid email address', function() {
-          expect(user.$valid).toBe(true);
-        });
+      it('is valid if it contains a valid email address', function() {
+        expect(user.$valid).toBe(true);
+      });
 
 
-        it('sets no errors if blank and not required', function() {
-          user.email = undefined;
-          user.validate();
-          expect(numkeys(user.$errors)).toBe(0);
-        });
+      it('sets no errors if blank and not required', function() {
+        user.email = undefined;
+        user.validate();
+        expect(numkeys(user.$errors)).toBe(0);
+      });
     });
 
     describe('Zip validation', function() {
@@ -2054,6 +2135,132 @@ describe('ActiveResource', function() {
       it('is valid if blank and not required', function() {
         user.zip = '';
         expect(user.$valid).toBe(true);
+      });
+    });
+
+    describe('Validates Association', function() {
+      describe('Has Many/Belongs To', function() {
+        var post, comment;
+        beforeEach(function() {
+          post = Post.new({title: 'Great post!'});
+          comment = post.comments.new({id: 1, text: 'Great post!'});
+
+          comment.validates({
+            text: { presence: true }
+          });
+
+          post.validates({
+            title: { presence: true }
+          });
+        });
+
+        describe('Has Many Association', function() {
+
+          beforeEach(function() {
+            post.validates({
+              comments: { association: 'comments' }
+            });
+          });
+
+          it('is invalid if the association is invalid', function() {
+            comment.text = undefined;
+            post.validate();
+            expect(post.$errors.comments).toContain('Comment invalid');
+          });
+
+          it('is valid if the association is valid', function() {
+            expect(post.$valid).toBe(true);
+          });
+        });
+
+        describe('Belongs To Association', function() {
+          beforeEach(function() {
+            comment.validates({
+              post: { association: 'post' }
+            });
+          });
+
+          it('is invalid if the association is invalid', function() {
+            post.title = undefined;
+            comment.validate();
+            expect(comment.$errors.post).toContain('Post invalid');
+          });
+
+          it('is valid if the association is valid', function() {
+            expect(comment.$valid).toBe(true);
+          });
+        });
+      });
+
+      describe('One-to-One Association', function() {
+
+        var system, gc;
+        beforeEach(function() {
+          system = System.new({name: 'Great System'});
+          gc     = system.gridController;
+
+          gc.validates({
+            status: { presence: true }
+          });
+
+          system.validates({
+            name: { presence: true }
+          });
+        });
+
+        describe('Has One Association', function() {
+          beforeEach(function() {
+            system.validates({
+              gridController: { association: 'gridController' }
+            });
+          });
+
+          it('is invalid if its association is invalid', function() {
+            system.validate();
+            expect(system.$errors.gridController).toContain('GridController invalid');
+          });
+
+          it('valid if the association is valid', function() {
+            gc.status = 'Great!';
+            expect(system.$valid).toBe(true);
+          });
+        });
+
+        describe('Belongs To Association', function() {
+          beforeEach(function() {
+            gc.validates({
+              system: { association: 'system' }
+            });
+
+            gc.status = 'Great!';
+          });
+
+          it('is invalid if its association is invalid', function() {
+            system.name = undefined;
+            gc.validate();
+            expect(gc.$errors.system).toContain('System invalid');
+          });
+
+          it('is valid if its association is valid', function() {
+            expect(gc.$valid).toBe(true);
+          });
+        });
+      });
+
+      describe('Validates If Option', function() {
+        var post, comment;
+        beforeEach(function() {
+          post = Post.new({title: 'Great post!'});
+          comment = post.comments.new({id: 1, text: 'Great post!'});
+
+          comment.validates({
+            text: { presence: true }
+          });
+
+          post.validates({
+            title: { presence: true }
+          });
+        });
       });
     });
 

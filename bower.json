@@ -1,10 +1,11 @@
 {
   "name": "ActiveResource",
-  "version": "0.4.9",
+  "version": "0.6.1",
   "authors": [
     "Brett Shollenberger <brett.shollenberger@gmail.com>"
   ],
   "license": "MIT",
+  "main": "dist/ng-active-resource.min.js",
   "ignore": [
     "**/.*",
     "node_modules",

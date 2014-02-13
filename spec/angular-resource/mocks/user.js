@@ -25,6 +25,7 @@ angular
         this.accountBalance       = data.accountBalance;
         this.badField             = data.badField;
         this.echeck               = data.echeck;
+        this.sometimesRequired    = data.sometimesRequired;
         
         if(data.echeck){
             this.echeck.type      = data.echeck.type;
@@ -49,8 +50,13 @@ angular
                                   exclusion: { from: ['XL', 'XXL'] } },
           accountBalance:       { numericality: { ignore: /[\,]/g } },
           badField:             { absence: true },
-          'echeck.type':        { length: {max: 20} }
+          'echeck.type':        { length: {max: 20} },
+          sometimesRequired:    { requiredIf: { requiredIf: sizeIsLarge, message: 'Field required if size is large' } }
         });
+
+        function sizeIsLarge(value, field, instance) {
+          return instance.size == 'large';
+        }
       };
 
       User = ActiveResource.Base.apply(User);
