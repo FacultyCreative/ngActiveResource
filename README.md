@@ -15,7 +15,7 @@ In your bower.json:
 Say you want a form to add comments to a post:
 
 ```html
-<form ng-submit="comment.$save">
+<form ng-submit="comment.$save()">
     <input ng-model="comment.text">
     <input type="submit">
 </form>
