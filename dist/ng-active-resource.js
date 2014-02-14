@@ -1,7 +1,37 @@
 angular.module('dojo', []).provider('stamp', function () {
   this.$get = function () {
     var stamp = {};
+    // Methods to convert dates to or from a wire (string) format using well-known conventions
     stamp.fromISOString = function (formattedString, defaultTime) {
+      // summary:
+      //                Returns a Date object given a string formatted according to a subset of the ISO-8601 standard.
+      //
+      // description:
+      //                Accepts a string formatted according to a profile of ISO8601 as defined by
+      //                [RFC3339](http://www.ietf.org/rfc/rfc3339.txt), except that partial input is allowed.
+      //                Can also process dates as specified [by the W3C](http://www.w3.org/TR/NOTE-datetime)
+      //                The following combinations are valid:
+      //
+      //                - dates only
+      //                        - yyyy
+      //                        - yyyy-MM
+      //                        - yyyy-MM-dd
+      //                - times only, with an optional time zone appended
+      //                        - THH:mm
+      //                        - THH:mm:ss
+      //                        - THH:mm:ss.SSS
+      //                - and "datetimes" which could be any combination of the above
+      //
+      //                timezones may be specified as Z (for UTC) or +/- followed by a time expression HH:mm
+      //                Assumes the local time zone if not specified.  Does not validate.  Improperly formatted
+      //                input may return null.  Arguments which are out of bounds will be handled
+      //                by the Date constructor (e.g. January 32nd typically gets resolved to February 1st)
+      //                Only years between 100 and 9999 are supported.
+      // formattedString:
+      //                A string such as 2005-06-30T08:05:00-07:00 or 2005-06-30 or T08:05:00
+      // defaultTime:
+      //                Used for defaults for fields omitted in the formattedString.
+      //                Uses 1970-01-01T00:00:00.0Z by default.
       if (!stamp._isoRegExp) {
         stamp._isoRegExp = /^(?:(\d{4})(?:-(\d{2})(?:-(\d{2}))?)?)?(?:T(\d{2}):(\d{2})(?::(\d{2})(.\d+)?)?((?:[+-](\d{2}):(\d{2}))|Z)?)?$/;
       }
@@ -11,10 +41,13 @@ angular.module('dojo', []).provider('stamp', function () {
         if (match[1]) {
           match[1]--;
         }
+        // Javascript Date months are 0-based
         if (match[6]) {
           match[6] *= 1000;
         }
+        // Javascript Date expects fractional seconds as milliseconds
         if (defaultTime) {
+          // mix in defaultTime.  Relatively expensive, so use || operators for the fast path of defaultTime === 0
           defaultTime = new Date(defaultTime);
           array.forEach(array.map([
             'FullYear',
@@ -31,6 +64,7 @@ angular.module('dojo', []).provider('stamp', function () {
           });
         }
         result = new Date(match[0] || 1970, match[1] || 0, match[2] || 1, match[3] || 0, match[4] || 0, match[5] || 0, match[6] || 0);
+        //TODO: UTC defaults
         if (match[0] < 100) {
           result.setFullYear(match[0] || 1970);
         }
@@ -48,9 +82,30 @@ angular.module('dojo', []).provider('stamp', function () {
           result.setTime(result.getTime() + offset * 60000);
         }
       }
-      return result;
+      return result;  // Date or null
     };
+    /*=====
+      var __Options = {
+    // selector: String
+    //                "date" or "time" for partial formatting of the Date object.
+    //                Both date and time will be formatted by default.
+    // zulu: Boolean
+    //                if true, UTC/GMT is used for a timezone
+    // milliseconds: Boolean
+    //                if true, output milliseconds
+    };
+    =====*/
     stamp.toISOString = function (dateObject, options) {
+      // summary:
+      //                Format a Date object as a string according a subset of the ISO-8601 standard
+      //
+      // description:
+      //                When options.selector is omitted, output follows [RFC3339](http://www.ietf.org/rfc/rfc3339.txt)
+      //                The local time zone is included as an offset from GMT, except when selector=='time' (time without a date)
+      //                Does not check bounds.  Only years between 100 and 9999 are supported.
+      //
+      // dateObject:
+      //                A Date object
       var _ = function (n) {
         return n < 10 ? '0' + n : n;
       };
@@ -84,7 +139,7 @@ angular.module('dojo', []).provider('stamp', function () {
         }
         formattedDate.push(time);
       }
-      return formattedDate.join('T');
+      return formattedDate.join('T');  // String
     };
     return stamp;
   };
@@ -94,9 +149,10 @@ angular.module('dojo', []).provider('stamp', function () {
     function (stamp) {
       djson = {};
       djson.fromJson = function (js) {
-        return eval('(' + js + ')');
+        return eval('(' + js + ')');  // Object
       };
       djson._escapeString = JSON.stringify;
+      // just delegate to json.stringify
       djson.toJsonIndentStr = '\t';
       djson.toJson = function (it, prettyPrint) {
         return JSON.stringify(it, function (key, value) {
@@ -107,7 +163,7 @@ angular.module('dojo', []).provider('stamp', function () {
             }
           }
           return value;
-        }, prettyPrint && djson.toJsonIndentStr);
+        }, prettyPrint && djson.toJsonIndentStr);  // String
       };
       var json = {};
       json.resolveJson = function (root, args) {
@@ -118,6 +174,7 @@ angular.module('dojo', []).provider('stamp', function () {
         var prefix = args.idPrefix || '';
         var assignAbsoluteIds = args.assignAbsoluteIds;
         var index = args.index || {};
+        // create an index if one doesn't exist
         var timeStamps = args.timeStamps;
         var ref, reWalk = [];
         var pathResolveRegex = /^(.*\/)?(\w+:\/\/)|[^\/\.]+\/\.\.\/|^.*\/(\/)/;
@@ -125,31 +182,40 @@ angular.module('dojo', []).provider('stamp', function () {
         var F = function () {
         };
         function walk(it, stop, defaultId, needsPrefix, schema, defaultObject) {
+          // this walks the new graph, resolving references and making other changes
           var i, update, val, id = idAttribute in it ? it[idAttribute] : defaultId;
           if (idAttribute in it || id !== undefined && needsPrefix) {
             id = (prefix + id).replace(pathResolveRegex, '$2$3');
           }
           var target = defaultObject || it;
           if (id !== undefined) {
+            // if there is an id available...
             if (assignAbsoluteIds) {
               it.__id = id;
             }
             if (args.schemas && !(it instanceof Array) && (val = id.match(/^(.+\/)[^\.\[]*$/))) {
+              // if it has a direct table id (no paths)
               schema = args.schemas[val[1]];
             }
+            // if the id already exists in the system, we should use the existing object, and just
+            // update it... as long as the object is compatible
             if (index[id] && it instanceof Array == index[id] instanceof Array) {
               target = index[id];
               delete target.$ref;
+              // remove this artifact
               delete target._loadObject;
               update = true;
             } else {
               var proto = schema && schema.prototype;
+              // and if has a prototype
               if (proto) {
+                // if the schema defines a prototype, that needs to be the prototype of the object
                 F.prototype = proto;
                 target = new F();
               }
             }
             index[id] = target;
+            // add the prefix, set _id, and index it
             if (timeStamps) {
               timeStamps[id] = args.time;
             }
@@ -181,11 +247,17 @@ angular.module('dojo', []).provider('stamp', function () {
                   }
                 }
                 if (ref) {
+                  // a reference was found
+                  // make sure it is a safe reference
                   delete it[i];
+                  // remove the property so it doesn't resolve to itself in the case of id.propertyName lazy values
                   var path = ref.toString().replace(/(#)([^\.\[])/, '$1.$2').match(/(^([^\[]*\/)?[^#\.\[]*)#?([\.\[].*)?/);
+                  // divide along the path
                   if (index[(prefix + ref).replace(pathResolveRegex, '$2$3')]) {
                     ref = index[(prefix + ref).replace(pathResolveRegex, '$2$3')];
                   } else if (ref = path[1] == '$' || path[1] == 'this' || path[1] == '' ? root : index[(prefix + path[1]).replace(pathResolveRegex, '$2$3')]) {
+                    // a $ indicates to start with the root, otherwise start with an id
+                    // if there is a path, we will iterate through the path references
                     if (path[3]) {
                       path[3].replace(/(\[([^\]]+)\])|(\.?([^\.\[]+))/g, function (t, a, b, c, d) {
                         ref = ref && ref[b ? b.replace(/[\"\'\\]/, '') : d];
@@ -195,40 +267,51 @@ angular.module('dojo', []).provider('stamp', function () {
                   if (ref) {
                     val = ref;
                   } else {
+                    // otherwise, no starting point was found (id not found), if stop is set, it does not exist, we have
+                    // unloaded reference, if stop is not set, it may be in a part of the graph not walked yet,
+                    // we will wait for the second loop
                     if (!stop) {
                       var rewalking;
                       if (!rewalking) {
-                        reWalk.push(target);
+                        reWalk.push(target);  // we need to rewalk it to resolve references
                       }
                       rewalking = true;
+                      // we only want to add it once
                       val = walk(val, false, val[refAttribute], true, propertyDefinition);
+                      // create a lazy loaded object
                       val._loadObject = args.loader;
                     }
                   }
                 } else {
                   if (!stop) {
+                    // if we are in stop, that means we are in the second loop, and we only need to check this current one,
+                    // further walking may lead down circular loops
                     val = walk(val, reWalk == it, id === undefined ? undefined : addProp(id, i), false, propertyDefinition, target != it && typeof target[i] == 'object' && target[i]);
                   }
                 }
               }
               it[i] = val;
               if (target != it && !target.__isDirty) {
+                // do updates if we are updating an existing object and it's not dirty
                 var old = target[i];
                 target[i] = val;
+                // only update if it changed
                 if (update && val !== old && !target._loadObject && !(i.charAt(0) == '_' && i.charAt(1) == '_') && i != '$ref' && !(val instanceof Date && old instanceof Date && val.getTime() == old.getTime()) && !(typeof val == 'function' && typeof old == 'function' && val.toString() == old.toString()) && index.onUpdate) {
-                  index.onUpdate(target, i, old, val);
+                  index.onUpdate(target, i, old, val);  // call the listener for each update
                 }
               }
             }
           }
           if (update && (idAttribute in it || target instanceof Array)) {
+            // this means we are updating with a full representation of the object, we need to remove deleted
             for (i in target) {
               if (!target.__isDirty && target.hasOwnProperty(i) && !it.hasOwnProperty(i) && !(i.charAt(0) == '_' && i.charAt(1) == '_') && !(target instanceof Array && isNaN(i))) {
                 if (index.onUpdate && i != '_loadObject' && i != '_idAttr') {
-                  index.onUpdate(target, i, target[i], undefined);
+                  index.onUpdate(target, i, target[i], undefined);  // call the listener for each update
                 }
                 delete target[i];
                 while (target instanceof Array && target.length && target[target.length - 1] === undefined) {
+                  // shorten the target if necessary
                   target.length--;
                 }
               }
@@ -242,18 +325,20 @@ angular.module('dojo', []).provider('stamp', function () {
         }
         if (root && typeof root == 'object') {
           root = walk(root, false, args.defaultId, true);
-          walk(reWalk, false);
+          // do the main walk through
+          walk(reWalk, false);  // re walk any parts that were not able to resolve references on the first round
         }
         return root;
       };
       json.fromJson = function (str, args) {
         function ref(target) {
+          // support call styles references as well
           var refObject = {};
           refObject[this.refAttribute] = target;
           return refObject;
         }
         try {
-          var root = eval('(' + str + ')');
+          var root = eval('(' + str + ')');  // do the eval
         } catch (e) {
           throw new SyntaxError('Invalid JSON string: ' + e.message + ' parsing: ' + str);
         }
@@ -267,28 +352,49 @@ angular.module('dojo', []).provider('stamp', function () {
           options = {};
         if (options.instance)
           it = options.instance;
+        // summary:
+        //                Create a JSON serialization of an object.
+        //                This has support for referencing, including circular references, duplicate references, and out-of-message references
+        //                id and path-based referencing is supported as well and is based on http://www.json.com/2007/10/19/json-referencing-proposal-and-library/.
+        // it:
+        //                an object to be serialized.
+        // prettyPrint:
+        //                if true, we indent objects and arrays to make the output prettier.
+        //                The variable dojo.toJsonIndentStr is used as the indent string
+        //                -- to use something other than the default (tab),
+        //                change that variable before calling dojo.toJson().
+        // idPrefix:
+        //                The prefix that has been used for the absolute ids
+        // returns:
+        //                a String representing the serialized version of the passed object.
         var useRefs = this._useRefs;
         var addProp = this._addProp;
         var refAttribute = this.refAttribute;
         idPrefix = idPrefix || '';
+        // the id prefix for this context
         var paths = {};
         var generated = {};
         function serialize(it, path, _indentStr) {
           if (typeof it == 'object' && it) {
             var value;
             if (it instanceof Date) {
+              // properly serialize dates
               return '"' + stamp.toISOString(it, { zulu: true }) + '"';
             }
             var id = it.__id;
             if (id) {
+              // we found an identifiable object, we will just serialize a reference to it... unless it is the root
               if (path != '#' && (useRefs && !id.match(/#/) || paths[id])) {
                 var ref = id;
                 if (id.charAt(0) != '#') {
                   if (it.__clientId == id) {
                     ref = 'cid:' + id;
                   } else if (id.substring(0, idPrefix.length) == idPrefix) {
+                    // see if the reference is in the current context
+                    // a reference with a prefix matching the current context, the prefix should be removed
                     ref = id.substring(idPrefix.length);
                   } else {
+                    // a reference to a different context, assume relative url based referencing
                     ref = id;
                   }
                 }
@@ -299,9 +405,11 @@ angular.module('dojo', []).provider('stamp', function () {
               path = id;
             } else {
               it.__id = path;
+              // we will create path ids for other objects in case they are circular
               generated[path] = it;
             }
             paths[path] = it;
+            // save it here so they can be deleted at the end
             _indentStr = _indentStr || '';
             var nextIndent = prettyPrint ? _indentStr + djson.toJsonIndentStr : '';
             var newLine = prettyPrint ? '\n' : '';
@@ -323,14 +431,17 @@ angular.module('dojo', []).provider('stamp', function () {
                 if (typeof i == 'number') {
                   keyStr = '"' + i + '"';
                 } else if (typeof i == 'string' && (i.charAt(0) != '_' || i.charAt(1) != '_')) {
+                  // we don't serialize our internal properties __id and __clientId
                   keyStr = djson._escapeString(i);
                 } else {
+                  // skip non-string or number keys
                   continue;
                 }
                 var val = serialize(it[i], addProp(path, i), nextIndent);
                 if (val === undefined && options.includeEmptyKeys === true)
                   val = '" "';
                 if (typeof val != 'string') {
+                  // skip non-serializable values
                   continue;
                 }
                 output.push(newLine + nextIndent + keyStr + ':' + sep + val);
@@ -338,11 +449,12 @@ angular.module('dojo', []).provider('stamp', function () {
             }
             return '{' + output.join(',' + sep) + newLine + _indentStr + '}';
           }
-          return djson.toJson(it);
+          return djson.toJson(it);  // use the default serializer for primitives
         }
         var json = serialize(it, '#', '');
         if (!indexSubObjects) {
           for (var i in generated) {
+            // cleanup the temporary path-generated ids
             delete generated[i].__id;
           }
         }
@@ -351,6 +463,10 @@ angular.module('dojo', []).provider('stamp', function () {
       json._addProp = function (id, prop) {
         return id + (id.match(/#/) ? id.length == 1 ? '' : '.' : '#') + prop;
       };
+      // refAttribute: String
+      // This indicates what property is the reference property. This acts like the idAttribute
+      // except that this is used to indicate the current object is a reference or only partially
+      // loaded. This defaults to "$ref".
       json.refAttribute = '$ref';
       json._useRefs = false;
       json.serializeFunctions = false;
@@ -387,11 +503,13 @@ angular.module('ActiveResource', [
 angular.module('ActiveResource').provider('ARAPI', function () {
   this.$get = [
     'ARHelpers',
-    function (Helpers) {
+    'Mime',
+    function (Helpers, Mime) {
       function API(klass, pk) {
         var className = klass.name.hyphenate();
         var singular = className.toLowerCase();
         var plural = singular.pluralize();
+        var format;
         var primaryKey = pk || 'id';
         this.indexURL = '';
         this.createURL = '';
@@ -402,13 +520,31 @@ angular.module('ActiveResource').provider('ARAPI', function () {
           if (url.slice(-1) != '/')
             url = url + '/';
           this.createURL = url + plural;
-          this.updateURL = url + plural + '/:' + primaryKey;
-          this.showURL = this.indexURL = this.deleteURL = url + plural;
+          this.updateURL = this.showURL = this.deleteURL = url + plural + '/:' + primaryKey;
+          this.indexURL = url + plural;
           return this;
         };
         this.updatePrimaryKey = function (pk) {
           primaryKey = pk;
           this.updateURL = this.updateURL;
+          return this;
+        };
+        this.format = function (f) {
+          Mime.types.register(f);
+          if (!f.match(/\.\w+/))
+            f = '.' + f;
+          format = f;
+          for (var attr in this) {
+            if (attr.match(/URL/)) {
+              _.each(Mime.types, function (mimetype) {
+                var mimeTypeRegex = new RegExp('.' + mimetype);
+                this[attr] = this[attr].replace(mimeTypeRegex, '');
+              }, this);
+              this[attr] += format;
+            }
+            ;
+          }
+          ;
         };
       }
       return API;
@@ -552,6 +688,10 @@ angular.module('ActiveResource').provider('ARAssociation', function () {
           model = klass.klass;
         else
           model = klass;
+        // If we have an instance, rather than a constructor,
+        // we know it's already been instantiated. So we also
+        // don't need to instantiate it, which will cause a
+        // stack overflow.
         if (model.constructor.name !== 'Function') {
           model = model.constructor;
         } else {
@@ -642,12 +782,26 @@ angular.module('ActiveResource').provider('ARAssociation', function () {
     return Collection;
   };
 });
+// HELPER METHODS
+//
+// String.prototype.downcase
+//
+// Shorthand for toLowerCase()
 String.prototype.downcase = function () {
   return this.toLowerCase();
 };
 angular.module('ActiveResource').provider('ARCache', function () {
   this.$get = function () {
     function Cache() {
+      // function cache(instance, primaryKey)
+      //
+      // @param {instance} - Model instance to store in the model's cache
+      //
+      // If the instance has an ID, add it to the cache of its constructor. E.g.:
+      //    sensor => {id: 1, name: "Johnny's Window"}
+      //    sensor.constructor = Sensor
+      //
+      //    expect(Sensor.cached[1]).toEqual(sensor);
       Object.defineProperty(this, 'cache', {
         enumerable: false,
         value: function (instance, primaryKey) {
@@ -656,12 +810,20 @@ angular.module('ActiveResource').provider('ARCache', function () {
           }
         }
       });
+      // function isEmpty()
+      //
+      // True/false cache is empty
       Object.defineProperty(this, 'isEmpty', {
         enumerable: false,
         value: function () {
           return !!!Object.keys(this).length;
         }
       });
+      // function where(terms)
+      //
+      // @param {terms} - Search terms used to find instances in the cache
+      //
+      // Returns all cached instances that match the given terms
       Object.defineProperty(this, 'where', {
         enumerable: false,
         value: function (terms) {
@@ -684,10 +846,30 @@ angular.module('ActiveResource').provider('ARSerializer', function () {
     'ARDeferred',
     function (json, mixin, Associations, Helpers, deferred) {
       function Serializer() {
+        // function serialize(instance)
+        //
+        // @param instance {object} - Instance to serialize
+        //
+        // Transform associations to foreign keys; a parsable, non-circular JSON structure
+        // ready to be sent over the wire.
         this.serialize = function (instance, options) {
           var obj = foreignkeyify(instance);
           return json.serialize(obj, options);
         };
+        // function deserialize(httpResponse, instance, options)
+        //
+        // @param httpResponse {object} - The data received in an http response
+        //
+        // @param instance     {object} - An optional instance to update using the data received
+        //
+        // @param options      {object} - Additional options to further refine deserialization
+        //
+        // Deserialize takes an http response, and by default loads all associations for any
+        // foreign keys on the response it receives (eager loading). Optionally, deserialize
+        // can be set to lazy-load (lazy: true), which will load no associations, or 
+        // to over-eager load (overEager: true), which will also load all associations found
+        // on the associated instances (careful: this can pull down a huge amount of your database,
+        // and issue many http requests). 
         this.deserialize = function (httpResponse, instance, options) {
           var json, options;
           if (httpResponse && httpResponse.data)
@@ -705,6 +887,11 @@ angular.module('ActiveResource').provider('ARSerializer', function () {
             });
           }
         };
+        // function foreignkeyify (instance) 
+        //
+        // @param instance {object} - A model instance
+        //
+        // Takes all associations and transforms the necessary ones into foreign keys
         function foreignkeyify(instance) {
           var json = mixin({}, instance, false);
           var associations = Associations.get(instance);
@@ -722,6 +909,9 @@ angular.module('ActiveResource').provider('ARSerializer', function () {
           return json;
         }
         ;
+        // function responseContainsForeignKeys (response, instance)
+        //
+        // True/false - Response contains foreign keys
         function responseContainsForeignKeys(response, instance) {
           var answer = false;
           var associations = Associations.get(instance);
@@ -765,6 +955,7 @@ angular.module('ActiveResource').provider('ARSerializer', function () {
             var associatedName = association.name.camelize();
             var foreignKey = foreignRel.foreignKey;
             var query = response[foreignKey];
+            // Unless overEager is set, only eagerly load one level of associations.
             var queryOptions = {};
             for (var i in options) {
               queryOptions[i] = options[i];
@@ -829,6 +1020,8 @@ angular.module('ActiveResource').provider('ARSerializer', function () {
 });
 angular.module('ActiveResource').provider('ARHelpers', function () {
   this.$get = function () {
+    // Non-duplicating push. Will not add an instance to an array if it is already
+    // a member.
     Object.defineProperty(Array.prototype, 'nodupush', {
       enumerable: false,
       configurable: true,
@@ -890,6 +1083,13 @@ angular.module('ActiveResource').provider('ARDeferred', function () {
   this.$get = [
     '$q',
     function ($q) {
+      // function deferred(instance, error)
+      //
+      // @param {instance} - An instance to wrap in a deferred object
+      // @param {error}    - Error to return
+      //
+      // Returns an object or error wrapped in a deferred. Responds to then() method. Shortcut
+      // for establishing these boilerplate lines.
       return function deferred(instance, error) {
         var deferred = $q.defer();
         if (error)
@@ -1002,6 +1202,37 @@ angular.module('ActiveResource').provider('ARGET', function () {
         ];
       }
       ;
+      function getAllParams(url) {
+        var params = [];
+        url.replace(/\:[a-zA-Z_]+/g, function (param) {
+          params.push(param);
+        });
+        params = _.map(params, function (param) {
+          return param.slice(1);
+        });
+        return params;
+      }
+      ;
+      function queryableByParams(url, terms) {
+        var params = getAllParams(url);
+        var truth = true;
+        _.each(params, function (param) {
+          if (terms[param] === undefined)
+            truth = false;
+        });
+        _.each(terms, function (value, termName) {
+          if (!_.include(params, termName))
+            truth = false;
+        });
+        return truth;
+      }
+      ;
+      function appendSlashForQueryString(url) {
+        if (url.slice(-1) == '/')
+          return url;
+        return url + '/';
+      }
+      ;
       return function generateGET(instance, url, terms, options) {
         var instanceAndTerms = transformSearchTermsToForeignKeys(instance, terms);
         var associatedInstance, terms, propertyName;
@@ -1011,12 +1242,13 @@ angular.module('ActiveResource').provider('ARGET', function () {
           propertyName = instanceAndTerms[2];
         }
         var config = {};
-        if (url.indexOf('/:') !== -1) {
+        if (queryableByParams(url, terms)) {
           url = URLify(url, terms);
         } else if (Object.keys(terms).length) {
+          url = url.replace(/\:\w+/, '');
           config.params = terms;
         }
-        url += '/';
+        url = appendSlashForQueryString(url);
         return $http.get(url, config).then(function (response) {
           var data = response.data;
           if (propertyName && associatedInstance) {
@@ -1058,6 +1290,9 @@ angular.module('ActiveResource').provider('ARBase', function () {
       function Base() {
         var _this = this;
         _this.watchedCollections = [];
+        // By default, the primary key is set to 'id'. It can be overridden using the
+        // Model.instance#primaryKey method. This local variable is used by the other methods
+        // to set the correct data and construct API requests.
         var primaryKey = 'id';
         Object.defineProperty(_this, 'primaryKey', {
           configurable: true,
@@ -1069,12 +1304,42 @@ angular.module('ActiveResource').provider('ARBase', function () {
             this.api.updatePrimaryKey(primaryKey);
           }
         });
+        // @ASSOCIATIONS
+        // We use an associations object to store the hasMany and belongsTo associations for each
+        // model. These are stored on associations.hasMany and associations.belongsTo respectively.
         var associations = new Associations(_this);
+        // Dependents to destroy when the primary resource is destroyed. Set with
+        // _this.dependentDestroy(dependents)
         var dependentDestroy = [];
+        // @API
+        // Instantiates a new ActiveResource::API, which comes with methods for setting the
+        // URLs used by functions like $save, $create, $delete, and $update. See
+        // ActiveResource::API for more details.
         this.api = new API(this);
+        // @EVENT EMITTER
+        // Make models event-driven
         mixin(_this, Eventable);
+        // @MODEL CACHE
+        //
+        // Creates a cache for the model. The cache is used by methods like Model#find and
+        // Model#where, to first check whether or not an instance with a given primary key
+        // already exists on the client before querying the backend for it. Model#find will not
+        // query the backend if it finds an instance in the cache. Model#where will combine
+        // both the cached instances and those it retrieved from the backend.
+        //
+        // The cache is also used to ensure model instances are the same object across the
+        // application. In different providers or directives, if two objects are meant to be
+        // the exact same object (===), as represented by the primary key, then they must be
+        // the exact same object in order for Angular's dirty checking functionality to
+        // work as expected.
         if (!_this.cached)
           _this.cached = new Cache();
+        // @MODEL CACHE
+        //
+        // function cacheInstance(instance) 
+        //
+        // A wrapper for cached.cache, which passes in the primary key that has been
+        // set on the instance. Puts the instance in the cache.
         function cacheInstance(instance) {
           _this.cached.cache(instance, primaryKey);
         }
@@ -1083,6 +1348,8 @@ angular.module('ActiveResource').provider('ARBase', function () {
           return _.where(_this.cached, terms, _this);
         }
         ;
+        // @SERIALIZER
+        //
         serializer = new Serializer();
         _this.prototype.toJSON = function (options) {
           return _this.prototype.serialize.call(this, options);
@@ -1090,9 +1357,35 @@ angular.module('ActiveResource').provider('ARBase', function () {
         _this.prototype.serialize = function (options) {
           return serializer.serialize(this, options);
         };
+        // 
+        // Model.instance#$save 
+        //
+        // Persists an instance of a model to the backend via the API. A convention used
+        // in ActiveResource is that methods prefaced with `$` interact with the backend.
+        //
+        // Calls the createURL defined on the API of the model. The createURL can either
+        // be set via Model.api.set('http://defaulturl.com') or overridden specifically
+        // by setting Model.api.createURL = 'http://myoverriddenURL.com'
+        //
+        // The API should respond with either a representation of the same resource, or 
+        // an error.
+        //
+        // If a representation of the resource is received, Model.instance calls
+        // Model.instance#update passing in the data received from the server. If the
+        // resource has a hasMany relationship, and receives a representation of its child
+        // resources, the child resources will also be updated.
+        //
+        // To avoid having to call $scope.$apply with nested resources, nested resources
+        // call up to the highest-level resource to perform the $save. The $save still only
+        // calls the resource-in-question, and not its parent or parent's parent, but the
+        // parent is being actively watched for $http requests, while the child is not
+        // when created via the nested structure (e.g. $scope.system.sensors.new())
         _this.prototype.$save = function (instance, url, put) {
           if (!instance)
             instance = this;
+          // If passed with no arguments, we attempt to parse what is meant by the $save.
+          // If the instance contains a primary key, it should save to the updateURL as
+          // a PUT request. Otherwise, it should be a new instance saved to the createURL.
           if (instance && instance[primaryKey] && !url) {
             url = URLify(_this.api.updateURL, instance);
             if (put !== false)
@@ -1117,6 +1410,16 @@ angular.module('ActiveResource').provider('ARBase', function () {
             });
           });
         };
+        // Model.instance#$update(data)
+        //
+        // @param data {object} - Optional data to use to update the instance
+        //
+        // Updates the instance, and then persists the instance to the database via the
+        // $save method. Notice that methods prefaced with a dollar sign ($update, $save, 
+        // $create, and $delete),perform unsafe API interactions, like PUT, POST, and DELETE.
+        //
+        // Model.instance#update below is distinct from $update, because it only works with the
+        // in-memory copy of the data, and does not attempt to persist the changes to the API.
         _this.prototype.$update = function (data) {
           var instance = this;
           var url = _this.api.updateURL;
@@ -1136,6 +1439,23 @@ angular.module('ActiveResource').provider('ARBase', function () {
             return instance.$save(instance, url, 'put');
           }
         };
+        // Model.instance#update
+        //
+        // Resource representations may be received many times over during the course of a
+        // session in a single page application. Whenever a new representation is received
+        // from the server, if a model instance of that representation already exists, it
+        // should be updated across the application.
+        //
+        // Model.instance#update receives server representations and updates the appropriate
+        // model objects with them. If an instance has a has many relationship to another model,
+        // and the representation received includes a reference to the has many relationship,
+        // the data on that reference will be used to update the foreign relationship.
+        //
+        // Update ensures random properties are not set on the instance. Only properties
+        // defined in the body of the constructor or via Object.defineProperty are considered
+        // "settable" via the model, although Javascript normally will allow you to set any
+        // property on any object using a setter. To ensure the sanctity of your data, use
+        // instance#update to set properties.
         _this.prototype.update = function (data) {
           _this.emit('update:called', {
             data: data,
@@ -1163,6 +1483,16 @@ angular.module('ActiveResource').provider('ARBase', function () {
             return deferred(instance);
           });
         };
+        // Model#$create
+        // 
+        // When a model calls $create, a new instance is built using the arguments passed in,
+        // and immediately saved. This calls Model.instance#$save, which will attempt to persist
+        // the instance to the backend. If the backend returns success, the new instance is added to
+        // the cache and returned.
+        //
+        //    System.$create({placement: 'window'}).then(function(response) { system = response; });
+        //
+        // Model.$create is equivalent to calling Model.new().save()
         _this.$create = function (data) {
           if (!data)
             data = {};
@@ -1176,6 +1506,23 @@ angular.module('ActiveResource').provider('ARBase', function () {
             return deferred(instance);
           });
         };
+        // Model#new(data)
+        // 
+        // @param {data} - JSON data used to instantiate a new instance of the model. 
+        //
+        // New creates a new instance of the model. If an id is passed in, new first checks
+        // whether or not an object is stored in the cache with that id; if it is, it is returned.
+        // The new instance is added to the cache. If the instance has any hasMany relationships
+        // associated with it, those relationships are instantiated via an empty ActiveResource::Collection.
+        // The new collection associates this instance with it, so that calling:
+        //
+        //    system.sensors.new()
+        //
+        // Associates the sensor with the system. E.g.:
+        //
+        //    var sensor = system.sensors.new()
+        //    expect(sensor.system).toEqual(system);
+        //
         _this.new = function (data) {
           if (!data)
             data = {};
@@ -1212,6 +1559,37 @@ angular.module('ActiveResource').provider('ARBase', function () {
             instance.validates(validations);
             instance[propertyName] = data[propertyName];
           };
+          // Instance#computedProperty(name, valueFn, dependents)
+          //
+          // @param name       {string}         - The name of the property to be computed from other properties
+          //
+          // @param valueFn    {func}           - The function used to compute the new property from the others
+          //
+          // @param dependents {string | array} - The name of the property or list of the properties that this 
+          //                                      property depends upon.
+          //
+          // Example:
+          //
+          //    function Tshirt(attributes) {
+          //      this.number('price');
+          //
+          //      this.computedProperty('salePrice', function() {
+          //        return this.price - (this.price * 0.2);
+          //      }, 'price');
+          //
+          //      this.computedProperty('superSalePrice', function() {
+          //        return this.price - this.salePrice;
+          //      }, ['price', 'salePrice']);
+          //    }
+          //
+          // The computed property function creates configurable getters and setters (that can thus be reconfigured).
+          // In the first example, the price setter calls the salePrice setter whenever it updates. In the second
+          // example, the salePrice setter continues to be called by the price setter, and additionally calls the
+          // superSalePrice setter afterward.
+          //
+          // This chainability allows us to create complex inter-dependencies, where an update to one property
+          // updates many others. In order to all this to occur, we use the `__lookupSetter__` function to retrieve
+          // the value of the previous setter.
           _this.prototype.computedProperty = function (name, valueFn, dependents) {
             var instance = this;
             if (!dependents)
@@ -1269,6 +1647,7 @@ angular.module('ActiveResource').provider('ARBase', function () {
             }
             ;
           });
+          // Add any data passed to the hasMany relationships
           _.each(associations.hasMany, function (collection) {
             var name = collection.klass.name.pluralize().camelize();
             instance[name][this.name.camelize()] = instance;
@@ -1284,8 +1663,19 @@ angular.module('ActiveResource').provider('ARBase', function () {
           _this.emit('new:complete', instance);
           return instance;
         };
+        // Model#where(terms, options)
+        //
+        // @param {terms} - JSON terms used to find all instances of an object matching specific parameters
+        //
+        // Used to find all instances of a model matching specific parameters:
+        //
+        //    System.where({placement: "window"})
+        //
+        // Returns a collection of system instances where the placement attribute is set to "window"
         _this.where = function (terms, options) {
+          // Generate start event
           _this.emit('where:called', terms);
+          // Normalize variables
           if (typeof terms != 'object')
             throw 'Argument to where must be an object';
           if (!options)
@@ -1297,6 +1687,8 @@ angular.module('ActiveResource').provider('ARBase', function () {
           options.cached = cached;
           options.multi = true;
           var url = _this.api.indexURL || _this.api.showURL;
+          // Generate a GET request for all instances matching the given params, deserialize each
+          // into the appropriate class, and return the found collection
           return GET(_this, url, terms, options).then(function (json) {
             var results = [];
             for (var i in json) {
@@ -1304,6 +1696,7 @@ angular.module('ActiveResource').provider('ARBase', function () {
               results.push(instance);
               serializer.deserialize(json[i], instance, options);
             }
+            // Watch all collections that get assigned out as variables
             _this.watchedCollections.push(results);
             _this.emit('where:complete', {
               instance: results,
@@ -1312,7 +1705,11 @@ angular.module('ActiveResource').provider('ARBase', function () {
             return results;
           });
         };
+        // Model#all()
+        //
+        // Returns all instances of a model. Equivalent to Model#where({})
         _this.all = function (options) {
+          // Generate start event
           _this.emit('all:called');
           return _this.where({}, options).then(function (results) {
             var deferred = $q.defer();
@@ -1321,9 +1718,24 @@ angular.module('ActiveResource').provider('ARBase', function () {
             return deferred.promise;
           });
         };
+        // Model#find(terms, options)
+        //
+        // @param {terms}   - JSON terms used to find a single instance of the model matching the given 
+        //                    parameters
+        // @param {options} - Options include:
+        //                      * Lazy: Whether or not to lazy-load options.
+        //
+        // Used to find the first instance of a model that matches the parameters given:
+        //
+        //    System.find({id: 1})
+        //
+        // Returns the system with an id of 1. By default, find eager-loads associated models. Passing
+        // the lazy option will cause find not to query for associated models.
         _this.find = function (terms, options) {
           var cached;
+          // Emit start event
           _this.emit('find:called', terms);
+          // Normalize variables
           if (typeof terms == 'number' || typeof terms == 'string')
             terms = argify(terms);
           if (typeof terms != 'object')
@@ -1333,6 +1745,8 @@ angular.module('ActiveResource').provider('ARBase', function () {
           if (!options.forceGET)
             cached = _.first(_this.cached.where(terms));
           var url = _this.api.showURL || _this.api.indexURL;
+          // If no instance is found in the cache, generate a GET request, and return the
+          // found instance, deserialized into the appropriate class
           if (cached !== undefined) {
             _this.emit('find:complete', cached);
             return deferred(cached);
@@ -1344,6 +1758,10 @@ angular.module('ActiveResource').provider('ARBase', function () {
             });
           }
         };
+        // Model.instance#$delete(terms)
+        //
+        // @param {terms} - JSON terms used to delete 
+        // 
         _this.prototype.$delete = function () {
           var instance = this;
           _this.emit('$delete:called', this);
@@ -1351,6 +1769,8 @@ angular.module('ActiveResource').provider('ARBase', function () {
           var config = {};
           var url = _this.api.deleteURL;
           queryterms[primaryKey] = instance[primaryKey];
+          // if user has provided an attr in their deleteURL definition
+          // then we URLify the deleteURL. Else we pass in params as 
           if (_this.api.deleteURL.indexOf('/:') !== -1) {
             url = URLify(_this.api.deleteURL, queryterms);
           } else {
@@ -1373,11 +1793,24 @@ angular.module('ActiveResource').provider('ARBase', function () {
             _.remove(watchedCollection, instance);
           });
         }
+        // function instanceIsAssociatedWith(instance, association)
+        //
+        // @param {instance}    - The instance in question
+        // @param {association} - The name of the associated model
+        //
+        // Checks whether or not an instance is associated with an instance of another model.
+        // In the event a "Sensor" model belongs to a "System" model, returns true if an instance
+        // of sensor contains a property called "system" that is an instance of the System model.
         function instanceIsAssociatedWith(instance, association) {
           var associationName = nameOfBelongsToModel(association);
           return !!(instance[associationName] && instance[associationName].constructor == association);
         }
         ;
+        // function nameOfBelongsToModel(model)
+        //
+        // @param {model} - [Constructor] Model to retrieve name from
+        //
+        // Returns name of model if the model is a constructor. Else returns undefined.
         function nameOfBelongsToModel(model) {
           if (!model)
             return;
@@ -1388,6 +1821,11 @@ angular.module('ActiveResource').provider('ARBase', function () {
           return model.klass.name.camelize();
         }
         ;
+        // Model.instance#establishBelongsTo
+        // 
+        // Called internally to sync a resource with the collection(s) it belongs to. If a System
+        // has many Sensors, whenever a sensor instance needs to establish its initial belongs to
+        // relationship, it calls this method to push itself into the right system instance.
         _this.prototype.establishBelongsTo = function () {
           if (associations.belongsTo.length) {
             for (var i in associations.belongsTo) {
@@ -1446,6 +1884,19 @@ angular.module('ActiveResource').provider('ARBase', function () {
               instance[0].update(hasManyInstanceAttrs);
           }, this);
         }
+        // Receives an array of new plain-old Javascript objects, and the name of a collection
+        // to update, e.g.:
+        //
+        //    updateHasManyRelationship([{
+        //      id: 1,
+        //      name: 'Great post'
+        //    }, 'posts']
+        //
+        // This removes any previously associated instances. The entire collection will be the new
+        // instances added here.
+        //
+        // If you don't want to remove all old instances, and instead only add new instances, use
+        // collection#new.
         function updateHasManyRelationship(newCollectionPOJOs, collectionName) {
           var hasManyCollection = this[collectionName.camelize()];
           removeOldHasManyInstances(hasManyCollection, newCollectionPOJOs);
@@ -1471,12 +1922,20 @@ angular.module('ActiveResource').provider('ARBase', function () {
           }, this);
         }
         ;
+        // function getBelongsToNames()
+        //
+        // Returns an array containing the names of the classes the model belongs to. E.g. if
+        // a Comment belongs to an Author and Post, getBelongsToNames will return ['author', 'post'] 
         function getBelongsToNames() {
           return _.map(associations.belongsTo, function (association) {
             return association.klass.name.camelize();
           });
         }
         ;
+        // function getHasManyNames()
+        //
+        // Returns an array of the names of the classes the model has a has-many relationship with. E.g.
+        // If an author has many posts and has many comments, getHasManyNames will return ['posts', 'comments']
         function getHasManyNames() {
           return _.map(associations.hasMany, function (association) {
             return association.klass.name.camelize().pluralize();
@@ -1488,6 +1947,15 @@ angular.module('ActiveResource').provider('ARBase', function () {
             return association.klass.name.camelize();
           });
         }
+        // function getSettableProperties(model)
+        //
+        // @param {model} - Model to get the settable properties of.
+        //
+        // Returns the properties (enumerable or not) that are settable on a model. It instantiates
+        // the model and checks its properties to see what properties were defined either in the
+        // body of the constructor or via Object.defineProperty.
+        //
+        // The `primaryKey` property 
         function getSettableProperties(model) {
           var instance = model.new();
           var nonenumerables = Object.getOwnPropertyNames(instance);
@@ -1655,6 +2123,29 @@ angular.module('ActiveResource').provider('ARBase', function () {
             this.validations = newValidations;
           }
         });
+        // Model.instance#hasMany(table, providerArray)
+        //
+        // @param {table}        - [String] The name of the attribute to be associated on the hasMany 
+        //                         collection.
+        // @param {providerName} - [Array]  The name of the module and provider where the associated 
+        //                         class can be found.
+        //
+        // Used to generate a hasMany collection for an instance of the model:
+        //
+        //    this.hasMany('sensors', ['ActiveResource.Mocks', 'ARMockSensor']);
+        //
+        // The call above generates a `sensors` property on the instance, which will use the 
+        // ARMockSensor provider, stored in the ActiveResource.Mocks module to instantiate sensor 
+        // instances.
+        //
+        // The instantiated `sensors` property is an instance of ActiveResource::Collection. This 
+        // gives it access to properties like:
+        //
+        //    system.sensors.new()
+        //
+        // Which will generate a new sensor instance pre-associated with the system instance on which 
+        // it was called. For more details about the methods the hasMany collection gains, see 
+        // ActiveResource::Collection. This method also calls Model.belongsTo on the associated model.
         _this.prototype.hasMany = function (name, options) {
           if (!options)
             options = {};
@@ -1679,12 +2170,34 @@ angular.module('ActiveResource').provider('ARBase', function () {
           var inverseAssociation = Associations.getBelongs(association.klass, this);
           this[table][inverseAssociation.propertyName] = this;
         };
+        // Model.instance#belongsTo(table, providerArray)
+        //
+        // @param {table}         - [String] The name of the model that this model belongs to.
+        // @param {providerArray} - [Array]  The module and provider name of the associated model.
+        //
+        // Establishes a belongsTo relationship:
+        //
+        //    this.belongsTo('system', ['ActiveResource.Mocks', 'ARMockSystem']);
+        //
+        // Creates a `system` property on the instance of the model, and establishes a getter and a setter
+        // for the `system` property. The value of the `system` property is stored in the closure created by
+        // this function on the `localTable` property.
+        //
+        // The setter ensures that the hasMany relationship is only set on instances of the hasMany class. In
+        // this case, the `system` attribute can only be set to objects of the class ARMockSystem defined in the
+        // ActiveResource.Mocks module.
         _this.prototype.belongsTo = function (table, options) {
           if (!options)
             options = {};
           var association = new Association('BelongsTo', this, table, options);
           associations.belongsTo.add(association);
         };
+        // function dependentDestroy(dependents)
+        //
+        // @param {dependents} - [Array or String] Comma separated list of dependents to destroy
+        //                                         when the primary resource is destroyed
+        // 
+        // Registers dependencies to destroy when the primary resource is destroyed
         _this.dependentDestroy = function (dependents) {
           if (dependents.constructor.name != 'Array')
             dependents = [dependents];
@@ -1736,6 +2249,15 @@ angular.module('ActiveResource').provider('AREventable', function () {
     ;
     return Eventable;
   };
+});
+angular.module('ActiveResource').provider('Mime', function () {
+  this.$get = [function () {
+      types = ['json'], types.register = function (mimetype) {
+        mimetype = mimetype.replace(/\./g, '');
+        types.nodupush(mimetype);
+      };
+      return { types: types };
+    }];
 });
 angular.module('ActiveResource').provider('ARValidations', function () {
   this.$get = [
@@ -2053,10 +2575,12 @@ angular.module('ActiveResource').provider('ARValidations', function () {
         }
         function fieldsToExecuteOn(field) {
           var toExecute;
+          // If a no field name is passed in, exutute on all fields:
           if (field === undefined)
-            toExecute = fields;
+            toExecute = fields;  // Else, validate the field passed in
           else
             toExecute = fields[field];
+          // If the field name does not exist, do not validate anything
           if (toExecute === undefined)
             return;
           if (toExecute.constructor.name == 'Array')
@@ -2124,20 +2648,63 @@ angular.module('ActiveResource').provider('ARValidations', function () {
           for (var validator in data) {
             addValidations(validator, data[validator], validators, field, data[validator]);
           }
+          // VALIDATION STRATEGY FACTORY
+          // The user assigns key-value pairs where the key represents the name of the
+          // validator she wants to use, and the value represents a particular set of
+          // instructions for customization. 
+          // 
+          // If the key matches a validation function in the validators hash, the
+          // instructions are passed as an argument to the factory function, which
+          // returns a validation strategy to be added to the array of $parsers used
+          // by any inputs that reference that model property. The $parsers 
+          // array runs as a pipeline whenever the control reads a value from the DOM,
+          // and the value is passed from one function to the next, unless at any point
+          // it is determined invalid, in which case it returns undefined. The $parsers
+          // functions also use ngModelCtrl.$setValidity to signal the validity of the
+          // input, and trigger responses on the page, like ng-valid/invalid CSS classes,
+          // and the addition messages in the $error hash on the form & each input.
+          // 
+          // If the key does not refer to a function, but instead returns a subset of
+          // the hash ({format: {email: true}} would return the format section of the
+          // hash), then we loop recursively through the addValidations function, moving
+          // to the next key:value pair in the set using the subset of the hash as the
+          // lookup table. In this case {email: true} would result in a terminal lookup
+          // that refers to a factory function, and the resultant function would be added 
+          // to the $parsers array.
+          //
+          // In the case where the key refers to nothing in the lookup table, the value
+          // in the user's key:value pair is presumed to be a function that evaluates to
+          // a boolean. This function is used to build a custom validator. 
           function addValidations(key, value, remainingHash, field, validationObject) {
+            // If the key points to a function, it is ready to be made into
+            // a validator. The value of the hash (e.g. {in: _.range(1, 10)}) is treated 
+            // as the argument to the factory function to build the appropriate validator
+            // (in this case, a validator where the length of the input is between)
+            // 1 and 9. pushParser creates a $parser function and adds it to the $parsers
+            // array on the input. 
             if (isFunction(remainingHash[key])) {
               pushValidation(remainingHash[key], value, field, validationObject);
               return;
             }
+            // If remainingHash[key] returns a subset of the hash, we need to recurse
+            // through the method until we find a function or return nothing from the hash.
             if (isObject(remainingHash[key])) {
+              // Cut down the hash to only the section we're still interested in.
               remainingHash = remainingHash[key];
+              // The recursive keys will be the keys from the next segment of the hash
               keys = Object.keys(value);
+              // Loop through each key to add a validator for each value in the event of
+              // multiple values like { length: { min: 1, max: 10 } }
               keys.forEach(function (key) {
+                // The recursive value will be the value from the next segment of the hash
                 nestedValue = value[key];
+                // Recurse through the function
                 addValidations(key, nestedValue, remainingHash, field, validationObject);
               });
               return;
             }
+            // If the key cannot be found in the hash, we assume that it is a custom
+            // validator that implements a validates key.
             if (isUndefined(remainingHash[key])) {
               if (key == 'message')
                 return;
@@ -2200,16 +2767,28 @@ simpleForm.directive('form', function () {
     compile: function () {
       return {
         pre: function (scope, formElement, attrs, ctrl) {
+          // Very little is changed compared to Angular 1.2.0rc3's ngForm. 
+          // We add a default name to the field based on the 'for' attribute, but allow
+          // this to be overridden by the name attribute. 
+          // We add a fields hash to separate form inputs from the rest of the controller
+          // methods of ngFormController, so they can be iterated through on their own.
           ctrl.$name = attrs.name || nameDefault() || attrs.ngForm;
           ctrl.$fields = {};
+          // Ex. for="user" returns "userForm"
           function nameDefault() {
             return attrs['for'] ? attrs['for'] + 'Form' : '';
           }
+          // Private method of ngForm that we had to copy out here to ensure we continued
+          // to raise this assertion in $addControl, which we override below
           function assertNotHasOwnProperty(name, context) {
             if (name === 'hasOwnProperty') {
               throw ngMinErr('badname', 'hasOwnProperty is not a valid {0} name', context);
             }
           }
+          // We only add one new line here to add the control to the $fields hash. We
+          // continue to allow the controls to sit as properties on the form itself
+          // for backwards compatibility, but this functionality is deprecated in our version.
+          // Future releases will only add controls to the fields hash. 
           ctrl.$addControl = function (control) {
             assertNotHasOwnProperty(control.$name, 'input');
             if (control.$name) {
