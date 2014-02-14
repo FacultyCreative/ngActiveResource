@@ -517,6 +517,7 @@ angular.module('ActiveResource').provider('ARAPI', function () {
         this.deleteURL = '';
         this.updateURL = '';
         this.set = function (url) {
+          console.log('The API#set method has recently changed its defaults. Please see https://github.com/FacultyCreative/ngActiveResource/pull/19 for details');
           if (url.slice(-1) != '/')
             url = url + '/';
           this.createURL = url + plural;
