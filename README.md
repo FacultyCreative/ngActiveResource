@@ -189,18 +189,13 @@ RESTful API (GET).
 Best case scenario: You have an API that adheres to ActiveResource's RESTful
 convention. Here's that convention:
 
-| HTTP Verb | CRUD     | Path                    | Action | Used To                                                           |
-| --------- |:--------:|:------------------:|:------:|:---------------------                                             |
-| GET       | Retrieve | /users                     | index  | Display a list of all users, or all users filtered by querystring |
-| GET       | Retrieve | /users                     | show   | Display a specific user, found by querystring                     |
-| POST      | Create   | /users                        | create | Create a user                                                     |
-| PUT       | Update   | /users/:id              | update | Update a specific user                                            |
-| DELETE    | Destroy  | /users/:id              | destroy| Delete a specific user                                            |
-
-Please notice that the update action differs from the URLs you might display to
-a user in Ruby on Rails: we won't refer to a specific primary key or username
-in the URL, as a valid PUT request will instead send this data as an opaque
-block of data.
+| HTTP Verb | CRUD     | Path       | Action | Used To                                                           |
+| --------- |:--------:|:----------:|:------:|:---------------------                                             |
+| GET       | Retrieve | /users     | index  | Display a list of all users, or all users filtered by querystring |
+| GET       | Retrieve | /users/:id | show   | Display a specific user, found by params or querystring           |
+| POST      | Create   | /users     | create | Create a user                                                     |
+| PUT       | Update   | /users/:id | update | Update a specific user                                            |
+| DELETE    | Destroy  | /users/:id | destroy| Delete a specific user                                            |
 
 If you do have an API that follows these conventions, hooking it up to ActiveResource is as easy as:
 
@@ -208,16 +203,32 @@ If you do have an API that follows these conventions, hooking it up to ActiveRes
 Post.api.set('http://api.faculty.com');
 ```
 
+Optionally, you can specify a format for your requests:
+
+```javascript
+Post.api.set('http://api.faculty.com').format('json');
+```
+
+Many APIs are set up to respond with specified data types if they are specified
+in the URLs. A request like:
+
+```javascript
+Post.find({id: 1});
+```
+
+Will send the request:
+
+```javascript
+http://api.faculty.com/posts/1.json
+```
+
 If you need to override specific URLs:
 
 ```javascript
 Post.api.indexURL  = 'http://api.faculty.com/list-all-the-users';
 Post.api.showURL   = 'http://api.faculty.com/show-me-user';
-Post.api.deleteURL = 'http://api.faculty.com/show-me-user/:param';
+Post.api.deleteURL = 'http://api.faculty.com/show-me-user/:param.json';
 ```
-
-`[:params]` will be substituted for you automatically using the parameters
-specified by the query methods listed below.
 
 ### Parameterized URLS versus Query Strings:
 
@@ -233,14 +244,28 @@ The parameters themselves will be replaced:
 
 ```javascript
 Post.find({ id: 1 });
->> http://my.api.com/posts/1
+>> http://faculty.api.com/posts/1
 ```
 
-If no params are provided, ActiveResource will use a query string by default.
+If no parameters are not provided _or_ your request utilizes parameters that are
+_not_ specified in the search URL, then a querystring will be generated:
 
 ```javascript
-Post.$delete({ author_id: 1 });
->> http://my.api.com/posts/?author_id=1
+Post.findURL = 'http://api.faculty.com/posts/:id';
+Post.find({author_id: 1});
+
+// 'http://faculty.api.com/posts/?author_id=1'
+```
+
+The `indexURL` is intended as a search URL. It is not expected to be
+parameterized (though you can parameterize it). By default, that means it will
+search using a querystring:
+
+```javascript
+Post.api.set('http://faculty.api.com').format('json');
+Post.where({author_id: 1});
+
+// 'http://faculty.api.com/posts.json/?author_id=1'
 ```
 
 ### Find:
@@ -262,13 +287,16 @@ Post.find({ title: 'My Great Post' }, { forceGET: true });
 ```
 
 By default, find will also eagerly load a single level of associations. If a
-Post has many comments, and we find a post, its comments will be loaded as well,
+Post has many comments, and we find a post, then its comments will be loaded as well,
 but the comments will not load their authors, or other comment-based
 associations. To load associations' associations, pass the option:
 
 ```javascript
 { overEager: true }
 ```
+
+_Warning:_ Over-eager loading is potentially very resource-intensive, and will often pull
+down sizeable portions of the database.
 
 To lazily load associations (not load even the first level of associations, aka
 comments in the example above), pass the option:
@@ -331,9 +359,8 @@ By default, models will assume a primary key field labeled `id`, but you can set
 a custom one like so:
 
 ```javascript
-function Post(data) {
-    primaryKey('_id');
-}
+function Post(attributes) {}
+Post.primaryKey = '_id';
 ```
 
 ## Destroy Dependent Associations
@@ -370,7 +397,7 @@ Changes instances of null or undefined to empty strings, in the event your backe
 
 ```javascript
 var dummyData = { hi: 'there' };
-post.serialize({ instance: dummyData });
+post.toJSON({ instance: dummyData });
 ```
 
 Can tap into ActiveResource's serialization method to serialize arbitrary
