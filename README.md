@@ -8,7 +8,7 @@ pattern persistence methods.
 
 In your bower.json:
 
-    "ngActiveResource": "0.6.3"
+    "ngActiveResource": "0.7.0"
 
 ## Simple:
 
