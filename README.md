@@ -68,7 +68,7 @@ angular.module('app', ['ActiveResource'])
         Post.api.set('http://api.faculty.com');
         Post.dependentDestroy('comments');
 
-        return User;
+        return Post;
   });
 ```
 
