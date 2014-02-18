@@ -411,9 +411,9 @@ instance itself. To save the serialized data as a variable, assign it:
 var json = post.serialize();
 ```
 
-## Resource Events
+## Model Events
 
-Models are automaticall provided with a handful of useful events to subscribe to.
+Models are automatically provided with a handful of useful events to subscribe to.
 
 The events broadcasted are:
 
