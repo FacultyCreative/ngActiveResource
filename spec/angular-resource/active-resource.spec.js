@@ -1193,6 +1193,13 @@ describe('ActiveResource', function() {
         expect(system.sensors.length).toBe(2);
       });
 
+      it('deals with a bunch of duplicate primary keys', function() {
+        post.update({comments: [{id: 1, text: 'My old comment'}]});
+        post.update({comments: [{id: 1, text: 'My Comment'}, {id: 1, text: 'My Comment 2'}, {id: 1, text: 'My Comment 3'}, {id: 2, text: 'My Comment 4'}]});
+        expect(Object.keys(Comment.cached).length).toBe(2);
+        expect(post.comments.first.text).toEqual('My Comment 3');
+      });
+
       it('will not set "unsettable" properties', function() {
         post.update({tags: "awesome!"});
         expect(post.tags).not.toBeDefined();
