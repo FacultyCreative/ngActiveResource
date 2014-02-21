@@ -517,7 +517,6 @@ angular.module('ActiveResource').provider('ARAPI', function () {
         this.deleteURL = '';
         this.updateURL = '';
         this.set = function (url) {
-          console.log('The API#set method has recently changed its defaults. Please see https://github.com/FacultyCreative/ngActiveResource/pull/19 for details');
           if (url.slice(-1) != '/')
             url = url + '/';
           this.createURL = url + plural;
@@ -1287,7 +1286,8 @@ angular.module('ActiveResource').provider('ARBase', function () {
     'ARGET',
     'ARMixin',
     'URLify',
-    function (API, Collection, Association, Associations, Cache, Serializer, Eventable, Validations, $http, $q, $injector, deferred, GET, mixin, URLify) {
+    'ARHelpers',
+    function (API, Collection, Association, Associations, Cache, Serializer, Eventable, Validations, $http, $q, $injector, deferred, GET, mixin, URLify, Helpers) {
       function Base() {
         var _this = this;
         _this.watchedCollections = [];
@@ -1867,22 +1867,34 @@ angular.module('ActiveResource').provider('ARBase', function () {
             this[name] = collection;
         }
         ;
-        function removeOldHasManyInstances(hasManyCollection, newHasManyObjects) {
-          _.each(hasManyCollection, function (hasManyInstance) {
-            var found = _.where(newHasManyObjects, function (newHasManyObject) {
-                return hasManyInstance && hasManyInstance[primaryKey] == newHasManyObject[primaryKey];
-              });
-            if (!found.length)
-              _.remove(hasManyCollection, hasManyInstance);
+        function removeOldHasManyInstances(hasManyCollection, newHasManyObjects, primaryKeyName, primaryKeys) {
+          _.remove(hasManyCollection, function (hasManyInstance) {
+            var keep = _.include(primaryKeys, hasManyInstance[primaryKeyName]);
+            if (keep == false) {
+              delete hasManyInstance.constructor.cached[hasManyInstance[primaryKeyName]];
+              return true;
+            }
           });
         }
-        function createOrUpdateHasManyInstances(hasManyCollection, newHasManyObjects) {
+        function createOrUpdateHasManyInstances(hasManyCollection, newHasManyObjects, primaryKeyName, primaryKeys) {
+          var _first, _cons, _cached;
+          _first = _.first(hasManyCollection);
+          if (_first !== undefined)
+            _cons = _first.constructor;
+          if (_cons !== undefined)
+            _cached = _cons.cached;
           _.each(newHasManyObjects, function (hasManyInstanceAttrs) {
-            var instance = _.where(hasManyCollection, hasManyInstanceAttrs);
-            if (!instance.length)
-              hasManyCollection.new(hasManyInstanceAttrs);
-            else
+            var instance;
+            if (_cached !== undefined) {
+              var search = {};
+              search[primaryKeyName] = hasManyInstanceAttrs[primaryKeyName];
+              instance = _cached.where(search);
+            }
+            if (instance && instance.length) {
               instance[0].update(hasManyInstanceAttrs);
+            } else {
+              hasManyCollection.new(hasManyInstanceAttrs);
+            }
           }, this);
         }
         // Receives an array of new plain-old Javascript objects, and the name of a collection
@@ -1900,8 +1912,16 @@ angular.module('ActiveResource').provider('ARBase', function () {
         // collection#new.
         function updateHasManyRelationship(newCollectionPOJOs, collectionName) {
           var hasManyCollection = this[collectionName.camelize()];
-          removeOldHasManyInstances(hasManyCollection, newCollectionPOJOs);
-          createOrUpdateHasManyInstances(hasManyCollection, newCollectionPOJOs);
+          var _first = _.first(hasManyCollection);
+          if (!_first) {
+            return createOrUpdateHasManyInstances(hasManyCollection, newCollectionPOJOs);
+          }
+          var primaryKeyName = Helpers.getPrimaryKeyFor(_first);
+          var primaryKeys = _.chain(newCollectionPOJOs).map(function (o) {
+              return o[primaryKeyName];
+            }).compact().unique().value();
+          removeOldHasManyInstances(hasManyCollection, newCollectionPOJOs, primaryKeyName, primaryKeys);
+          createOrUpdateHasManyInstances(hasManyCollection, newCollectionPOJOs, primaryKeyName, primaryKeys);
         }
         ;
         function updateHasOneRelationship(association, name) {
