@@ -1239,7 +1239,7 @@ angular.module('ActiveResource').provider('ARGET', function () {
         if (queryableByParams(url, terms)) {
           url = URLify(url, terms);
         } else if (Object.keys(terms).length) {
-          url = url.replace(/\/\:\w+/, '').replace(/\:\w+/g, '');
+          url = url.replace(/\/\:[a-zA-Z_]+/g, '').replace(/\:[a-zA-Z_]+/g, '');
           config.params = terms;
         }
         return $http.get(url, config).then(function (response) {
