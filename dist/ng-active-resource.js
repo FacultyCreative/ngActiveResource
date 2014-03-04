@@ -1227,12 +1227,6 @@ angular.module('ActiveResource').provider('ARGET', function () {
         return truth;
       }
       ;
-      function appendSlashForQueryString(url) {
-        if (url.slice(-1) == '/')
-          return url;
-        return url + '/';
-      }
-      ;
       return function generateGET(instance, url, terms, options) {
         var instanceAndTerms = transformSearchTermsToForeignKeys(instance, terms);
         var associatedInstance, terms, propertyName;
@@ -1245,10 +1239,9 @@ angular.module('ActiveResource').provider('ARGET', function () {
         if (queryableByParams(url, terms)) {
           url = URLify(url, terms);
         } else if (Object.keys(terms).length) {
-          url = url.replace(/\:\w+/, '');
+          url = url.replace(/\/\:\w+/, '').replace(/\:\w+/g, '');
           config.params = terms;
         }
-        url = appendSlashForQueryString(url);
         return $http.get(url, config).then(function (response) {
           var data = response.data;
           if (propertyName && associatedInstance) {
@@ -1777,7 +1770,6 @@ angular.module('ActiveResource').provider('ARBase', function () {
           } else {
             config = { params: queryterms };
           }
-          url += '/';
           return $http.delete(url, config).then(function (response) {
             if (response.status == 200) {
               removeFromWatchedCollections(instance);
