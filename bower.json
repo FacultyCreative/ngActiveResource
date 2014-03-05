@@ -1,6 +1,6 @@
 {
   "name": "ActiveResource",
-  "version": "0.7.1",
+  "version": "0.7.4",
   "authors": [
     "Brett Shollenberger <brett.shollenberger@gmail.com>"
   ],
@@ -14,7 +14,7 @@
     "tests"
   ],
   "dependencies": {
-    "active-support": "0.0.7",
+    "active-support": "latest",
     "angular": "latest",
     "lodash": "latest",
     "async": "~0.2.5",

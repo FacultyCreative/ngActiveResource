@@ -6,6 +6,32 @@ pattern persistence methods.
 
 ## Installation:
 
+### Download
+
+#### With Bower
+
+If you have bower install just run
+
+```javascript
+bower install ngActiveResource --save-dev
+```
+
+#### Manually
+
+To manually download head over to the [latest release](https://github.com/FacultyCreative/ngActiveResource/releases/latest) and hit the big 'source code' button.
+
+### Install
+
+Once downloaded you'll find everything you need in the `/dist` directory, include either file and add it as a dependency in your module.
+
+```javascript
+angular.module('app', ['ngActiveResource']);
+```
+
+> Note: Don't forget to include lodash.js before active-resource.js.
+
+## Installation:
+
 In your bower.json:
 
     "ngActiveResource": "0.7.0"
