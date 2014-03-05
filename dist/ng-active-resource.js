@@ -1399,7 +1399,10 @@ angular.module('ActiveResource').provider('ARBase', function () {
             method = 'post';
           return $http[method](url, json).then(function (response) {
             return serializer.deserialize(response, instance).then(function (instance) {
-              _this.emit('$save:complete', instance);
+              _this.emit('$save:complete', {
+                data: response,
+                instance: instance
+              });
               return deferred(instance);
             });
           });
@@ -1416,6 +1419,10 @@ angular.module('ActiveResource').provider('ARBase', function () {
         // in-memory copy of the data, and does not attempt to persist the changes to the API.
         _this.prototype.$update = function (data) {
           var instance = this;
+          _this.emit('$update:called', {
+            instance: instance,
+            data: data
+          });
           var url = _this.api.updateURL;
           if (!url)
             return;
@@ -1496,7 +1503,6 @@ angular.module('ActiveResource').provider('ARBase', function () {
           return instance.$save().then(function (response) {
             instance = response;
             cacheInstance(instance);
-            _this.emit('$create:complete', instance);
             return deferred(instance);
           });
         };
@@ -1742,12 +1748,21 @@ angular.module('ActiveResource').provider('ARBase', function () {
           // If no instance is found in the cache, generate a GET request, and return the
           // found instance, deserialized into the appropriate class
           if (cached !== undefined) {
-            _this.emit('find:complete', cached);
+            _this.emit('find:complete', {
+              instance: cached,
+              data: {
+                message: 'Backend not queried. Found in cache',
+                data: cached
+              }
+            });
             return deferred(cached);
           } else {
             return GET(_this, url, terms, options).then(function (json) {
               var instance = _this.new(json);
-              _this.emit('find:complete', instance);
+              _this.emit('find:complete', {
+                instance: instance,
+                data: json
+              });
               return serializer.deserialize(json, instance, options);
             });
           }
@@ -1773,7 +1788,10 @@ angular.module('ActiveResource').provider('ARBase', function () {
           return $http.delete(url, config).then(function (response) {
             if (response.status == 200) {
               removeFromWatchedCollections(instance);
-              _this.emit('$delete:complete', instance);
+              _this.emit('$delete:complete', {
+                data: response,
+                instance: instance
+              });
               if (dependentDestroy.length >= 1)
                 return destroyDependents(instance);
               unlinkAssociations(instance);
