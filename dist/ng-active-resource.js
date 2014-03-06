@@ -1750,10 +1750,8 @@ angular.module('ActiveResource').provider('ARBase', function () {
           if (cached !== undefined) {
             _this.emit('find:complete', {
               instance: cached,
-              data: {
-                message: 'Backend not queried. Found in cache',
-                data: cached
-              }
+              data: cached,
+              message: 'Backend not queried. Found in cache'
             });
             return deferred(cached);
           } else {

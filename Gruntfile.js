@@ -1,11 +1,5 @@
 module.exports = function(grunt) {
-  grunt.loadNpmTasks('grunt-contrib-watch');
-  grunt.loadNpmTasks('grunt-shell');
-  grunt.loadNpmTasks('grunt-contrib-concat');
-  grunt.loadNpmTasks('grunt-ngmin');
-  grunt.loadNpmTasks('grunt-contrib-uglify');
   require('load-grunt-tasks')(grunt, {scope: ['dependencies', 'devDependencies']});
-
 
   grunt.initConfig({
     shell: {
