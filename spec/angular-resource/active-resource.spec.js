@@ -1757,7 +1757,7 @@ describe('ActiveResource', function() {
 
       it('passes the raw data to the after find callback', function() {
         Post.after('find', function(response) {
-          alert(response.data.data);
+          alert(response.data);
         });
 
         Post.find(1);
