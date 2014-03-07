@@ -25,7 +25,7 @@ To manually download head over to the [latest release](https://github.com/Facult
 Once downloaded you'll find everything you need in the `/dist` directory, include either file and add it as a dependency in your module.
 
 ```javascript
-angular.module('app', ['ngActiveResource']);
+angular.module('app', ['ActiveResource']);
 ```
 
 > Note: Don't forget to include lodash.js before active-resource.js.
@@ -34,7 +34,7 @@ angular.module('app', ['ngActiveResource']);
 
 In your bower.json:
 
-    "ngActiveResource": "0.7.0"
+    "ngActiveResource": "latest"
 
 ## Simple:
 
