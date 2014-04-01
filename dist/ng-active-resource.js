@@ -789,8 +789,8 @@ angular.module('ActiveResource').provider('ARAssociation', function () {
 // Shorthand for toLowerCase()
 String.prototype.downcase = function () {
   return this.toLowerCase();
-};
-Function.prototype.name = function () {
+}(function () {
+}).constructor.prototype.name = function () {
   console.log('Getting Name');
   if (!this.name) {
     this.name = this.toString().match(/function\s*([^\s(]+)/)[1];
