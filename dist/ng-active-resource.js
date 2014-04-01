@@ -790,6 +790,13 @@ angular.module('ActiveResource').provider('ARAssociation', function () {
 String.prototype.downcase = function () {
   return this.toLowerCase();
 };
+Function.prototype.name = function () {
+  console.log('Getting Name');
+  if (!this.name) {
+    this.name = this.toString().match(/function\s*([^\s(]+)/)[1];
+  }
+  return this.name;
+};
 angular.module('ActiveResource').provider('ARCache', function () {
   this.$get = function () {
     function Cache() {
@@ -866,10 +873,10 @@ angular.module('ActiveResource').provider('ARSerializer', function () {
         //
         // Deserialize takes an http response, and by default loads all associations for any
         // foreign keys on the response it receives (eager loading). Optionally, deserialize
-        // can be set to lazy-load (lazy: true), which will load no associations, or 
+        // can be set to lazy-load (lazy: true), which will load no associations, or
         // to over-eager load (overEager: true), which will also load all associations found
         // on the associated instances (careful: this can pull down a huge amount of your database,
-        // and issue many http requests). 
+        // and issue many http requests).
         this.deserialize = function (httpResponse, instance, options) {
           var json, options;
           if (httpResponse && httpResponse.data)
@@ -887,7 +894,7 @@ angular.module('ActiveResource').provider('ARSerializer', function () {
             });
           }
         };
-        // function foreignkeyify (instance) 
+        // function foreignkeyify (instance)
         //
         // @param instance {object} - A model instance
         //
@@ -1020,6 +1027,7 @@ angular.module('ActiveResource').provider('ARSerializer', function () {
 });
 angular.module('ActiveResource').provider('ARHelpers', function () {
   this.$get = function () {
+    Object.defineProperty();
     // Non-duplicating push. Will not add an instance to an array if it is already
     // a member.
     Object.defineProperty(Array.prototype, 'nodupush', {
@@ -1330,7 +1338,7 @@ angular.module('ActiveResource').provider('ARBase', function () {
           _this.cached = new Cache();
         // @MODEL CACHE
         //
-        // function cacheInstance(instance) 
+        // function cacheInstance(instance)
         //
         // A wrapper for cached.cache, which passes in the primary key that has been
         // set on the instance. Puts the instance in the cache.
@@ -1351,8 +1359,8 @@ angular.module('ActiveResource').provider('ARBase', function () {
         _this.prototype.serialize = function (options) {
           return serializer.serialize(this, options);
         };
-        // 
-        // Model.instance#$save 
+        //
+        // Model.instance#$save
         //
         // Persists an instance of a model to the backend via the API. A convention used
         // in ActiveResource is that methods prefaced with `$` interact with the backend.
@@ -1361,7 +1369,7 @@ angular.module('ActiveResource').provider('ARBase', function () {
         // be set via Model.api.set('http://defaulturl.com') or overridden specifically
         // by setting Model.api.createURL = 'http://myoverriddenURL.com'
         //
-        // The API should respond with either a representation of the same resource, or 
+        // The API should respond with either a representation of the same resource, or
         // an error.
         //
         // If a representation of the resource is received, Model.instance calls
@@ -1412,7 +1420,7 @@ angular.module('ActiveResource').provider('ARBase', function () {
         // @param data {object} - Optional data to use to update the instance
         //
         // Updates the instance, and then persists the instance to the database via the
-        // $save method. Notice that methods prefaced with a dollar sign ($update, $save, 
+        // $save method. Notice that methods prefaced with a dollar sign ($update, $save,
         // $create, and $delete),perform unsafe API interactions, like PUT, POST, and DELETE.
         //
         // Model.instance#update below is distinct from $update, because it only works with the
@@ -1485,7 +1493,7 @@ angular.module('ActiveResource').provider('ARBase', function () {
           });
         };
         // Model#$create
-        // 
+        //
         // When a model calls $create, a new instance is built using the arguments passed in,
         // and immediately saved. This calls Model.instance#$save, which will attempt to persist
         // the instance to the backend. If the backend returns success, the new instance is added to
@@ -1507,8 +1515,8 @@ angular.module('ActiveResource').provider('ARBase', function () {
           });
         };
         // Model#new(data)
-        // 
-        // @param {data} - JSON data used to instantiate a new instance of the model. 
+        //
+        // @param {data} - JSON data used to instantiate a new instance of the model.
         //
         // New creates a new instance of the model. If an id is passed in, new first checks
         // whether or not an object is stored in the cache with that id; if it is, it is returned.
@@ -1565,7 +1573,7 @@ angular.module('ActiveResource').provider('ARBase', function () {
           //
           // @param valueFn    {func}           - The function used to compute the new property from the others
           //
-          // @param dependents {string | array} - The name of the property or list of the properties that this 
+          // @param dependents {string | array} - The name of the property or list of the properties that this
           //                                      property depends upon.
           //
           // Example:
@@ -1720,7 +1728,7 @@ angular.module('ActiveResource').provider('ARBase', function () {
         };
         // Model#find(terms, options)
         //
-        // @param {terms}   - JSON terms used to find a single instance of the model matching the given 
+        // @param {terms}   - JSON terms used to find a single instance of the model matching the given
         //                    parameters
         // @param {options} - Options include:
         //                      * Lazy: Whether or not to lazy-load options.
@@ -1767,8 +1775,8 @@ angular.module('ActiveResource').provider('ARBase', function () {
         };
         // Model.instance#$delete(terms)
         //
-        // @param {terms} - JSON terms used to delete 
-        // 
+        // @param {terms} - JSON terms used to delete
+        //
         _this.prototype.$delete = function () {
           var instance = this;
           _this.emit('$delete:called', this);
@@ -1777,7 +1785,7 @@ angular.module('ActiveResource').provider('ARBase', function () {
           var url = _this.api.deleteURL;
           queryterms[primaryKey] = instance[primaryKey];
           // if user has provided an attr in their deleteURL definition
-          // then we URLify the deleteURL. Else we pass in params as 
+          // then we URLify the deleteURL. Else we pass in params as
           if (_this.api.deleteURL.indexOf('/:') !== -1) {
             url = URLify(_this.api.deleteURL, queryterms);
           } else {
@@ -1831,7 +1839,7 @@ angular.module('ActiveResource').provider('ARBase', function () {
         }
         ;
         // Model.instance#establishBelongsTo
-        // 
+        //
         // Called internally to sync a resource with the collection(s) it belongs to. If a System
         // has many Sensors, whenever a sensor instance needs to establish its initial belongs to
         // relationship, it calls this method to push itself into the right system instance.
@@ -1954,7 +1962,7 @@ angular.module('ActiveResource').provider('ARBase', function () {
         // function getBelongsToNames()
         //
         // Returns an array containing the names of the classes the model belongs to. E.g. if
-        // a Comment belongs to an Author and Post, getBelongsToNames will return ['author', 'post'] 
+        // a Comment belongs to an Author and Post, getBelongsToNames will return ['author', 'post']
         function getBelongsToNames() {
           return _.map(associations.belongsTo, function (association) {
             return association.klass.name.camelize();
@@ -1984,7 +1992,7 @@ angular.module('ActiveResource').provider('ARBase', function () {
         // the model and checks its properties to see what properties were defined either in the
         // body of the constructor or via Object.defineProperty.
         //
-        // The `primaryKey` property 
+        // The `primaryKey` property
         function getSettableProperties(model) {
           var instance = model.new();
           var nonenumerables = Object.getOwnPropertyNames(instance);
@@ -2154,26 +2162,26 @@ angular.module('ActiveResource').provider('ARBase', function () {
         });
         // Model.instance#hasMany(table, providerArray)
         //
-        // @param {table}        - [String] The name of the attribute to be associated on the hasMany 
+        // @param {table}        - [String] The name of the attribute to be associated on the hasMany
         //                         collection.
-        // @param {providerName} - [Array]  The name of the module and provider where the associated 
+        // @param {providerName} - [Array]  The name of the module and provider where the associated
         //                         class can be found.
         //
         // Used to generate a hasMany collection for an instance of the model:
         //
         //    this.hasMany('sensors', ['ActiveResource.Mocks', 'ARMockSensor']);
         //
-        // The call above generates a `sensors` property on the instance, which will use the 
-        // ARMockSensor provider, stored in the ActiveResource.Mocks module to instantiate sensor 
+        // The call above generates a `sensors` property on the instance, which will use the
+        // ARMockSensor provider, stored in the ActiveResource.Mocks module to instantiate sensor
         // instances.
         //
-        // The instantiated `sensors` property is an instance of ActiveResource::Collection. This 
+        // The instantiated `sensors` property is an instance of ActiveResource::Collection. This
         // gives it access to properties like:
         //
         //    system.sensors.new()
         //
-        // Which will generate a new sensor instance pre-associated with the system instance on which 
-        // it was called. For more details about the methods the hasMany collection gains, see 
+        // Which will generate a new sensor instance pre-associated with the system instance on which
+        // it was called. For more details about the methods the hasMany collection gains, see
         // ActiveResource::Collection. This method also calls Model.belongsTo on the associated model.
         _this.prototype.hasMany = function (name, options) {
           if (!options)
@@ -2225,7 +2233,7 @@ angular.module('ActiveResource').provider('ARBase', function () {
         //
         // @param {dependents} - [Array or String] Comma separated list of dependents to destroy
         //                                         when the primary resource is destroyed
-        // 
+        //
         // Registers dependencies to destroy when the primary resource is destroyed
         _this.dependentDestroy = function (dependents) {
           if (dependents.constructor.name != 'Array')
