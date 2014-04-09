@@ -1046,6 +1046,23 @@ angular.module('ActiveResource').provider('ARHelpers', function () {
 angular.module('ActiveResource').provider('ARMixin', function () {
   this.$get = function () {
     return function (receiver, giver, excludeFunctions) {
+      function mixinProp() {
+        if (!receiver.hasOwnProperty(i)) {
+          (function () {
+            var local;
+            Object.defineProperty(receiver, i, {
+              enumerable: true,
+              get: function () {
+                return local;
+              },
+              set: function (val) {
+                local = val;
+              }
+            });
+          }());
+          receiver[i] = giver[i];
+        }
+      }
       if (giver.constructor.name == 'Function') {
         giver = new giver();
       }
@@ -1056,23 +1073,6 @@ angular.module('ActiveResource').provider('ARMixin', function () {
           }
         } else {
           mixinProp();
-        }
-        function mixinProp() {
-          if (!receiver.hasOwnProperty(i)) {
-            (function () {
-              var local;
-              Object.defineProperty(receiver, i, {
-                enumerable: true,
-                get: function () {
-                  return local;
-                },
-                set: function (val) {
-                  local = val;
-                }
-              });
-            }());
-            receiver[i] = giver[i];
-          }
         }
       }
       return receiver;
