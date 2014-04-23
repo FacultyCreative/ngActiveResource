@@ -75,7 +75,7 @@ Create an Angular factory or provider that relies on ActiveResource:
 
 ```javascript
 angular.module('app', ['ActiveResource'])
-    .factory('Post', ['ActiveResource'], function(ActiveResource) {
+    .factory('Post', ['ActiveResource', function(ActiveResource) {
 
         function Post(data) {
             this.number('id');
@@ -95,7 +95,7 @@ angular.module('app', ['ActiveResource'])
         Post.dependentDestroy('comments');
 
         return Post;
-  });
+  }]);
 ```
 
 The model is terse, but gains a lot of functionality from ActiveResource.Base.
