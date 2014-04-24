@@ -1400,6 +1400,16 @@ describe('ActiveResource', function() {
         backend.flush();
       });
 
+      it('prevents api calls if option {api : false} is set', function() {
+        var foundSystem;
+        expect(System.cached.length()).toBe(3);
+        System.find({id: 100}, {api: false, lazy: true}).then(function(response) { foundSystem = response; });
+        expect(function() {
+          backend.flush();
+        }).toThrow();
+        expect(System.cached.length()).toBe(3);
+      });
+
       it('returns the first instance found', function() {
         var foundSystem;
         System.find({id: 1}, {lazy: true}).then(function(response) { foundSystem = response; });
