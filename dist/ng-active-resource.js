@@ -819,6 +819,16 @@ angular.module('ActiveResource').provider('ARCache', function () {
           return !!!Object.keys(this).length;
         }
       });
+      // function length()
+      //
+      // Length of cache, since cache is object so it has no length
+      // property by default
+      Object.defineProperty(this, 'length', {
+        enumerable: false,
+        value: function () {
+          return Object.keys(this).length;
+        }
+      });
       // function where(terms)
       //
       // @param {terms} - Search terms used to find instances in the cache
@@ -1050,13 +1060,6 @@ angular.module('ActiveResource').provider('ARMixin', function () {
         giver = new giver();
       }
       for (var i in giver) {
-        if (excludeFunctions) {
-          if (typeof giver[i] !== 'function') {
-            mixinProp();
-          }
-        } else {
-          mixinProp();
-        }
         function mixinProp() {
           if (!receiver.hasOwnProperty(i)) {
             (function () {
@@ -1073,6 +1076,13 @@ angular.module('ActiveResource').provider('ARMixin', function () {
             }());
             receiver[i] = giver[i];
           }
+        }
+        if (excludeFunctions) {
+          if (typeof giver[i] !== 'function') {
+            mixinProp();
+          }
+        } else {
+          mixinProp();
         }
       }
       return receiver;
@@ -1163,7 +1173,8 @@ angular.module('ActiveResource').provider('ARGET', function () {
     'ARAssociations',
     'ARHelpers',
     'URLify',
-    function ($http, deferred, Associations, Helpers, URLify) {
+    '$q',
+    function ($http, deferred, Associations, Helpers, URLify, $q) {
       function resolveSingleGET(data, terms, options) {
         if (data && data.length >= 1) {
           if (options.noInstanceEndpoint)
@@ -1241,6 +1252,11 @@ angular.module('ActiveResource').provider('ARGET', function () {
         } else if (Object.keys(terms).length) {
           url = url.replace(/\/\:[a-zA-Z_]+/g, '').replace(/\:[a-zA-Z_]+/g, '');
           config.params = terms;
+        }
+        if (options.api === false) {
+          var deferred = $q.defer();
+          deferred.resolve(options.cached);
+          return deferred.promise;
         }
         return $http.get(url, config).then(function (response) {
           var data = response.data;
@@ -1681,7 +1697,8 @@ angular.module('ActiveResource').provider('ARBase', function () {
           if (!options)
             options = {
               lazy: false,
-              overEager: false
+              overEager: false,
+              api: true
             };
           var cached = _this.cached.where(terms);
           options.cached = cached;
