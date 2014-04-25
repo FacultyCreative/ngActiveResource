@@ -67,6 +67,11 @@ describe('ActiveResource', function() {
     backend.whenPOST('http://api.faculty.com/systems')
       .respond({id: 1});
 
+    // tshirts 
+
+    backend.whenGET('http://api.faculty.com/tshirts')
+      .respond([{_id: 1, order_id: 1, price: '1.00', available: true, name: 'shirt'}]);
+
     // GET SENSOR
     // Requests for mock "persisted" sensors
     backend.whenGET('http://api.faculty.com/sensors/1')
@@ -256,6 +261,10 @@ describe('ActiveResource', function() {
     it('isEmpty if the cache is empty', function() {
       delete System.cached[1];
       expect(System.cached.isEmpty()).toBe(true);
+    });
+
+    it('length returns length of cache', function() {
+      expect(System.cached.length()).toBe(1);
     });
 
     it('adds new instances to the cache', function() {
@@ -1323,6 +1332,14 @@ describe('ActiveResource', function() {
           backend.flush();
           expect(System.cached[8]).toBe(system8);
         });
+
+        it('all accepts option `api : false` which prevents api calls', function() {
+          Tshirt.all({api: false}).then(function(response) {});
+          expect(function() {
+            backend.flush(); // will throw because no backend calls are expected
+          }).toThrow();
+          expect(Tshirt.cached.length()).toBe(0);
+        });
       });
 
       describe('using indexURL to GET multiple instances', function() {
@@ -1381,6 +1398,16 @@ describe('ActiveResource', function() {
         System.$create({placement: 'door'}).then(function(response) { system2 = response; });
         System.$create({placement: 'door'}).then(function(response) { system3 = response; });
         backend.flush();
+      });
+
+      it('prevents api calls if option {api : false} is set', function() {
+        var foundSystem;
+        expect(System.cached.length()).toBe(3);
+        System.find({id: 100}, {api: false, lazy: true}).then(function(response) { foundSystem = response; });
+        expect(function() {
+          backend.flush();
+        }).toThrow();
+        expect(System.cached.length()).toBe(3);
       });
 
       it('returns the first instance found', function() {
