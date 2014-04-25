@@ -47,7 +47,7 @@ module.exports = function(grunt) {
   });
 
   grunt.registerTask('build', ['concat:dist', 'ngmin:dist', 'uglify:dist', 'clean']);
-  grunt.registerTask('test', 'shell:test');
+  grunt.registerTask('test', 'karma:unit');
   grunt.registerTask('autotest', [
     'autotest:unit' 
   ]);
