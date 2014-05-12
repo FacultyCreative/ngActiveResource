@@ -17,7 +17,6 @@
     "active-support": "latest",
     "angular": "latest",
     "lodash": "latest",
-    "async": "~0.2.5",
     "meld": "latest"
   },
   "devDependencies": {

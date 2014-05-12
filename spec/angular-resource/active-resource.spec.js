@@ -1315,18 +1315,18 @@ describe('ActiveResource', function() {
         it('has associated method #all that returns all instances', function() {
           var foundSystems;
           System.all().then(function(response) { foundSystems = response; });
-          backend.expectGET('http://api.faculty.com/systems')
+          backend.when('GET', 'http://api.faculty.com/systems')
             .respond([{id: 8, placement: 'window', name: 'Bretts System'},
                       {id: 9, placement: 'window', name: 'Matts System'},
                       {id: 10, placement: 'window', name: 'Pickles System'}]);
 
-          backend.expectGET('http://api.faculty.com/sensors?system_id=8')
+          backend.when('GET', 'http://api.faculty.com/sensors?system_id=8')
             .respond([]);
 
-          backend.expectGET('http://api.faculty.com/sensors?system_id=9')
+          backend.when('GET', 'http://api.faculty.com/sensors?system_id=9')
             .respond([]);
 
-          backend.expectGET('http://api.faculty.com/sensors?system_id=10')
+          backend.when('GET', 'http://api.faculty.com/sensors?system_id=10')
             .respond([]);
 
           backend.flush();
@@ -1638,19 +1638,19 @@ describe('ActiveResource', function() {
     beforeEach(function() {
       Post.find(1, {overEager: true}).then(function(response) { post = response; });
 
-      backend.expectGET('http://api.faculty.com/posts/1')
+      backend.when('GET', 'http://api.faculty.com/posts/1')
         .respond({_id: 1, title: 'Great post!', author_id: 1});
 
-      backend.expectGET('http://api.faculty.com/authors/1')
+      backend.when('GET', 'http://api.faculty.com/authors/1')
         .respond({_id: 1, name: 'Yorn Lomborg'});
 
-      backend.expectGET('http://api.faculty.com/comments?author_id=1')
+      backend.when('GET', 'http://api.faculty.com/comments?author_id=1')
         .respond({_id: 1, text: 'Great!', author_id: 1, post_id: 1});
 
-      backend.expectGET('http://api.faculty.com/comments?post_id=1')
+      backend.when('GET', 'http://api.faculty.com/comments?post_id=1')
         .respond({_id: 1, text: 'Great!', author_id: 1, post_id: 1});
 
-      backend.expectGET('http://api.faculty.com/posts?author_id=1')
+      backend.when('GET', 'http://api.faculty.com/posts?author_id=1')
         .respond({_id: 1, title: 'Great post!', author_id: 1});
 
       backend.flush();
