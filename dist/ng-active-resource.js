@@ -520,7 +520,7 @@ angular.module('ActiveResource').provider('ARAPI', function () {
           if (url.slice(-1) != '/')
             url = url + '/';
           if (override) {
-            sections = url.split('/');
+            var sections = url.split('/');
             plural = sections.pop();
             url = sections.join('/');
           }
