@@ -14,9 +14,8 @@ angular
         };
 
         GridController = ActiveResource.Base.apply(GridController);
-        GridController.api.set('http://api.faculty.com');
+        GridController.api.set('http://api.faculty.com/grid-controllers', true);
         GridController.api.showURL = 'http://api.faculty.com/grid-controllers';
-        GridController.api.createURL = 'http://api.faculty.com/grid-controllers';
 
         return GridController;
     }];
