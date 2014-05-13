@@ -21,7 +21,6 @@ module.exports = function(config) {
       'bower_components/angular-mocks/angular-mocks.js',
       'bower_components/active-support/active-support.js',
       'bower_components/lodash/dist/lodash.js',
-      'bower_components/async/lib/async.js',
       'bower_components/meld/meld.js',
       'lib/json/json.js',
       'lib/simple-form/**/*.js',
