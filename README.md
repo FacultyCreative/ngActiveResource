@@ -437,6 +437,38 @@ instance itself. To save the serialized data as a variable, assign it:
 var json = post.serialize();
 ```
 
+## Model Events
+
+Models are automatically provided with a handful of useful events to subscribe to.
+
+The events broadcasted are:
+
+| Name    | Description                                 |
+| ------- | :------------------------------------------ |
+| new     | Called when a new resource is instantiated. |
+| $create | Called when a resource is created           |
+| update  | Called when a resource is updated.          |
+| $save   | Called when a resource is created/updated.  |
+| $delete | Called when a resource is destroyed.        |
+| find    | Called when a resource is found.            |
+| where   | Called when a resource collection is found. |
+
+You can listen for these events using the following syntax:
+```javascript
+Post.before('<event name>', function() {});
+Post.after('<event name>', function () {});
+```
+
+```javascript
+Post.before('$save', function() {
+  // Manipulate data before saving.
+});
+
+Post.after('$save', function() {
+  // Handle post save actions, i.e. redirect, notifications etc
+});
+```
+
 ## Write Validations:
 
 Models can describe validations required before data will be persisted
