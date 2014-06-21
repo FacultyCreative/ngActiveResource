@@ -88,14 +88,14 @@ angular.module('app', ['ActiveResource'])
 
             this.hasMany('comments');
             this.belongsTo('author');
-        };
+        }
 
         Post.inherits(ActiveResource.Base);
         Post.api.set('http://api.faculty.com');
         Post.dependentDestroy('comments');
 
         return Post;
-  });
+  }]);
 ```
 
 The model is terse, but gains a lot of functionality from ActiveResource.Base.
