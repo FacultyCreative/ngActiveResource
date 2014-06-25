@@ -426,7 +426,7 @@ var dummyData = { hi: 'there' };
 post.toJSON({ instance: dummyData });
 ```
 
-Can tap into ActiveResource's serialization method to serialize arbitrary
+You can tap into ActiveResource's serialization method to serialize arbitrary
 Javascript objects. If the `instance` option is not passed, the model instance
 itself will be serialized.
 
@@ -495,7 +495,7 @@ The interaction we prefer at Faculty Creative usually looks like this:
 ```html
 <input
     ng-model="user.name"
-    ng-blur="user.validate('name')
+    ng-blur="user.validate('name')"
     ng-change="user.validateIfErrored('name')>
 ```
 
