@@ -78,7 +78,7 @@ angular.module('app', ['ActiveResource'])
     .factory('Post', ['ActiveResource', function(ActiveResource) {
 
         function Post(data) {
-            this.number('id');
+            this.integer('id');
             this.string('title');
             this.string('subtitle');
 
