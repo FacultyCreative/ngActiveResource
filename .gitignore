@@ -4,6 +4,11 @@ node_modules/
 #Bower
 bower_components/
 
+#.idea
+.idea/*
+.idea/workspace.xml
+.idea/tasks.xml
+
 # Git
 .git/
 
