@@ -500,6 +500,18 @@ angular.module('ActiveResource', [
     }
   ];
 });
+if (!function f() {
+  }.name) {
+  Object.defineProperty(Function.prototype, 'name', {
+    get: function () {
+      var name = this.toString().match(/^\s*function\s*(\S*)\s*\(/)[1];
+      // For better performance only parse once, and then cache the
+      // result through a new accessor for repeated access.
+      Object.defineProperty(this, 'name', { value: name });
+      return name;
+    }
+  });
+}
 angular.module('ActiveResource').provider('ARAPI', function () {
   this.$get = [
     'ARHelpers',
@@ -1626,7 +1638,7 @@ angular.module('ActiveResource').provider('ARBase', function () {
             });
             _.each(dependents, function (dependent) {
               var local;
-              var previousSetter = instance.__lookupSetter__(dependent);
+              var previousSetter = Object.getOwnPropertyDescriptor(instance, dependent).set;
               var dependentVal = instance[dependent];
               Object.defineProperty(instance, dependent, {
                 enumerable: true,
