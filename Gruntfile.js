@@ -21,7 +21,7 @@ module.exports = function(grunt) {
         configFile: 'karma-unit.conf.js',
         autoWatch: true,
         singleRun: false
-      },
+      }
     },
     concat: {
       dist: {
