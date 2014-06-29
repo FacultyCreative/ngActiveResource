@@ -500,6 +500,7 @@ angular.module('ActiveResource', [
     }
   ];
 });
+// Fix for IE not implementing Function.name propertyit 
 if (!function f() {
   }.name) {
   Object.defineProperty(Function.prototype, 'name', {
@@ -1616,7 +1617,7 @@ angular.module('ActiveResource').provider('ARBase', function () {
           // superSalePrice setter afterward.
           //
           // This chainability allows us to create complex inter-dependencies, where an update to one property
-          // updates many others. In order to all this to occur, we use the `__lookupSetter__` function to retrieve
+          // updates many others. In order to all this to occur, we use the `getOwnPropertyDescriptor` function to retrieve
           // the value of the previous setter.
           _this.prototype.computedProperty = function (name, valueFn, dependents) {
             var instance = this;
