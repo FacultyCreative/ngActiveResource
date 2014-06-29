@@ -1,12 +1,12 @@
 {
   "name": "ActiveResource",
-  "version": "0.7.6",
+  "version": "0.7.8",
   "description": "RESTful resource modeling",
   "main": "index.js",
   "author": "Brett Shollenberger <brett@facultycreative.com>",
   "license": "MIT",
   "dependencies": {
-    "lodash": "latest"
+    "lodash": "latest"git
   },
   "devDependencies": {
     "karma-sauce-launcher": "~0.1",
