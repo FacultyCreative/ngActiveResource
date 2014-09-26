@@ -277,7 +277,7 @@ If no parameters are not provided _or_ your request utilizes parameters that are
 _not_ specified in the search URL, then a querystring will be generated:
 
 ```javascript
-Post.findURL = 'http://api.faculty.com/posts/:id';
+Post.api.findURL = 'http://api.faculty.com/posts/:id';
 Post.find({author_id: 1});
 
 // 'http://faculty.api.com/posts/?author_id=1'
