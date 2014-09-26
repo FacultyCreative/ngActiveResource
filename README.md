@@ -180,13 +180,13 @@ the post to which it belongs. If the foreign key is different, you can set it
 explicitly: 
 
 ```javascript
-this.belongsTo('post', { foreign_key: 'my_post_id' });
+this.belongsTo('post', { foreignKey: 'my_post_id' });
 ```
 
 Any number of options can be set on the association:
 
 ```javascript
-this.belongsTo('post', { provider: 'PostModel', foreign_key: 'my_post_id' });
+this.belongsTo('post', { provider: 'PostModel', foreignKey: 'my_post_id' });
 ```
 
 ## Methods:
@@ -217,8 +217,8 @@ convention. Here's that convention:
 
 | HTTP Verb | CRUD     | Path       | Action | Used To                                                           |
 | --------- |:--------:|:----------:|:------:|:---------------------                                             |
-| GET       | Retrieve | /users     | index  | Display a list of all users, or all users filtered by querystring |
-| GET       | Retrieve | /users/:id | show   | Display a specific user, found by params or querystring           |
+| GET       | Retrieve | /users     | index  | Display a list of all users, or all users filtered by query string|
+| GET       | Retrieve | /users/:id | show   | Display a specific user, found by params or query string          |
 | POST      | Create   | /users     | create | Create a user                                                     |
 | PUT       | Update   | /users/:id | update | Update a specific user                                            |
 | DELETE    | Destroy  | /users/:id | destroy| Delete a specific user                                            |
@@ -273,11 +273,11 @@ Post.find({ id: 1 });
 >> http://faculty.api.com/posts/1
 ```
 
-If no parameters are not provided _or_ your request utilizes parameters that are
-_not_ specified in the search URL, then a querystring will be generated:
+If no parameters are provided _or_ your request utilizes parameters that are
+_not_ specified in the search URL, then a query string will be generated:
 
 ```javascript
-Post.findURL = 'http://api.faculty.com/posts/:id';
+Post.api.findURL = 'http://api.faculty.com/posts/:id';
 Post.find({author_id: 1});
 
 // 'http://faculty.api.com/posts/?author_id=1'
@@ -285,7 +285,7 @@ Post.find({author_id: 1});
 
 The `indexURL` is intended as a search URL. It is not expected to be
 parameterized (though you can parameterize it). By default, that means it will
-search using a querystring:
+search using a query string:
 
 ```javascript
 Post.api.set('http://faculty.api.com').format('json');
