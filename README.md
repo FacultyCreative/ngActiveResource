@@ -180,13 +180,13 @@ the post to which it belongs. If the foreign key is different, you can set it
 explicitly: 
 
 ```javascript
-this.belongsTo('post', { foreign_key: 'my_post_id' });
+this.belongsTo('post', { foreignKey: 'my_post_id' });
 ```
 
 Any number of options can be set on the association:
 
 ```javascript
-this.belongsTo('post', { provider: 'PostModel', foreign_key: 'my_post_id' });
+this.belongsTo('post', { provider: 'PostModel', foreignKey: 'my_post_id' });
 ```
 
 ## Methods:
