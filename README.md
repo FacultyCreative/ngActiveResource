@@ -95,7 +95,7 @@ angular.module('app', ['ActiveResource'])
         Post.dependentDestroy('comments');
 
         return Post;
-  });
+  }]);
 ```
 
 The model is terse, but gains a lot of functionality from ActiveResource.Base.
